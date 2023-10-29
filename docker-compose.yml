@@ -325,7 +325,7 @@ services:
     image: selenium/sessions:latest
     container_name: selenium-sessions_psql
     ports:
-      - "5556:5556"
+      - "10156:5556"
     depends_on:
       - selenium-event-bus
     environment:
