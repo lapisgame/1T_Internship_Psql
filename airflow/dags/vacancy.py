@@ -26,7 +26,7 @@ import os
 
 # Connections settings
 # Загружаем данные подключений из JSON файла
-with open("config_connections.json") as config_file:
+with open("/opt/airflow/dags/config_connections.json") as config_file:
     config = json.load(config_file)["psql_connect"]
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
