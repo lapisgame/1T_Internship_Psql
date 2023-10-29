@@ -1,7 +1,7 @@
 {
   "psql_connect": {
     "conn_type": "Postgres",
-    "host": "host.docker.internal",
+    "host": "postgresql_db",
     "database": "vacancy",
     "user": "admin",
     "password": "password",
