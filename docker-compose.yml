@@ -361,7 +361,7 @@ services:
     image: selenium/router:latest
     container_name: selenium-router_psql
     ports:
-      - "4444:4444"
+      - "10144:4444"
     depends_on:
       - selenium-distributor
       - selenium-sessions
