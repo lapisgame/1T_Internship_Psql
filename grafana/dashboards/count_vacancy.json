@@ -1,0 +1,110 @@
+{
+  "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "PDEE91DDB90597936"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          },
+          {
+            "color": "purple",
+            "value": 80
+          }
+        ]
+      },
+      "color": {
+        "mode": "continuous-GrYlRd"
+      }
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+  },
+  "id": 1,
+  "options": {
+    "reduceOptions": {
+      "values": true,
+      "calcs": [],
+      "fields": ""
+    },
+    "orientation": "horizontal",
+    "displayMode": "lcd",
+    "valueMode": "color",
+    "showUnfilled": true,
+    "minVizWidth": 0,
+    "minVizHeight": 10
+  },
+  "pluginVersion": "10.1.4",
+  "targets": [
+    {
+      "builderOptions": {
+        "database": "vacancy",
+        "fields": [],
+        "filters": [
+          {
+            "condition": "AND",
+            "filterType": "custom",
+            "key": "company",
+            "operator": "!=",
+            "type": "String",
+            "value": "company"
+          }
+        ],
+        "groupBy": [
+          "company"
+        ],
+        "limit": 100,
+        "metrics": [
+          {
+            "aggregation": "count",
+            "alias": "companies",
+            "field": "company"
+          }
+        ],
+        "mode": "aggregate",
+        "table": "raw_vk"
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "PDEE91DDB90597936"
+      },
+      "format": 1,
+      "meta": {
+        "builderOptions": {
+          "database": "vacancy",
+          "fields": [],
+          "groupBy": [
+            "location"
+          ],
+          "limit": 100,
+          "metrics": [
+            {
+              "aggregation": "count",
+              "alias": "companies",
+              "field": "company"
+            }
+          ],
+          "mode": "aggregate",
+          "table": "raw_vk"
+        }
+      },
+      "queryType": "builder",
+      "rawSql": "SELECT company, count(company) companies FROM \"vacancy\".\"raw_vk\" WHERE   ( company != 'company' ) GROUP BY company",
+      "refId": "A",
+      "selectedFormat": 4
+    }
+  ],
+  "title": "Panel Title",
+  "type": "bargauge"
+}

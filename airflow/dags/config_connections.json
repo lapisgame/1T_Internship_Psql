@@ -1,0 +1,10 @@
+{
+  "click_connect": {
+    "conn_type": "HTTP",
+    "host": "clickhouse",
+    "database": "vacancy",
+    "user": "admin",
+    "password": "password",
+    "port": 9000
+  }
+}
