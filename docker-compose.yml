@@ -323,7 +323,7 @@ services:
 
   selenium-sessions:
     image: selenium/sessions:latest
-    container_name: selenium-sessions
+    container_name: selenium-sessions_psql
     ports:
       - "5556:5556"
     depends_on:
@@ -335,13 +335,13 @@ services:
 
   selenium-session-queue:
     image: selenium/session-queue:latest
-    container_name: selenium-session-queue
+    container_name: selenium-session-queue_psql
     ports:
       - "5559:5559"
 
   selenium-distributor:
     image: selenium/distributor:latest
-    container_name: selenium-distributor
+    container_name: selenium-distributor_psql
     ports:
       - "5553:5553"
     depends_on:
@@ -359,7 +359,7 @@ services:
 
   selenium-router:
     image: selenium/router:latest
-    container_name: selenium-router
+    container_name: selenium-router_psql
     ports:
       - "4444:4444"
     depends_on:
