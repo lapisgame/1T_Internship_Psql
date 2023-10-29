@@ -26,20 +26,19 @@ import os
 
 # Connections settings
 # Загружаем данные подключений из JSON файла
-with open('/opt/airflow/dags/config_connections.json', 'r') as config_file:
-    connections_config = json.load(config_file)
+with open("config_connections.json") as config_file:
+    config = json.load(config_file)["psql_connect"]
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
-conn_config = connections_config['psql_connect']
-config = {
-    'database': conn_config['database'],
-    'user': conn_config['user'],
-    'password': conn_config['password'],
-    'host': conn_config['host'],
-    'port': conn_config['port'],
-}
+conn = psycopg2.connect(
+    host=config["host"],
+    database=config["database"],
+    user=config["user"],
+    password=config["password"],
+    port=config["port"]
+)
 
-client = psycopg2.connect(**config)
+# client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -100,7 +99,7 @@ class DatabaseManager:
     def create_raw_tables(self):
         for table_name in self.raw_tables:
             try:
-                self.cur = client.cursor()
+                self.cur = conn.cursor()
                 drop_table_query = f"DROP TABLE IF EXISTS {self.database}.{table_name};"
                 self.cur.execute(drop_table_query)
                 self.log.info(f'Удалена таблица {table_name}')
@@ -133,11 +132,11 @@ class DatabaseManager:
                 );
                 """
                 self.cur.execute(create_table_query)
-                self.client.commit()
+                self.conn.commit()
                 self.log.info(f'Таблица {table_name} создана в базе данных.')
             except Exception as e:
                 self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
-                self.client.rollback()
+                self.conn.rollback()
 
     # def create_core_fact_table(self):
     #     try:
