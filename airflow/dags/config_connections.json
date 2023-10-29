@@ -1,5 +1,5 @@
 {
-  "click_connect": {
+  "psql_connect": {
     "conn_type": "Postgres",
     "host": "host.docker.internal",
     "database": "vacancy",

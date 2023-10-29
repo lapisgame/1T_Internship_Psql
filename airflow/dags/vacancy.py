@@ -2,6 +2,7 @@
 import dateparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
+import psycopg2
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
 from airflow.operators.python_operator import PythonOperator
@@ -29,7 +30,7 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as config_file:
     connections_config = json.load(config_file)
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
-conn_config = connections_config['click_connect']
+conn_config = connections_config['psql_connect']
 config = {
     'database': conn_config['database'],
     'user': conn_config['user'],
@@ -38,7 +39,7 @@ config = {
     'port': conn_config['port'],
 }
 
-client = Client(**config)
+client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -96,72 +97,83 @@ class DatabaseManager:
     def create_raw_tables(self):
         for table_name in self.raw_tables:
             try:
+                self.cur = client.cursor()
                 drop_table_query = f"DROP TABLE IF EXISTS {self.database}.{table_name};"
-                self.client.execute(drop_table_query)
+                self.cur.execute(drop_table_query)
                 self.log.info(f'Удалена таблица {table_name}')
 
-                create_table_query = f"""
-                CREATE TABLE {self.database}.{table_name}(
-                   link String,
-                   name String,
-                   location String,
-                   level Nullable(String),
-                   company String,
-                   salary Nullable(Float),
-                   description Nullable(String),
+                create_table_query = f"""                
+                CREATE TABLE {table_name}(
+                   link varchar NOT NULL,
+                   vacancy_name varchar,
+                   locat_work varchar,
+                   level_skill varchar,
+                   company varchar,
+                   salary_from integer,
+                   salary_to integer,
+                   exp_from integer,
+                   exp_to integer,
+                   description text,
+                   job_type varchar,
+                   job_format varchar,
+                   lang varchar,
+                   skills varchar,
+                   source_vac varchar,
                    date_created Date,
-                   date_of_download Date, 
-                   status String,
-                   date_closed Nullable(Date),
-                   version UInt32,
-                   sign Int8
-                ) ENGINE = VersionedCollapsingMergeTree(sign, version)
-                PARTITION BY toYYYYMM(date_of_download)
-                ORDER BY (link);
+                   date_of_download Date NOT NULL, 
+                   status varchar,
+                   date_closed Date,
+                   version_vac integer,
+                   actual int8,
+                   vector decimal,
+                   PRIMARY KEY(link, date_of_download)
+                );
                 """
-                self.client.execute(create_table_query)
-                self.log.info(f'Таблица {table_name} создана в базе данных {self.database}.')
+                self.cur.execute(create_table_query)
+                self.client.commit()
+                self.log.info(f'Таблица {table_name} создана в базе данных.')
             except Exception as e:
                 self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
+                self.client.rollback()
 
-    def create_core_fact_table(self):
-        try:
-            table_name = 'core_fact_table'
-            drop_table_query = f"DROP TABLE IF EXISTS {self.database}.{table_name};"
-            self.client.execute(drop_table_query)
-            self.log.info(f'Удалена таблица {table_name}')
-
-            create_core_fact_table = f"""
-            CREATE TABLE {self.database}.{table_name}(
-               link String,
-               name String,
-               location String,
-               level Nullable(String),
-               company String,
-               salary Nullable(Float),
-               description Nullable(String),
-               date_created Date,
-               date_of_download Date, 
-               status String
-            ) ENGINE = ReplacingMergeTree(date_of_download)
-            ORDER BY link
-            AS
-            SELECT link, name, location, level, company, salary, description, 
-                   date_created, date_of_download, status 
-            FROM {self.database}.raw_vk
-            UNION ALL
-            SELECT link, name, location, level, company, salary, description, 
-                   date_created, date_of_download, status  
-            FROM {self.database}.raw_sber
-            UNION ALL
-            SELECT link, name, location, level, company, salary, description, 
-                   date_created, date_of_download, status 
-            FROM {self.database}.raw_tin
-            """
-            self.client.execute(create_core_fact_table)
-            self.log.info(f'Таблица {table_name} создана в базе данных {self.database}.')
-        except Exception as e:
-            self.log.error(f'Ошибка при создании таблицы core_fact_table: {e}')
+    # def create_core_fact_table(self):
+    #     try:
+    #         table_name = 'core_fact_table'
+    #         drop_table_query = f"DROP TABLE IF EXISTS {self.database}.{table_name};"
+    #         self.client.execute(drop_table_query)
+    #         self.log.info(f'Удалена таблица {table_name}')
+    #
+    #         create_core_fact_table = f"""
+    #         CREATE TABLE {self.database}.{table_name}(
+    #            link String,
+    #            name String,
+    #            location String,
+    #            level Nullable(String),
+    #            company String,
+    #            salary Nullable(Float),
+    #            description Nullable(String),
+    #            date_created Date,
+    #            date_of_download Date,
+    #            status String
+    #         ) ENGINE = ReplacingMergeTree(date_of_download)
+    #         ORDER BY link
+    #         AS
+    #         SELECT link, name, location, level, company, salary, description,
+    #                date_created, date_of_download, status
+    #         FROM {self.database}.raw_vk
+    #         UNION ALL
+    #         SELECT link, name, location, level, company, salary, description,
+    #                date_created, date_of_download, status
+    #         FROM {self.database}.raw_sber
+    #         UNION ALL
+    #         SELECT link, name, location, level, company, salary, description,
+    #                date_created, date_of_download, status
+    #         FROM {self.database}.raw_tin
+    #         """
+    #         self.client.execute(create_core_fact_table)
+    #         self.log.info(f'Таблица {table_name} создана в базе данных {self.database}.')
+    #     except Exception as e:
+    #         self.log.error(f'Ошибка при создании таблицы core_fact_table: {e}')
 
 class BaseJobParser:
     def __init__(self, url, profs, log):
@@ -492,54 +504,54 @@ class TinkoffJobParser(BaseJobParser):
 db_manager = DatabaseManager(client=client, database=config['database'])
 
 
-def run_vk_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий VK
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера ВК')
-    try:
-        parser = VKJobParser(url_vk, profs, log)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер ВК успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера ВК: {e}')
-
-def run_sber_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Sber
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Сбербанка')
-    try:
-        parser = SberJobParser(url_sber, profs, log)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Сбербанка успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
-
-def run_tin_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Tinkoff
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Тинькофф')
-    try:
-        parser = TinkoffJobParser(url_tin, profs, log)
-        parser.open_all_pages()
-        parser.all_vacs_parser()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Тинькофф успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
+# def run_vk_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий VK
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера ВК')
+#     try:
+#         parser = VKJobParser(url_vk, profs, log)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер ВК успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера ВК: {e}')
+#
+# def run_sber_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Sber
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Сбербанка')
+#     try:
+#         parser = SberJobParser(url_sber, profs, log)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Сбербанка успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
+#
+# def run_tin_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Tinkoff
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Тинькофф')
+#     try:
+#         parser = TinkoffJobParser(url_tin, profs, log)
+#         parser.open_all_pages()
+#         parser.all_vacs_parser()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Тинькофф успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
 
 hello_bash_task = BashOperator(
@@ -554,36 +566,37 @@ create_raw_tables = PythonOperator(
     dag=first_raw_dag
 )
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=first_raw_dag
-)
-
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=first_raw_dag
-)
-
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=first_raw_dag
-)
-
-create_core_fact_table = PythonOperator(
-    task_id='create_core_fact_table',
-    python_callable=db_manager.create_core_fact_table,
-    provide_context=True,
-    dag=first_raw_dag
-)
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
+#     provide_context=True,
+#     dag=first_raw_dag
+# )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=first_raw_dag
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=first_raw_dag
+# )
+#
+# create_core_fact_table = PythonOperator(
+#     task_id='create_core_fact_table',
+#     python_callable=db_manager.create_core_fact_table,
+#     provide_context=True,
+#     dag=first_raw_dag
+# )
 
 end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> create_core_fact_table >> end_task
+# hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> create_core_fact_table >> end_task
+hello_bash_task >> create_raw_tables >> end_task

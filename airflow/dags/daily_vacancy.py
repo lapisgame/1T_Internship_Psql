@@ -1,5 +1,6 @@
 # from clickhouse_driver import Client
 import dateparser
+import psycopg2
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
 from airflow import DAG
@@ -29,7 +30,7 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as config_file:
     connections_config = json.load(config_file)
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
-conn_config = connections_config['click_connect']
+conn_config = connections_config['psql_connect']
 config = {
     'database': conn_config['database'],
     'user': conn_config['user'],
@@ -38,7 +39,7 @@ config = {
     'port': conn_config['port'],
 }
 
-client = Client(**config)
+client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -84,7 +85,7 @@ default_args = {
 # Создаем DAG для автоматического запуска каждые 3 часа
 daily_raw_dag = DAG(dag_id='daily_raw_dag',
                     tags=['admin_1T'],
-                    start_date=datetime(2023, 10, 19),
+                    start_date=datetime(2023, 10, 29),
                     schedule_interval='0 */3 * * *',
                     default_args=default_args
                     )
