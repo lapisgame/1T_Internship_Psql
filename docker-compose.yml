@@ -316,8 +316,8 @@ services:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus_psql
     ports:
-      - "4442:4442"
-      - "4443:4443"
+#      - "4442:4442"
+#      - "4443:4443"
       - "4445:4445"
 #      - "5557:5557"
 
