@@ -46,7 +46,10 @@ client = psycopg2.connect(**config)
 with open('/opt/airflow/dags/config_variables.json', 'r') as config_file:
     my_variables = json.load(config_file)
 
-Variable.set("shares_variable", my_variables, serialize_json=True)
+# Проверяем, существует ли переменная с данным ключом
+if not Variable.get("shares_variable", default_var=None):
+    # Если переменная не существует, устанавливаем ее
+    Variable.set("shares_variable", my_variables, serialize_json=True)
 
 dag_variables = Variable.get("shares_variable", deserialize_json=True)
 
