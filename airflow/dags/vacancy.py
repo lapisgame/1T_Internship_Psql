@@ -84,7 +84,7 @@ default_args = {
 # Создаем DAG ручного запуска (инициализирующий режим).
 first_raw_dag = DAG(dag_id='first_raw_dag',
                 tags=['admin_1T'],
-                start_date=datetime(2023, 10, 15),
+                start_date=datetime(2023, 10, 29),
                 schedule_interval=None,
                 default_args=default_args
                 )
