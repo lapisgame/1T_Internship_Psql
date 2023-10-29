@@ -337,13 +337,13 @@ services:
     image: selenium/session-queue:latest
     container_name: selenium-session-queue_psql
     ports:
-      - "5559:5559"
+      - "10128:5559"
 
   selenium-distributor:
     image: selenium/distributor:latest
     container_name: selenium-distributor_psql
     ports:
-      - "5553:5553"
+      - "10123:5553"
     depends_on:
       - selenium-event-bus
       - selenium-sessions
