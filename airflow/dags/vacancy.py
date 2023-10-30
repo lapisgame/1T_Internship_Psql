@@ -3,6 +3,8 @@ import dateparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
 import psycopg2
+from psycopg2.extras import execute_values
+from psycopg2.extensions import register_adapter, AsIs
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
 from airflow.operators.python_operator import PythonOperator
@@ -24,21 +26,37 @@ import pandas as pd
 import numpy as np
 import os
 
+# # Connections settings
+# # Загружаем данные подключений из JSON файла
+# with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
+#     config = json.load(conn_file)['psql_connect']
+
+# # Получаем данные конфигурации подключения и создаем конфиг для клиента
+# conn = psycopg2.connect(
+#     host=config["host"],
+#     database=config["database"],
+#     user=config["user"],
+#     password=config["password"],
+#     port=config["port"]
+# )
+
 # Connections settings
 # Загружаем данные подключений из JSON файла
 with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
-    config = json.load(conn_file)['psql_connect']
+    connections_config = json.load(conn_file)
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
-conn = psycopg2.connect(
-    host=config["host"],
-    database=config["database"],
-    user=config["user"],
-    password=config["password"],
-    port=config["port"]
-)
+conn_config = connections_config['psql_connect']
 
-# client = psycopg2.connect(**config)
+config = {
+    'database': conn_config['database'],
+    'user': conn_config['user'],
+    'password': conn_config['password'],
+    'host': conn_config['host'],
+    'port': conn_config['port'],
+}
+
+client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -63,16 +81,19 @@ options = ChromeOptions()
 
 profs = dag_variables['professions']
 
-logging_level = os.environ.get('LOGGING_LEVEL', 'INFO').upper()
+logging_level = os.environ.get('LOGGING_LEVEL', 'DEBUG').upper()
 logging.basicConfig(level=logging_level)
 log = logging.getLogger(__name__)
 log_handler = handlers.RotatingFileHandler('/opt/airflow/logs/airflow.log',
                                            maxBytes=5000,
                                            backupCount=5)
-log_handler.setLevel(logging.ERROR)
+
+log_handler.setLevel(logging.DEBUG)
 log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
+
+# cur = client.cursor()
 
 # Параметры по умолчанию
 default_args = {
@@ -99,44 +120,44 @@ class DatabaseManager:
     def create_raw_tables(self):
         for table_name in self.raw_tables:
             try:
-                self.cur = conn.cursor()
-                drop_table_query = f"DROP TABLE IF EXISTS {self.database}.{table_name};"
+                self.cur = client.cursor()
+                drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
                 self.cur.execute(drop_table_query)
                 self.log.info(f'Удалена таблица {table_name}')
 
                 create_table_query = f"""                
                 CREATE TABLE {table_name}(
-                   link varchar NOT NULL,
-                   vacancy_name varchar,
-                   locat_work varchar,
-                   level_skill varchar,
-                   company varchar,
-                   salary_from integer,
-                   salary_to integer,
-                   exp_from integer,
-                   exp_to integer,
+                   link VARCHAR(255) NOT NULL,
+                   vacancy_name VARCHAR(100),
+                   locat_work VARCHAR(255),
+                   level_skill TEXT,
+                   company VARCHAR(255),
+                   salary_from BIGINT,
+                   salary_to BIGINT,
+                   exp_from SMALLINT,
+                   exp_to SMALLINT,
                    description text,
-                   job_type varchar,
-                   job_format varchar,
-                   lang varchar,
-                   skills varchar,
-                   source_vac varchar,
-                   date_created Date,
-                   date_of_download Date NOT NULL, 
-                   status varchar,
-                   date_closed Date,
-                   version_vac integer,
-                   actual int8,
-                   vector decimal,
-                   PRIMARY KEY(link, date_of_download)
+                   job_type VARCHAR(255),
+                   job_format VARCHAR(255),
+                   lang VARCHAR(255),
+                   skills VARCHAR(255),
+                   source_vac VARCHAR(255),
+                   date_created DATE,
+                   date_of_download DATE NOT NULL, 
+                   status VARCHAR(32),
+                   date_closed DATE,
+                   version_vac SERIAL NOT NULL,
+                   actual SMALLINT,
+                   vector DECIMAL,
+                   PRIMARY KEY(link, version_vac)
                 );
                 """
                 self.cur.execute(create_table_query)
-                self.conn.commit()
+                self.client.commit()
                 self.log.info(f'Таблица {table_name} создана в базе данных.')
             except Exception as e:
                 self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
-                self.conn.rollback()
+                self.client.rollback()
 
     # def create_core_fact_table(self):
     #     try:
@@ -178,7 +199,7 @@ class DatabaseManager:
     #         self.log.error(f'Ошибка при создании таблицы core_fact_table: {e}')
 
 class BaseJobParser:
-    def __init__(self, url, profs, log):
+    def __init__(self, url, profs, log, client):
         self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
         self.url = url
         self.browser.get(self.url)
@@ -187,6 +208,7 @@ class BaseJobParser:
         time.sleep(2)
         self.profs = profs
         self.log = log
+        self.client = client
 
     def scroll_down_page(self, page_height=0):
         """
@@ -225,8 +247,9 @@ class VKJobParser(BaseJobParser):
         """
         Метод для нахождения вакансий с VK
         """
-        self.df = pd.DataFrame(columns=['link', 'name', 'location', 'company', 'date_created', 'date_of_download',
-                                        'status', 'version', 'sign', 'description'])
+        self.cur = self.client.cursor()
+        self.df = pd.DataFrame(columns=['link', 'vacancy_name', 'locat_work', 'company', 'source_vac', 'date_created',
+                                        'date_of_download', 'status', 'actual', 'description'])
         self.log.info('Старт парсинга вакансий')
         self.browser.implicitly_wait(3)
         # Поиск и запись вакансий на поисковой странице
@@ -252,8 +275,8 @@ class VKJobParser(BaseJobParser):
                 for vac in vacs:
                     vac_info = {}
                     vac_info['link'] = str(vac.get_attribute('href'))
-                    vac_info['name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
-                    vac_info['location'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
+                    vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
+                    vac_info['locat_work'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
                     vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
                     self.df.loc[len(self.df)] = vac_info
 
@@ -264,14 +287,16 @@ class VKJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.df['date_created'] = datetime.now().date()
         self.df['date_of_download'] = datetime.now().date()
+        self.df['source_vac'] = url_vk
         self.df['status'] = 'existing'
-        self.df['version'] = 1
-        self.df['sign'] = 1
+        # self.df['version_vac'] = 1
+        self.df['actual'] = 1
 
     def find_vacancies_description(self):
         """
         Метод для парсинга описаний вакансий для VKJobParser.
         """
+        self.log.info('Старт парсинга описаний вакансий')
         if not self.df.empty:
             for descr in self.df.index:
                 try:
@@ -293,16 +318,42 @@ class VKJobParser(BaseJobParser):
         """
         Метод для сохранения данных в базу данных vk
         """
-        table_name = 'raw_vk'
-        # данные, которые вставляются в таблицу Clickhouse
-        data = [tuple(x) for x in self.df.to_records(index=False)]
-        # попытка вставить данные в таблицу
-        client.execute(
-            f"INSERT INTO {config['database']}.{table_name} \
-            (link, name, location, company, date_created, date_of_download, status, version, sign, description) \
-            VALUES", data)
-        # логируем количество обработанных вакансий
-        self.log.info("Общее количество вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+        self.cur = self.client.cursor()
+
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
+        self.df['actual'] = self.df['actual'].astype(int)
+
+        try:
+            if not self.df.empty:
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                table_name = 'raw_vk'
+                # данные, которые вставляются в таблицу PosqtgreSQL
+                data = [tuple(x) for x in self.df.to_records(index=False)]
+                # формируем строку запроса с плейсхолдерами для значений
+                query = f"INSERT INTO {table_name} (link, vacancy_name, locat_work, company, source_vac, " \
+                        f"date_created, date_of_download, status, actual, description) VALUES %s"
+                # исполняем запрос с использованием execute_values
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Данные для вставки: {data}")
+                execute_values(self.cur, query, data)
+                self.client.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.client.close()
+                # логируем количество обработанных вакансий
+                self.log.info("Общее количество вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+
+        except Exception as e:
+            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
+            raise
 
 class SberJobParser(BaseJobParser):
     """
@@ -506,22 +557,22 @@ class TinkoffJobParser(BaseJobParser):
 db_manager = DatabaseManager(client=client, database=config['database'])
 
 
-# def run_vk_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий VK
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера ВК')
-#     try:
-#         parser = VKJobParser(url_vk, profs, log)
-#         parser.find_vacancies()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.stop()
-#         log.info('Парсер ВК успешно провел работу')
-#     except Exception as e:
-#         log.error(f'Ошибка во время работы парсера ВК: {e}')
-#
+def run_vk_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий VK
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера ВК')
+    try:
+        parser = VKJobParser(url_vk, profs, log, client)
+        parser.find_vacancies()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.stop()
+        log.info('Парсер ВК успешно провел работу')
+    except Exception as e:
+        log.error(f'Ошибка во время работы парсера ВК: {e}')
+
 # def run_sber_parser(**context):
 #     """
 #     Основной вид задачи для запуска парсера для вакансий Sber
@@ -568,13 +619,13 @@ create_raw_tables = PythonOperator(
     dag=first_raw_dag
 )
 
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=first_raw_dag
-# )
-#
+parse_vkjobs = PythonOperator(
+    task_id='parse_vkjobs',
+    python_callable=run_vk_parser,
+    provide_context=True,
+    dag=first_raw_dag
+)
+
 # parse_sber = PythonOperator(
 #     task_id='parse_sber',
 #     python_callable=run_sber_parser,
@@ -601,4 +652,4 @@ end_task = DummyOperator(
 )
 
 # hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> create_core_fact_table >> end_task
-hello_bash_task >> create_raw_tables >> end_task
+hello_bash_task >> create_raw_tables >> parse_vkjobs >> end_task

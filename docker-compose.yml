@@ -13,7 +13,7 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pandas selenium dateparser psycopg2-binary SQLAlchemy}
-#    AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
+    # AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
 
   volumes:
     - ./airflow/dags:/opt/airflow/dags
@@ -61,7 +61,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "vacancy"]
       interval: 5s
       retries: 5
     depends_on:
