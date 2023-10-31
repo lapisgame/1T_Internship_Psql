@@ -26,20 +26,6 @@ import pandas as pd
 import numpy as np
 import os
 
-# # Connections settings
-# # Загружаем данные подключений из JSON файла
-# with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
-#     config = json.load(conn_file)['psql_connect']
-
-# # Получаем данные конфигурации подключения и создаем конфиг для клиента
-# conn = psycopg2.connect(
-#     host=config["host"],
-#     database=config["database"],
-#     user=config["user"],
-#     password=config["password"],
-#     port=config["port"]
-# )
-
 # Connections settings
 # Загружаем данные подключений из JSON файла
 with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
@@ -130,13 +116,13 @@ class DatabaseManager:
                    link VARCHAR(255) NOT NULL,
                    vacancy_name VARCHAR(100),
                    locat_work VARCHAR(255),
-                   level_skill TEXT,
+                   level_skill VARCHAR(255),
                    company VARCHAR(255),
                    salary_from BIGINT,
                    salary_to BIGINT,
                    exp_from SMALLINT,
                    exp_to SMALLINT,
-                   description text,
+                   description TEXT,
                    job_type VARCHAR(255),
                    job_format VARCHAR(255),
                    lang VARCHAR(255),
@@ -146,7 +132,7 @@ class DatabaseManager:
                    date_of_download DATE NOT NULL, 
                    status VARCHAR(32),
                    date_closed DATE,
-                   version_vac SERIAL NOT NULL,
+                   version_vac INTEGER NOT NULL,
                    actual SMALLINT,
                    vector DECIMAL,
                    PRIMARY KEY(link, version_vac)
@@ -249,7 +235,7 @@ class VKJobParser(BaseJobParser):
         """
         self.cur = self.client.cursor()
         self.df = pd.DataFrame(columns=['link', 'vacancy_name', 'locat_work', 'company', 'source_vac', 'date_created',
-                                        'date_of_download', 'status', 'actual', 'description'])
+                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info('Старт парсинга вакансий')
         self.browser.implicitly_wait(3)
         # Поиск и запись вакансий на поисковой странице
@@ -289,7 +275,7 @@ class VKJobParser(BaseJobParser):
         self.df['date_of_download'] = datetime.now().date()
         self.df['source_vac'] = url_vk
         self.df['status'] = 'existing'
-        # self.df['version_vac'] = 1
+        self.df['version_vac'] = 1
         self.df['actual'] = 1
 
     def find_vacancies_description(self):
@@ -339,11 +325,35 @@ class VKJobParser(BaseJobParser):
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 # формируем строку запроса с плейсхолдерами для значений
                 query = f"INSERT INTO {table_name} (link, vacancy_name, locat_work, company, source_vac, " \
-                        f"date_created, date_of_download, status, actual, description) VALUES %s"
+                        f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
                 # исполняем запрос с использованием execute_values
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.log.info(f"Данные для вставки: {data}")
                 execute_values(self.cur, query, data)
+
+                # # Создание функции для автоматического увеличения version_vac
+                # self.cur.execute("""
+                #     CREATE OR REPLACE FUNCTION increment_version_vac()
+                #     RETURNS TRIGGER AS $$
+                #     BEGIN
+                #         IF NEW.link = OLD.link THEN
+                #             NEW.version_vac = OLD.version_vac + 1;
+                #             RETURN NEW;
+                #         ELSE
+                #             RETURN NEW;
+                #         END IF;
+                #     END;
+                #     $$ LANGUAGE plpgsql
+                # """)
+                #
+                # # Создание триггера для применения функции increment_version_vac
+                # self.cur.execute(f"""
+                #     CREATE TRIGGER increment_version_vac_trigger
+                #     BEFORE INSERT ON {table_name}
+                #     FOR EACH ROW
+                #     EXECUTE FUNCTION increment_version_vac()
+                # """)
+
                 self.client.commit()
                 # закрываем курсор и соединение с базой данных
                 self.cur.close()
