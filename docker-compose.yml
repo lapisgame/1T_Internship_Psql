@@ -8,7 +8,7 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__SECRET_KEY: airflow
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '90'
+    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '180'
     AIRFLOW__CELERY__OPERATION_TIMEOUT: '180'
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
@@ -257,6 +257,7 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ''
+      AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '180'
     depends_on:
       - postgres
     user: "0:0"
