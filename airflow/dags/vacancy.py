@@ -79,8 +79,6 @@ log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
-# cur = client.cursor()
-
 # Параметры по умолчанию
 default_args = {
     "owner": "admin_1T",
@@ -152,33 +150,8 @@ class DatabaseManager:
             self.cur.execute(drop_table_query)
             self.log.info(f'Удалена таблица {table_name}')
             create_core_fact_table = f"""
-            CREATE TABLE {table_name}
---             (
---                    link VARCHAR(255) NOT NULL,
---                    vacancy_name VARCHAR(100),
---                    locat_work VARCHAR(255),
---                    level VARCHAR(255),
---                    company VARCHAR(255),
---                    salary_from BIGINT,
---                    salary_to BIGINT,
---                    exp_from SMALLINT,
---                    exp_to SMALLINT,
---                    description TEXT,
---                    job_type VARCHAR(255),
---                    job_format VARCHAR(255),
---                    lang VARCHAR(255),
---                    skills VARCHAR(255),
---                    source_vac VARCHAR(255),
---                    date_created DATE,
---                    date_of_download DATE NOT NULL, 
---                    status VARCHAR(32),
---                    date_closed DATE,
---                    version_vac INTEGER NOT NULL,
---                    actual SMALLINT,
---                    PRIMARY KEY(link, version_vac)
---             )
-            AS
-            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+            CREATE TABLE {table_name} AS
+            (SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
                    description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
                    status, date_closed, version_vac, actual
             FROM raw_vk
@@ -191,7 +164,7 @@ class DatabaseManager:
             SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
                    description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
                    status, date_closed, version_vac, actual
-            FROM raw_tin
+            FROM raw_tin);
             """
             self.cur.execute(create_core_fact_table)
             self.client.commit()

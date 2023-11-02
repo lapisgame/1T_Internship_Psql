@@ -8,8 +8,6 @@ x-airflow-common:
     AIRFLOW__WEBSERVER__SECRET_KEY: airflow
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
-#    AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: '180'
-#    AIRFLOW__CELERY__OPERATION_TIMEOUT: '180'
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
@@ -18,7 +16,6 @@ x-airflow-common:
     # AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
 
   volumes:
-#    - ./airflow/cfg:/opt/airflow
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
