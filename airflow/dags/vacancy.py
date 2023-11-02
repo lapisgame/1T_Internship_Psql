@@ -178,16 +178,19 @@ class DatabaseManager:
 --                    PRIMARY KEY(link, version_vac)
 --             )
             AS
-            SELECT link, name, location, level, company, salary, description,
-                   date_created, date_of_download, status
+            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
             FROM raw_vk
             UNION ALL
-            SELECT link, name, location, level, company, salary, description,
-                   date_created, date_of_download, status
+            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
             FROM raw_sber
             UNION ALL
-            SELECT link, name, location, level, company, salary, description,
-                   date_created, date_of_download, status
+            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
             FROM raw_tin
             """
             self.cur.execute(create_core_fact_table)
