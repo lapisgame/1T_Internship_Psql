@@ -87,7 +87,7 @@ default_args = {
 }
 
 # Создаем DAG ручного запуска (инициализирующий режим).
-first_raw_dag = DAG(dag_id='first_raw_dag',
+initial_dag = DAG(dag_id='initial_dag',
                 tags=['admin_1T'],
                 start_date=datetime(2023, 10, 29),
                 schedule_interval=None,
@@ -95,8 +95,9 @@ first_raw_dag = DAG(dag_id='first_raw_dag',
                 )
 
 class DatabaseManager:
-    def __init__(self, client):
+    def __init__(self, client, database):
         self.client = client
+        self.database = database
         self.cur = client.cursor()
         self.raw_tables = ['raw_vk', 'raw_sber', 'raw_tin']
         self.log = LoggingMixin().log
@@ -104,7 +105,6 @@ class DatabaseManager:
     def create_raw_tables(self):
         for table_name in self.raw_tables:
             try:
-                # self.cur = client.cursor()
                 drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
                 self.cur.execute(drop_table_query)
                 self.log.info(f'Удалена таблица {table_name}')
@@ -306,8 +306,6 @@ class VKJobParser(BaseJobParser):
 
         register_adapter(np.float64, addapt_numpy_float64)
         register_adapter(np.int64, addapt_numpy_int64)
-
-        # self.df['actual'] = self.df['actual'].astype(int)
 
         try:
             if not self.df.empty:
@@ -648,35 +646,35 @@ create_raw_tables = PythonOperator(
     task_id='create_raw_tables',
     python_callable=db_manager.create_raw_tables,
     provide_context=True,
-    dag=first_raw_dag
+    dag=initial_dag
 )
 
 parse_vkjobs = PythonOperator(
     task_id='parse_vkjobs',
     python_callable=run_vk_parser,
     provide_context=True,
-    dag=first_raw_dag
+    dag=initial_dag
 )
 
 parse_sber = PythonOperator(
     task_id='parse_sber',
     python_callable=run_sber_parser,
     provide_context=True,
-    dag=first_raw_dag
+    dag=initial_dag
 )
 
 parse_tink = PythonOperator(
     task_id='parse_tink',
     python_callable=run_tin_parser,
     provide_context=True,
-    dag=first_raw_dag
+    dag=initial_dag
 )
 
 create_core_fact_table = PythonOperator(
     task_id='create_core_fact_table',
     python_callable=db_manager.create_core_fact_table,
     provide_context=True,
-    dag=first_raw_dag
+    dag=initial_dag
 )
 
 end_task = DummyOperator(
@@ -684,4 +682,3 @@ end_task = DummyOperator(
 )
 
 hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> create_core_fact_table >> end_task
-# hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
