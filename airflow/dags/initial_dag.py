@@ -79,7 +79,7 @@ def get_conn_credentials(conn_id) -> BaseHook.get_connection:
 
 
 # Получаем данные соединения с базой данных из переменных DAG
-pg_conn = get_conn_credentials(dag_variables.get('conn_id'))
+pg_conn = get_conn_credentials(dag_variables.get('connection_name'))
 # Извлекаем параметры соединения с базой данных
 pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
 

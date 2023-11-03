@@ -1,5 +1,5 @@
 {
-  "conn_id": "psql_connect",
+  "connection_name": "psql_connect",
   "path": "/opt/airflow/raw_data",
   "base_sber": "https://rabota.sber.ru/search",
   "base_yand": "https://yandex.ru/jobs/vacancies/",
