@@ -6,6 +6,6 @@
     "schema": "vacancy",
     "login": "admin",
     "password": "password",
-    "port": 10121
+    "port": "10121"
   }
 }
