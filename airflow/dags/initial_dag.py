@@ -60,18 +60,18 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
 # )
 
 
-# # Получаем данные конфигурации подключения и создаем конфиг для клиента
-# conn_config = connections_config['psql_connect']
-#
-# config = {
-#     'database': conn_config['database'],
-#     'user': conn_config['user'],
-#     'password': conn_config['password'],
-#     'host': conn_config['host'],
-#     'port': conn_config['port'],
-# }
-#
-# client = psycopg2.connect(**config)
+# Получаем данные конфигурации подключения и создаем конфиг для клиента
+conn_config = connections_config['psql_connect']
+
+config = {
+    'database': conn_config['database'],
+    'user': conn_config['user'],
+    'password': conn_config['password'],
+    'host': conn_config['host'],
+    'port': conn_config['port'],
+}
+
+client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
