@@ -296,15 +296,15 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-#  airflow-exporter:
-#    image: pbweb/airflow-prometheus-exporter:latest
-#    ports:
-#      - "10127:9112"
-#    environment:
-#      - AIRFLOW_PROMETHEUS_DEBUG=true
-#      - AIRFLOW_PROMETHEUS_HOST=localhost
-#      - AIRFLOW_PROMETHEUS_PORT=10127
-#      - AIRFLOW_EXPORT_DIRECTORY=/usr/local/airflow/export/
+  airflow-exporter:
+    image: pbweb/airflow-prometheus-exporter:latest
+    ports:
+      - "10127:9112"
+    environment:
+      - AIRFLOW_PROMETHEUS_DEBUG=true
+      - AIRFLOW_PROMETHEUS_HOST=localhost
+      - AIRFLOW_PROMETHEUS_PORT=10127
+      - AIRFLOW_EXPORT_DIRECTORY=/usr/local/airflow/export/
 
 #  postgres-exporter:
 #    image: imagenarium/postgresql-exporter:latest
@@ -317,10 +317,10 @@ services:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus_psql
     ports:
-#      - "4442:4442"
-#      - "4443:4443"
+      - "4442:4442"
+      - "4443:4443"
       - "4445:4445"
-#      - "5557:5557"
+      - "5557:5557"
 
   selenium-sessions:
     image: selenium/sessions:latest
