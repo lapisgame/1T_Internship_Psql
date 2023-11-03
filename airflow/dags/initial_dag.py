@@ -1,4 +1,3 @@
-# from clickhouse_driver import Client
 import dateparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
