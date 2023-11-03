@@ -53,7 +53,7 @@ services:
     image: postgres:latest
     container_name: postgresql_db
     ports:
-      - 10132:5432
+      - 10121:5432
     volumes:
       - ./sql_scripts/:/docker-entrypoint-initdb.d/
       - postgres_db_data:/var/lib/postgresql/data
