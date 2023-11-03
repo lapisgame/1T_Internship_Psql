@@ -35,7 +35,7 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
 conn_config = connections_config['psql_connect']
 
 config = {
-    'database': conn_config['database'],
+    'schema': conn_config['schema'],
     'user': conn_config['user'],
     'password': conn_config['password'],
     'host': conn_config['host'],
