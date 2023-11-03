@@ -36,7 +36,7 @@ services:
     image: postgres:13
     hostname: localhost
     ports:
-      - 10122:5432
+      - 10132:5432
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -53,7 +53,7 @@ services:
     image: postgres:latest
     container_name: postgresql_db
     ports:
-      - 10121:5432
+      - 10132:5432
     volumes:
       - ./sql_scripts/:/docker-entrypoint-initdb.d/
       - postgres_db_data:/var/lib/postgresql/data
@@ -93,7 +93,7 @@ services:
     depends_on:
       - postgresql_db
     ports:
-      - 10124:3000
+      - 10134:3000
     restart: unless-stopped
 #    env_file: grafana/.gfenv
 
@@ -121,7 +121,7 @@ services:
     <<: *airflow-common
     command: webserver
     ports:
-      - 10129:8080
+      - 10139:8080
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 10s
@@ -299,7 +299,7 @@ services:
   airflow-exporter:
     image: pbweb/airflow-prometheus-exporter:latest
     ports:
-      - "10127:9112"
+      - "10137:9112"
     environment:
       - AIRFLOW_PROMETHEUS_DEBUG=true
       - AIRFLOW_PROMETHEUS_HOST=localhost
@@ -317,16 +317,16 @@ services:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus_psql
     ports:
+      - "4441:4441"
       - "4442:4442"
       - "4443:4443"
-      - "4445:4445"
       - "5557:5557"
 
   selenium-sessions:
     image: selenium/sessions:latest
     container_name: selenium-sessions_psql
     ports:
-      - "10156:5556"
+      - "10136:5556"
     depends_on:
       - selenium-event-bus
     environment:
@@ -338,13 +338,13 @@ services:
     image: selenium/session-queue:latest
     container_name: selenium-session-queue_psql
     ports:
-      - "10128:5559"
+      - "10138:5559"
 
   selenium-distributor:
     image: selenium/distributor:latest
     container_name: selenium-distributor_psql
     ports:
-      - "10123:5553"
+      - "10133:5553"
     depends_on:
       - selenium-event-bus
       - selenium-sessions
