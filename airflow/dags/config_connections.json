@@ -3,8 +3,8 @@
     "connection_name": "psql_connect",
     "conn_type": "Postgres",
     "host": "146.120.224.155",
-    "database": "vacancy",
-    "user": "admin",
+    "schema": "vacancy",
+    "login": "admin",
     "password": "password",
     "port": 10121
   }
