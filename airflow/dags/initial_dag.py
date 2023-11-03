@@ -58,22 +58,28 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
     connections_config = json.load(conn_file)
 
 # Получение объекта Connection с помощью метода BaseHook.get_connection
-def get_conn_credentials(conn_id) -> BaseHook.get_connection:
+def get_conn_credentials(conn_id):
     """
-    Function returns dictionary with connection credentials
-
-    :param conn_id: str with airflow connection id
-    :return: Connection
+    Функция возвращает словарь с параметрами подключения
+    :param conn_id: идентификатор соединения
+    :return: словарь с параметрами подключения
     """
     conn = BaseHook.get_connection(conn_id)
-    return conn
+    return {
+        "host": conn.host,
+        "port": conn.port,
+        "login": conn.login,
+        "password": conn.password,
+        "schema": conn.schema
+    }
 
 
 # Получаем данные соединения с базой данных из переменных DAG
-pg_conn = get_conn_credentials(dag_variables.get('connection_name'))
+pg_conn = get_conn_credentials("psql_connect")
 # Извлекаем параметры соединения с базой данных
-pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
-
+pg_hostname, pg_port, pg_username, pg_pass, pg_db = (
+    pg_conn["host"], pg_conn["port"], pg_conn["login"], pg_conn["password"], pg_conn["schema"]
+)
 
 # Создаем подключение к базе данных PostgreSQL с помощью полученных параметров
 client = psycopg2.connect(
