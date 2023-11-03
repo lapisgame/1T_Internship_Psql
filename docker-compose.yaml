@@ -1,6 +1,6 @@
 version: '3'
-
-x-airflow-common: &airflow-common
+x-airflow-common:
+  &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.0}
   environment:
     &airflow-common-env
@@ -13,8 +13,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pandas selenium dateparser psycopg2-binary SQLAlchemy}
+#    AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
+
   volumes:
-#    - ./airflow/cfg/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
@@ -34,7 +35,7 @@ services:
     image: postgres:13
     hostname: localhost
     ports:
-      - 10132:5432
+      - 10122:5432
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -60,7 +61,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "admin", "-d", "vacancy"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 5s
       retries: 5
     depends_on:
@@ -91,7 +92,7 @@ services:
     depends_on:
       - postgresql_db
     ports:
-      - 10134:3000
+      - 10124:3000
     restart: unless-stopped
 #    env_file: grafana/.gfenv
 
@@ -115,12 +116,11 @@ services:
 #    ports:
 #      - 10120:9100
 
-
   airflow-webserver:
     <<: *airflow-common
     command: webserver
     ports:
-      - 10139:8080
+      - 10129:8080
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 10s
@@ -136,7 +136,7 @@ services:
     <<: *airflow-common
     command: scheduler
     healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "${HOSTNAME}"']
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
       interval: 10s
       timeout: 10s
       retries: 5
@@ -152,7 +152,7 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@${HOSTNAME}"'
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
       interval: 10s
       timeout: 10s
       retries: 5
@@ -171,7 +171,7 @@ services:
     <<: *airflow-common
     command: triggerer
     healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "${HOSTNAME}"']
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 10s
       timeout: 10s
       retries: 5
@@ -298,7 +298,7 @@ services:
   airflow-exporter:
     image: pbweb/airflow-prometheus-exporter:latest
     ports:
-      - "10137:9112"
+      - "10127:9112"
     environment:
       - AIRFLOW_PROMETHEUS_DEBUG=true
       - AIRFLOW_PROMETHEUS_HOST=localhost
@@ -316,16 +316,16 @@ services:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus_psql
     ports:
-      - "4441:4441"
-      - "4442:4442"
-      - "4443:4443"
-      - "5557:5557"
+#      - "4442:4442"
+#      - "4443:4443"
+      - "4445:4445"
+#      - "5557:5557"
 
   selenium-sessions:
     image: selenium/sessions:latest
     container_name: selenium-sessions_psql
     ports:
-      - "10136:5556"
+      - "10156:5556"
     depends_on:
       - selenium-event-bus
     environment:
@@ -337,13 +337,13 @@ services:
     image: selenium/session-queue:latest
     container_name: selenium-session-queue_psql
     ports:
-      - "10138:5559"
+      - "10128:5559"
 
   selenium-distributor:
     image: selenium/distributor:latest
     container_name: selenium-distributor_psql
     ports:
-      - "10133:5553"
+      - "10123:5553"
     depends_on:
       - selenium-event-bus
       - selenium-sessions
