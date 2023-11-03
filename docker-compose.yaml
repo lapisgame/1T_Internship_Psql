@@ -13,15 +13,14 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pandas selenium dateparser psycopg2-binary SQLAlchemy}
-#    AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
 
   volumes:
-    - ./airflow/cfg/airflow.cfg:/opt/airflow/airflow.cfg
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/logs:/opt/airflow/logs
-    - ./airflow/plugins:/opt/airflow/plugins
-    - ./parse_files:/opt/airflow/parse_files
-    - ./airflow/raw_data/:/opt/airflow/raw_data
+    - /home/1t-user-1/PSQL/airflow/cfg/airflow.cfg:/opt/airflow/airflow.cfg
+    - /home/1t-user-1/PSQL/airflow/dags/:/opt/airflow/dags
+    - /home/1t-user-1/PSQL/airflow/logs/:/opt/airflow/logs
+    - /home/1t-user-1/PSQL/airflow/plugins/:/opt/airflow/plugins
+    - /home/1t-user-1/PSQL/parse_files/:/opt/airflow/parse_files
+    - /home/1t-user-1/PSQL/airflow/raw_data/:/opt/airflow/raw_data
   depends_on:
     &airflow-common-depends-on
     redis:
@@ -317,10 +316,10 @@ services:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus_psql
     ports:
-#      - "4442:4442"
-#      - "4443:4443"
+      - "4442:4442"
+      - "4443:4443"
       - "4445:4445"
-#      - "5557:5557"
+      - "5557:5557"
 
   selenium-sessions:
     image: selenium/sessions:latest
