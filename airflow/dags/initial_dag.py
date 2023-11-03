@@ -26,13 +26,13 @@ import pandas as pd
 import numpy as np
 import os
 
-# # Connections settings
-# # Загружаем данные подключений из JSON файла
-# with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
-#     connections_config = json.load(conn_file)
-#
-# # Получаем данные конфигурации подключения и создаем конфиг для клиента
-# conn_config = connections_config['psql_connect']
+# Connections settings
+# Загружаем данные подключений из JSON файла
+with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
+    connections_config = json.load(conn_file)
+
+# Получаем данные конфигурации подключения и создаем конфиг для клиента
+conn_config = connections_config['psql_connect']
 
 # config = {
 #     'database': conn_config['database'],
@@ -42,17 +42,7 @@ import os
 #     'port': conn_config['port']
 # }
 
-config = {
-    "connection_name": "psql_connect",
-    "conn_type": "Postgres",
-    "host": "146.120.224.155",
-    "database": "vacancy",
-    "user": "admin",
-    "password": "password",
-    "port": "10121"
-}
-
-client = psycopg2.connect(**config)
+# client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -65,6 +55,16 @@ if not Variable.get("shares_variable", default_var=None):
     Variable.set("shares_variable", my_variables, serialize_json=True)
 
 dag_variables = Variable.get("shares_variable", deserialize_json=True)
+
+
+client = psycopg2.connect(
+    host=conn_config['host'],
+    port=conn_config['port'],
+    user=conn_config['user'],
+    password=conn_config['password'],
+    database=conn_config['database'],
+    options=dag_variables.get('options')
+)
 
 # Загружаем переменные из JSON файла
 # with open('/opt/airflow/dags/config_variables.json', 'r') as config_file:
