@@ -35,11 +35,11 @@ with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
 conn_config = connections_config['psql_connect']
 
 config = {
-    'schema': conn_config['schema'],
+    'database': conn_config['database'],
     'user': conn_config['user'],
     'password': conn_config['password'],
     'host': conn_config['host'],
-    'port': conn_config['port'],
+    'port': conn_config['port']
 }
 
 client = psycopg2.connect(**config)

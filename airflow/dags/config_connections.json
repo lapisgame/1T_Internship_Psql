@@ -1,9 +1,9 @@
 {
   "psql_connect": {
-    "conn_id": "psql_connect",
+    "connection_name": "psql_connect",
     "conn_type": "Postgres",
     "host": "146.120.224.155",
-    "schema": "vacancy",
+    "database": "vacancy",
     "user": "admin",
     "password": "password",
     "port": "10121"
