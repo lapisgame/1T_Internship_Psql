@@ -13,7 +13,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
 import logging
 from logging import handlers
-# from airflow.hooks.base_hook import BaseHook
+from airflow.hooks.base_hook import BaseHook
 from airflow.models import Variable
 import time
 from datetime import datetime, timedelta
@@ -31,18 +31,47 @@ import os
 with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
     connections_config = json.load(conn_file)
 
-# Получаем данные конфигурации подключения и создаем конфиг для клиента
-conn_config = connections_config['psql_connect']
+# # Получение объекта Connection с помощью метода BaseHook.get_connection
+# def get_conn_credentials(conn_id) -> BaseHook.get_connection:
+#     """
+#     Function returns dictionary with connection credentials
+#
+#     :param conn_id: str with airflow connection id
+#     :return: Connection
+#     """
+#     conn = BaseHook.get_connection(conn_id)
+#     return conn
+#
+#
+# # Получаем данные соединения с базой данных из переменных DAG
+# pg_conn = get_conn_credentials(dag_variables.get('connection_name'))
+# # Извлекаем параметры соединения с базой данных
+# pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
+#
+#
+# # Создаем подключение к базе данных PostgreSQL с помощью полученных параметров
+# conn = psycopg2.connect(
+#     host=pg_hostname,
+#     port=pg_port,
+#     user=pg_username,
+#     password=pg_pass,
+#     database=pg_db,
+#     options=dag_variables.get('options')
+# )
 
-config = {
-    'database': conn_config['database'],
-    'user': conn_config['user'],
-    'password': conn_config['password'],
-    'host': conn_config['host'],
-    'port': conn_config['port'],
-}
 
-client = psycopg2.connect(**config)
+# # Получаем данные конфигурации подключения и создаем конфиг для клиента
+# conn_config = connections_config['psql_connect']
+#
+# config = {
+#     'database': conn_config['database'],
+#     'user': conn_config['user'],
+#     'password': conn_config['password'],
+#     'host': conn_config['host'],
+#     'port': conn_config['port'],
+# }
+#
+# client = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
