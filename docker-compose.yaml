@@ -16,6 +16,7 @@ x-airflow-common:
 #    AIRFLOW__CLICKHOUSE__SQL_ALCHEMY_CONN: clickhouse+native://admin:password@clickhouse/vacancy
 
   volumes:
+    - ./airflow/cfg/airflow.cfg:/opt/airflow/airflow.cfg
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
