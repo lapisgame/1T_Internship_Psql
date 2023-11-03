@@ -1,6 +1,6 @@
 {
   "psql_connect": {
-    "connection_name": "psql_connect",
+    "conn_id": "psql_connect",
     "conn_type": "Postgres",
     "host": "146.120.224.155",
     "database": "vacancy",
