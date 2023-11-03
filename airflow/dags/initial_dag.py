@@ -141,39 +141,39 @@ class DatabaseManager:
                 self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
                 self.client.rollback()
 
-    # def create_core_fact_table(self):
-    #     try:
-    #         table_name = 'core_fact_table'
-    #         # self.cur = client.cursor()
-    #         drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
-    #         self.cur.execute(drop_table_query)
-    #         self.log.info(f'Удалена таблица {table_name}')
-    #         create_core_fact_table = f"""
-    #         CREATE TABLE {table_name} AS
-    #         (SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
-    #                description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
-    #                status, date_closed, version_vac, actual
-    #         FROM raw_vk
-    #         UNION ALL
-    #         SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
-    #                description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
-    #                status, date_closed, version_vac, actual
-    #         FROM raw_sber
-    #         UNION ALL
-    #         SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
-    #                description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
-    #                status, date_closed, version_vac, actual
-    #         FROM raw_tin);
-    #         """
-    #         self.cur.execute(create_core_fact_table)
-    #         self.client.commit()
-    #         # закрываем курсор и соединение с базой данных
-    #         self.cur.close()
-    #         self.client.close()
-    #         self.log.info(f'Таблица {table_name} создана в базе данных.')
-    #     except Exception as e:
-    #         self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
-    #         self.client.rollback()
+    def create_core_fact_table(self):
+        try:
+            table_name = 'core_fact_table'
+            # self.cur = client.cursor()
+            drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
+            self.cur.execute(drop_table_query)
+            self.log.info(f'Удалена таблица {table_name}')
+            create_core_fact_table = f"""
+            CREATE TABLE {table_name} AS
+            (SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
+            FROM raw_vk
+            UNION ALL
+            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
+            FROM raw_sber
+            UNION ALL
+            SELECT link, vacancy_name, locat_work, level, company, salary_from, salary_to, exp_from, exp_to,
+                   description, job_type, job_format, lang, skills, source_vac, date_created, date_of_download,
+                   status, date_closed, version_vac, actual
+            FROM raw_tin);
+            """
+            self.cur.execute(create_core_fact_table)
+            self.client.commit()
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.client.close()
+            self.log.info(f'Таблица {table_name} создана в базе данных.')
+        except Exception as e:
+            self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
+            self.client.rollback()
 
 class BaseJobParser:
     def __init__(self, url, profs, log, client):
@@ -461,126 +461,126 @@ class SberJobParser(BaseJobParser):
             self.log.error(f"Ошибка при загрузке данных в raw-слой Sber {e}")
 
 
-# class TinkoffJobParser(BaseJobParser):
-#     """
-#     Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
-#     """
-#     def open_all_pages(self):
-#         elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
-#         for element in elements:
-#             element.click()
-#
-#     def all_vacs_parser(self):
-#         """
-#         Метод для нахождения вакансий с Tinkoff
-#         """
-#         self.cur = self.client.cursor()
-#
-#         self.df = pd.DataFrame(
-#             columns=['link', 'vacancy_name', 'locat_work', 'level', 'company', 'source_vac', 'date_created',
-#                      'date_of_download', 'status', 'version_vac', 'actual', 'description'])
-#         self.log.info("Создан DataFrame для записи вакансий")
-#
-#         self.browser.implicitly_wait(3)
-#         try:
-#             vac_index = 0
-#             while True:
-#                 try:
-#                     vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
-#                 except IndexError:
-#                     break  # Закончили обработку всех элементов
-#
-#                 self.log.info(f"Обработка вакансии номер {vac_index + 1}")
-#
-#                 vac_info = {}
-#                 vac_info['link'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
-#                 data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
-#                 vac_info['vacancy_name'] = data[0].text
-#                 vac_info['level'] = data[1].text
-#                 vac_info['locat_work'] = data[2].text
-#                 self.df.loc[len(self.df)] = vac_info
-#                 vac_index += 1
-#
-#             self.df = self.df.drop_duplicates()
-#             self.df['company'] = 'Тинькофф'
-#             self.df['date_created'] = datetime.now().date()
-#             self.df['date_of_download'] = datetime.now().date()
-#             self.df['source_vac'] = url_tin
-#             self.df['description'] = None
-#             self.df['status'] = 'existing'
-#             self.df['actual'] = 1
-#             self.df['version_vac'] = 1
-#
-#             self.log.info(
-#                 f"Парсер завершил работу. Обработано {vac_index} вакансий. Оставлены только уникальные записи. "
-#                 f"Записи обновлены данными о компании, дате создания и загрузки.")
-#
-#         except Exception as e:
-#             self.log.error(f"Произошла ошибка: {e}")
-#
-#     def find_vacancies_description(self):
-#         """
-#         Метод для парсинга описаний вакансий для TinkoffJobParser.
-#         """
-#         if not self.df.empty:
-#             for descr in self.df.index:
-#                 try:
-#                     link = self.df.loc[descr, 'link']
-#                     self.browser.get(link)
-#                     self.browser.delete_all_cookies()
-#                     self.browser.implicitly_wait(3)
-#                     desc = str(self.browser.find_element(By.CLASS_NAME, 'dyzaXu').text)
-#                     desc = desc.replace(';', '')
-#                     self.df.loc[descr, 'description'] = desc
-#
-#                     self.log.info(f"Описание успешно добавлено для вакансии {descr + 1}")
-#
-#                 except Exception as e:
-#                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
-#                     pass
-#         else:
-#             self.log.info(f"Нет описания вакансий для парсинга")
-#
-#     def save_df(self):
-#         """
-#         Метод для сохранения данных в базу данных Tinkoff
-#         """
-#         self.cur = self.client.cursor()
-#
-#         def addapt_numpy_float64(numpy_float64):
-#             return AsIs(numpy_float64)
-#
-#         def addapt_numpy_int64(numpy_int64):
-#             return AsIs(numpy_int64)
-#
-#         register_adapter(np.float64, addapt_numpy_float64)
-#         register_adapter(np.int64, addapt_numpy_int64)
-#
-#         self.df['description'] = self.df['description'].astype(str)
-#
-#         try:
-#             if not self.df.empty:
-#                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-#                 table_name = 'raw_tin'
-#                 data = [tuple(x) for x in self.df.to_records(index=False)]
-#
-#                 query = f"INSERT INTO {table_name} (link, vacancy_name, locat_work, level, company, source_vac, " \
-#                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
-#                 # исполняем запрос с использованием execute_values
-#                 self.log.info(f"Запрос вставки данных: {query}")
-#                 self.log.info(f"Данные для вставки: {data}")
-#                 execute_values(self.cur, query, data)
-#
-#                 self.client.commit()
-#                 # закрываем курсор и соединение с базой данных
-#                 self.cur.close()
-#                 self.client.close()
-#                 # логируем количество обработанных вакансий
-#                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
-#                               + str(len(self.df)) + "\n")
-#
-#         except Exception as e:
-#             self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
+class TinkoffJobParser(BaseJobParser):
+    """
+    Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
+    """
+    def open_all_pages(self):
+        elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
+        for element in elements:
+            element.click()
+
+    def all_vacs_parser(self):
+        """
+        Метод для нахождения вакансий с Tinkoff
+        """
+        self.cur = self.client.cursor()
+
+        self.df = pd.DataFrame(
+            columns=['link', 'vacancy_name', 'locat_work', 'level', 'company', 'source_vac', 'date_created',
+                     'date_of_download', 'status', 'version_vac', 'actual', 'description'])
+        self.log.info("Создан DataFrame для записи вакансий")
+
+        self.browser.implicitly_wait(3)
+        try:
+            vac_index = 0
+            while True:
+                try:
+                    vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
+                except IndexError:
+                    break  # Закончили обработку всех элементов
+
+                self.log.info(f"Обработка вакансии номер {vac_index + 1}")
+
+                vac_info = {}
+                vac_info['link'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
+                vac_info['vacancy_name'] = data[0].text
+                vac_info['level'] = data[1].text
+                vac_info['locat_work'] = data[2].text
+                self.df.loc[len(self.df)] = vac_info
+                vac_index += 1
+
+            self.df = self.df.drop_duplicates()
+            self.df['company'] = 'Тинькофф'
+            self.df['date_created'] = datetime.now().date()
+            self.df['date_of_download'] = datetime.now().date()
+            self.df['source_vac'] = url_tin
+            self.df['description'] = None
+            self.df['status'] = 'existing'
+            self.df['actual'] = 1
+            self.df['version_vac'] = 1
+
+            self.log.info(
+                f"Парсер завершил работу. Обработано {vac_index} вакансий. Оставлены только уникальные записи. "
+                f"Записи обновлены данными о компании, дате создания и загрузки.")
+
+        except Exception as e:
+            self.log.error(f"Произошла ошибка: {e}")
+
+    def find_vacancies_description(self):
+        """
+        Метод для парсинга описаний вакансий для TinkoffJobParser.
+        """
+        if not self.df.empty:
+            for descr in self.df.index:
+                try:
+                    link = self.df.loc[descr, 'link']
+                    self.browser.get(link)
+                    self.browser.delete_all_cookies()
+                    self.browser.implicitly_wait(3)
+                    desc = str(self.browser.find_element(By.CLASS_NAME, 'dyzaXu').text)
+                    desc = desc.replace(';', '')
+                    self.df.loc[descr, 'description'] = desc
+
+                    self.log.info(f"Описание успешно добавлено для вакансии {descr + 1}")
+
+                except Exception as e:
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
+                    pass
+        else:
+            self.log.info(f"Нет описания вакансий для парсинга")
+
+    def save_df(self):
+        """
+        Метод для сохранения данных в базу данных Tinkoff
+        """
+        self.cur = self.client.cursor()
+
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
+        self.df['description'] = self.df['description'].astype(str)
+
+        try:
+            if not self.df.empty:
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                table_name = 'raw_tin'
+                data = [tuple(x) for x in self.df.to_records(index=False)]
+
+                query = f"INSERT INTO {table_name} (link, vacancy_name, locat_work, level, company, source_vac, " \
+                        f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
+                # исполняем запрос с использованием execute_values
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Данные для вставки: {data}")
+                execute_values(self.cur, query, data)
+
+                self.client.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.client.close()
+                # логируем количество обработанных вакансий
+                self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
+                              + str(len(self.df)) + "\n")
+
+        except Exception as e:
+            self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
 
 
 db_manager = DatabaseManager(client=client)
@@ -618,22 +618,22 @@ def run_sber_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
 
-# def run_tin_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий Tinkoff
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера Тинькофф')
-#     try:
-#         parser = TinkoffJobParser(url_tin, profs, log, client)
-#         parser.open_all_pages()
-#         parser.all_vacs_parser()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.stop()
-#         log.info('Парсер Тинькофф успешно провел работу')
-#     except Exception as e:
-#         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
+def run_tin_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий Tinkoff
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера Тинькофф')
+    try:
+        parser = TinkoffJobParser(url_tin, profs, log, client)
+        parser.open_all_pages()
+        parser.all_vacs_parser()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.stop()
+        log.info('Парсер Тинькофф успешно провел работу')
+    except Exception as e:
+        log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
 
 hello_bash_task = BashOperator(
