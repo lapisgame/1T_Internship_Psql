@@ -65,33 +65,35 @@ dag_variables = Variable.set("shares_variable", my_variables, serialize_json=Tru
 dag_variables = Variable.get('shares_variable', deserialize_json=True)
 
 
-# Получение объекта Connection с помощью метода BaseHook.get_connection
-def get_conn_credentials(conn_id) -> BaseHook.get_connection:
-    """
-    Function returns dictionary with connection credentials
+# # Получение объекта Connection с помощью метода BaseHook.get_connection
+# def get_conn_credentials(conn_id) -> BaseHook.get_connection:
+#     """
+#     Function returns dictionary with connection credentials
+#
+#     :param conn_id: str with airflow connection id
+#     :return: Connection
+#     """
+#     conn = BaseHook.get_connection(conn_id)
+#     return conn
+#
+#
+# # Получаем данные соединения с базой данных из переменных DAG
+# pg_conn = get_conn_credentials(dag_variables.get('conn_id'))
+# # Извлекаем параметры соединения с базой данных
+# pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
 
-    :param conn_id: str with airflow connection id
-    :return: Connection
-    """
-    conn = BaseHook.get_connection(conn_id)
-    return conn
+connection_string = 'postgres://admin:password@146.120.224.155/10121'
+client = psycopg2.connect(connection_string)
 
-
-# Получаем данные соединения с базой данных из переменных DAG
-pg_conn = get_conn_credentials(dag_variables.get('conn_id'))
-# Извлекаем параметры соединения с базой данных
-pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
-
-
-# Создаем подключение к базе данных PostgreSQL с помощью полученных параметров
-client = psycopg2.connect(
-    host=pg_hostname,
-    port=pg_port,
-    user=pg_username,
-    password=pg_pass,
-    database=pg_db,
-    options=dag_variables.get('options')
-)
+# # Создаем подключение к базе данных PostgreSQL с помощью полученных параметров
+# client = psycopg2.connect(
+#     host=pg_hostname,
+#     port=pg_port,
+#     user=pg_username,
+#     password=pg_pass,
+#     database=pg_db,
+#     options=dag_variables.get('options')
+# )
 
 url_sber = dag_variables.get('base_sber')
 url_yand = dag_variables.get('base_yand')
