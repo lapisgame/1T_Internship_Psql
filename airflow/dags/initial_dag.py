@@ -38,21 +38,23 @@ import os
 # # Получаем данные конфигурации подключения и создаем конфиг для клиента
 # conn_config = connections_config['psql_connect']
 
-# Define the connection parameters
+# Создаем соединение с PostgreSQL
 conn_params = {
-    'conn_id': 'psql_connect',
-    'conn_type': 'postgres',
     'host': '146.120.224.155',
-    'schema': 'vacancy',
-    'login': 'admin',
-    'password': 'password',
     'port': 10121,
+    'database': 'vacancy',
+    'user': 'admin',
+    'password': 'password'
 }
 
-# Создаем клиент соединения
-client = settings.engine_from_config(conn_params)
-# Получаем соединение из клиента
-conn = client.connect()
+# Создаем строку подключения
+connection_string = f'postgresql://{conn_params["user"]}:{conn_params["password"]}@{conn_params["host"]}:{conn_params["port"]}/{conn_params["database"]}'
+
+# Создаем движок SQLAlchemy
+engine = create_engine(connection_string)
+
+# Получаем соединение из движка
+conn = engine.connect()
 
 # # Create the connection
 # conn = models.Connection(**conn_params)
