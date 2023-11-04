@@ -12,6 +12,8 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
 import logging
 from logging import handlers
+from airflow import models
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.hooks.base_hook import BaseHook
 from airflow.models import Variable
 import time
@@ -33,17 +35,34 @@ import os
 # # Получаем данные конфигурации подключения и создаем конфиг для клиента
 # conn_config = connections_config['psql_connect']
 
-# # Variables settings
-# # Загружаем переменные из JSON файла
-# with open('/opt/airflow/dags/config_variables.json', 'r') as config_file:
-#     my_variables = json.load(config_file)
-#
-# # Проверяем, существует ли переменная с данным ключом
-# if not Variable.get("shares_variable", default_var=None):
-#     # Если переменная не существует, устанавливаем ее
-#     Variable.set("shares_variable", my_variables, serialize_json=True)
-#
-# dag_variables = Variable.get("shares_variable", deserialize_json=True)
+# Define the connection parameters
+conn_params = {
+    'conn_id': 'psql_connect',
+    'conn_type': 'postgres',
+    'host': '146.120.224.155',
+    'schema': 'vacancy',
+    'login': 'admin',
+    'password': 'password',
+    'port': 10121,
+}
+
+# Create the connection
+client = models.Connection(**conn_params)
+# session = settings.Session()
+# session.add(conn)
+# session.commit()
+
+# Variables settings
+# Загружаем переменные из JSON файла
+with open('/opt/airflow/dags/config_variables.json', 'r') as config_file:
+    my_variables = json.load(config_file)
+
+# Проверяем, существует ли переменная с данным ключом
+if not Variable.get("shares_variable", default_var=None):
+    # Если переменная не существует, устанавливаем ее
+    Variable.set("shares_variable", my_variables, serialize_json=True)
+
+dag_variables = Variable.get("shares_variable", deserialize_json=True)
 
 
 # client = psycopg2.connect(
@@ -52,46 +71,6 @@ import os
 #     user=conn_config['user'],
 #     password=conn_config['password'],
 #     database=conn_config['database'],
-#     options=dag_variables.get('options')
-# )
-
-#Загружаем переменные из JSON файла
-with open('/opt/airflow/dags/config_variables.json', 'r') as config_file:
-    my_variables = json.load(config_file)
-
-dag_variables = Variable.set("shares_variable", my_variables, serialize_json=True)
-
-# Получение значений из переменной окружения.
-dag_variables = Variable.get('shares_variable', deserialize_json=True)
-
-
-# # Получение объекта Connection с помощью метода BaseHook.get_connection
-# def get_conn_credentials(conn_id) -> BaseHook.get_connection:
-#     """
-#     Function returns dictionary with connection credentials
-#
-#     :param conn_id: str with airflow connection id
-#     :return: Connection
-#     """
-#     conn = BaseHook.get_connection(conn_id)
-#     return conn
-#
-#
-# # Получаем данные соединения с базой данных из переменных DAG
-# pg_conn = get_conn_credentials(dag_variables.get('conn_id'))
-# # Извлекаем параметры соединения с базой данных
-# pg_hostname, pg_port, pg_username, pg_pass, pg_db = pg_conn.host, pg_conn.port, pg_conn.login, pg_conn.password, pg_conn.schema
-
-connection_string = 'postgres://admin:password@146.120.224.155/10121'
-client = psycopg2.connect(connection_string)
-
-# # Создаем подключение к базе данных PostgreSQL с помощью полученных параметров
-# client = psycopg2.connect(
-#     host=pg_hostname,
-#     port=pg_port,
-#     user=pg_username,
-#     password=pg_pass,
-#     database=pg_db,
 #     options=dag_variables.get('options')
 # )
 
