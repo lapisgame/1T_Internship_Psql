@@ -30,37 +30,23 @@ import pandas as pd
 import numpy as np
 import os
 
-# # Connections settings
-# # Загружаем данные подключений из JSON файла
-# with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
-#     connections_config = json.load(conn_file)
-#
-# # Получаем данные конфигурации подключения и создаем конфиг для клиента
-# conn_config = connections_config['psql_connect']
+# Connections settings
+# Загружаем данные подключений из JSON файла
+with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
+    connections_config = json.load(conn_file)
 
-# Создаем соединение с PostgreSQL
-conn_params = {
-    'host': '146.120.224.155',
-    'port': 10121,
-    'database': 'vacancy',
-    'user': 'admin',
-    'password': 'password'
+# Получаем данные конфигурации подключения и создаем конфиг для клиента
+conn_config = connections_config['psql_connect']
+
+config = {
+    'database': conn_config['database'],
+    'user': conn_config['user'],
+    'password': conn_config['password'],
+    'host': conn_config['host'],
+    'port': conn_config['port'],
 }
 
-# Создаем строку подключения
-connection_string = f'postgresql://{conn_params["user"]}:{conn_params["password"]}@{conn_params["host"]}:{conn_params["port"]}/{conn_params["database"]}'
-
-# Создаем движок SQLAlchemy
-engine = create_engine(connection_string)
-
-# Получаем соединение из движка
-conn = engine.connect()
-
-# # Create the connection
-# conn = models.Connection(**conn_params)
-# session = settings.Session()
-# session.add(conn)
-# session.commit()
+conn = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -74,22 +60,12 @@ if not Variable.get("shares_variable", default_var=None):
 
 dag_variables = Variable.get("shares_variable", deserialize_json=True)
 
-
-# conn = psycopg2.connect(
-#     host=conn_config['host'],
-#     port=conn_config['port'],
-#     user=conn_config['user'],
-#     password=conn_config['password'],
-#     database=conn_config['database'],
-#     options=dag_variables.get('options')
-# )
-
 url_sber = dag_variables.get('base_sber')
 url_yand = dag_variables.get('base_yand')
 url_vk = dag_variables.get('base_vk')
 url_tin = dag_variables.get('base_tin')
 
-raw_tables = ['raw_vk', 'raw_sber', 'raw_tin']
+raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex']
 
 options = ChromeOptions()
 
@@ -126,7 +102,7 @@ class DatabaseManager:
     def __init__(self, conn):
         self.conn = conn
         self.cur = conn.cursor()
-        self.raw_tables = ['raw_vk', 'raw_sber', 'raw_tin']
+        self.raw_tables = raw_tables
         self.log = LoggingMixin().log
 
     def create_raw_tables(self):
@@ -172,7 +148,6 @@ class DatabaseManager:
     def create_core_fact_table(self):
         try:
             table_name = 'core_fact_table'
-            # self.cur = conn.cursor()
             drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
             self.cur.execute(drop_table_query)
             self.log.info(f'Удалена таблица {table_name}')
@@ -337,7 +312,7 @@ class VKJobParser(BaseJobParser):
         try:
             if not self.df.empty:
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-                table_name = 'raw_vk'
+                table_name = raw_tables[0]
                 # данные, которые вставляются в таблицу PosqtgreSQL
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 # формируем строку запроса с плейсхолдерами для значений
@@ -466,7 +441,7 @@ class SberJobParser(BaseJobParser):
             if not self.df.empty:
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
-                table_name = 'raw_sber'
+                table_name = raw_tables[1]
                 # данные, которые вставляются в таблицу PosqtgreSQL
                 data = [tuple(x) for x in self.df.to_records(index=False)]
 
@@ -589,7 +564,7 @@ class TinkoffJobParser(BaseJobParser):
         try:
             if not self.df.empty:
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-                table_name = 'raw_tin'
+                table_name = raw_tables[2]
                 data = [tuple(x) for x in self.df.to_records(index=False)]
 
                 query = f"INSERT INTO {table_name} (link, vacancy_name, locat_work, level, company, source_vac, " \

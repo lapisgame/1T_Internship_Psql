@@ -3,9 +3,9 @@
     "conn_id": "psql_connect",
     "conn_type": "Postgres",
     "host": "146.120.224.155",
-    "schema": "vacancy",
-    "login": "admin",
+    "database": "vacancy",
+    "user": "admin",
     "password": "password",
-    "port": "10121"
+    "port": 10121
   }
 }
