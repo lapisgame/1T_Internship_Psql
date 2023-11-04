@@ -2,6 +2,7 @@ import dateparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
 import psycopg2
+from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
 from airflow import DAG
@@ -48,9 +49,9 @@ conn_params = {
 
 # Create the connection
 client = models.Connection(**conn_params)
-# session = settings.Session()
-# session.add(conn)
-# session.commit()
+session = settings.Session()
+session.add(client)
+session.commit()
 
 # Variables settings
 # Загружаем переменные из JSON файла
