@@ -5,6 +5,8 @@ import psycopg2
 from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
+from airflow import settings
+from sqlalchemy import create_engine
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
 from airflow.operators.python_operator import PythonOperator
@@ -47,11 +49,16 @@ conn_params = {
     'port': 10121,
 }
 
-# Create the connection
-client = models.Connection(**conn_params)
-session = settings.Session()
-session.add(client)
-session.commit()
+# Создаем клиент соединения
+client = settings.engine_from_config(conn_params)
+# Получаем соединение из клиента
+conn = client.connect()
+
+# # Create the connection
+# conn = models.Connection(**conn_params)
+# session = settings.Session()
+# session.add(conn)
+# session.commit()
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -66,7 +73,7 @@ if not Variable.get("shares_variable", default_var=None):
 dag_variables = Variable.get("shares_variable", deserialize_json=True)
 
 
-# client = psycopg2.connect(
+# conn = psycopg2.connect(
 #     host=conn_config['host'],
 #     port=conn_config['port'],
 #     user=conn_config['user'],
@@ -114,9 +121,9 @@ initial_dag = DAG(dag_id='initial_dag',
                 )
 
 class DatabaseManager:
-    def __init__(self, client):
-        self.client = client
-        self.cur = client.cursor()
+    def __init__(self, conn):
+        self.conn = conn
+        self.cur = conn.cursor()
         self.raw_tables = ['raw_vk', 'raw_sber', 'raw_tin']
         self.log = LoggingMixin().log
 
@@ -154,16 +161,16 @@ class DatabaseManager:
                 );
                 """
                 self.cur.execute(create_table_query)
-                self.client.commit()
+                self.conn.commit()
                 self.log.info(f'Таблица {table_name} создана в базе данных.')
             except Exception as e:
                 self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
-                self.client.rollback()
+                self.conn.rollback()
 
     def create_core_fact_table(self):
         try:
             table_name = 'core_fact_table'
-            # self.cur = client.cursor()
+            # self.cur = conn.cursor()
             drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
             self.cur.execute(drop_table_query)
             self.log.info(f'Удалена таблица {table_name}')
@@ -185,17 +192,17 @@ class DatabaseManager:
             FROM raw_tin);
             """
             self.cur.execute(create_core_fact_table)
-            self.client.commit()
+            self.conn.commit()
             # закрываем курсор и соединение с базой данных
             self.cur.close()
-            self.client.close()
+            self.conn.close()
             self.log.info(f'Таблица {table_name} создана в базе данных.')
         except Exception as e:
             self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
-            self.client.rollback()
+            self.conn.rollback()
 
 class BaseJobParser:
-    def __init__(self, url, profs, log, client):
+    def __init__(self, url, profs, log, conn):
         self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
         self.url = url
         self.browser.get(self.url)
@@ -204,7 +211,7 @@ class BaseJobParser:
         time.sleep(2)
         self.profs = profs
         self.log = log
-        self.client = client
+        self.conn = conn
 
     def scroll_down_page(self, page_height=0):
         """
@@ -243,7 +250,7 @@ class VKJobParser(BaseJobParser):
         """
         Метод для нахождения вакансий с VK
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
         self.df = pd.DataFrame(columns=['link', 'vacancy_name', 'locat_work', 'company', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
@@ -314,7 +321,7 @@ class VKJobParser(BaseJobParser):
         """
         Метод для сохранения данных в базу данных vk
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
@@ -339,10 +346,10 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Данные для вставки: {data}")
                 execute_values(self.cur, query, data)
 
-                self.client.commit()
+                self.conn.commit()
                 # закрываем курсор и соединение с базой данных
                 self.cur.close()
-                self.client.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
                               + str(len(self.df)) + "\n")
@@ -359,7 +366,7 @@ class SberJobParser(BaseJobParser):
         """
         Метод для нахождения вакансий с Sberbank
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
         self.df = pd.DataFrame(columns=['link', 'vacancy_name', 'locat_work', 'company', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
@@ -440,7 +447,7 @@ class SberJobParser(BaseJobParser):
         """
         Метод для сохранения данных в базу данных Sber
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
@@ -468,10 +475,10 @@ class SberJobParser(BaseJobParser):
                 self.log.info(f"Данные для вставки: {data}")
                 execute_values(self.cur, query, data)
 
-                self.client.commit()
+                self.conn.commit()
                 # закрываем курсор и соединение с базой данных
                 self.cur.close()
-                self.client.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
                               + str(len(self.df)) + "\n")
@@ -493,7 +500,7 @@ class TinkoffJobParser(BaseJobParser):
         """
         Метод для нахождения вакансий с Tinkoff
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
 
         self.df = pd.DataFrame(
             columns=['link', 'vacancy_name', 'locat_work', 'level', 'company', 'source_vac', 'date_created',
@@ -564,7 +571,7 @@ class TinkoffJobParser(BaseJobParser):
         """
         Метод для сохранения данных в базу данных Tinkoff
         """
-        self.cur = self.client.cursor()
+        self.cur = self.conn.cursor()
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
@@ -590,10 +597,10 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f"Данные для вставки: {data}")
                 execute_values(self.cur, query, data)
 
-                self.client.commit()
+                self.conn.commit()
                 # закрываем курсор и соединение с базой данных
                 self.cur.close()
-                self.client.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
                               + str(len(self.df)) + "\n")
@@ -602,7 +609,7 @@ class TinkoffJobParser(BaseJobParser):
             self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
 
 
-db_manager = DatabaseManager(client=client)
+db_manager = DatabaseManager(conn=conn)
 
 
 def run_vk_parser(**context):
@@ -612,7 +619,7 @@ def run_vk_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера ВК')
     try:
-        parser = VKJobParser(url_vk, profs, log, client)
+        parser = VKJobParser(url_vk, profs, log, conn)
         parser.find_vacancies()
         parser.find_vacancies_description()
         parser.save_df()
@@ -628,7 +635,7 @@ def run_sber_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Сбербанка')
     try:
-        parser = SberJobParser(url_sber, profs, log, client)
+        parser = SberJobParser(url_sber, profs, log, conn)
         parser.find_vacancies()
         parser.find_vacancies_description()
         parser.save_df()
@@ -644,7 +651,7 @@ def run_tin_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Тинькофф')
     try:
-        parser = TinkoffJobParser(url_tin, profs, log, client)
+        parser = TinkoffJobParser(url_tin, profs, log, conn)
         parser.open_all_pages()
         parser.all_vacs_parser()
         parser.find_vacancies_description()
