@@ -591,191 +591,191 @@ class TinkoffJobParser(BaseJobParser):
             self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
 
 
-# class YandJobParser(BaseJobParser):
-#     def find_vacancies(self):
-#         print('Старт парсинга вакансий Yandex')
-#         self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'company', 'tags', 'source_vac', 'date_created',
-#                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
-#         self.log.info("Создан DataFrame для записи вакансий")
-#         self.browser.implicitly_wait(3)
-#         # Поиск и запись вакансий на поисковой странице
-#         for prof in self.profs:
-#             text_str = self.url + '?text=' + str(prof['fullName'].replace(' ', '+')).lower()
-#             self.browser.get(text_str)
-#             self.browser.maximize_window()
-#             self.browser.delete_all_cookies()
-#             # """
-#             # """
-#             # input_str = self.browser.find_element(By.XPATH, '/html/body/div[3]/div/div/span/section/div[1]'
-#             #                                                 '/div[1]/div[2]/section/div/div/div/div[3]/div'
-#             #                                                 '/div[2]/div/div/span/input')
-#             #
-#             # input_str.send_keys(f"{prof}")
-#             # click_button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div/div/span/section/div[1]'
-#             #                                                    '/div[1]/div[2]/section/div/div/div/div[3]/div'
-#             #                                                    '/div[2]/div/button')
-#             # click_button.click()
-#             # time.sleep(3)
-#             # """
-#             # """
-#             self.browser.implicitly_wait(10)
-#
-#             # Прокрутка вниз до конца страницы
-#             self.scroll_down_page()
-#
-#             try:
-#                 # Подсчет количества предложений
-#                 self.browser.implicitly_wait(60)
-#                 vacs_bar = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancies-list')
-#                 vacs = vacs_bar.find_elements(By.CLASS_NAME, 'lc-jobs-vacancy-card')
-#                 self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
-#                 self.log.info(f"Количество: " + str(len(vacs)) + "\n")
-#
-#                 for vac in vacs:
-#                     try:
-#                         vac_info = {}
-#                         find_vacancy_id = vac.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-card__vacancy_id')
-#                         vac_info['vacancy_id'] = find_vacancy_id.get_attribute('href')
-#                         vac_info['company'] = vac.find_elements(By.CLASS_NAME, 'lc-styled-text')[0].text
-#                         self.df.loc[len(self.df)] = vac_info
-#
-#                     except Exception as e:
-#                         self.log.error(f"Произошла ошибка: {e}")
-#                         continue
-#
-#             except Exception as e:
-#                 self.log.error(f"Ошибка {e}")
-#
-#         self.df = self.df.drop_duplicates()
-#         self.df['date_created'] = datetime.now().date()
-#         self.df['date_of_download'] = datetime.now().date()
-#         self.df['source_vac'] = url_yand
-#         self.df['description'] = None
-#         self.df['status'] = 'existing'
-#         self.df['actual'] = 1
-#         self.df['version_vac'] = 1
-#
-#     def find_vacancies_description(self):
-#         """
-#         Метод для парсинга описаний вакансий для YandJobParser.
-#         """
-#         if not self.df.empty:
-#             for descr in self.df.index:
-#                 try:
-#                     link = self.df.loc[descr, 'vacancy_id']
-#                     self.browser.get(link)
-#                     self.browser.delete_all_cookies()
-#                     self.browser.implicitly_wait(5)
-#                     if isinstance(self, YandJobParser):
-#                         desc = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-mvp__description').text
-#                         desc = desc.replace(';', '')
-#                         self.df.loc[descr, 'description'] = str(desc)
-#                         tags = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-tags-block').text
-#                         self.df.loc[descr, 'tags'] = str(desc)
-#                         header = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-content-header')
-#                         name = header.find_element(By.CLASS_NAME, 'lc-styled-text__text').text
-#                         self.df.loc[descr, 'vacancy_name'] = str(desc)
-#
-#                 except Exception as e:
-#                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
-#                     pass
-#         else:
-#             self.log.info(f"Нет вакансий для парсинга")
-#
-#
-#     def save_df(self):
-#         """
-#         Метод для сохранения данных в базу данных Yandex
-#         """
-#         self.cur = self.conn.cursor()
-#
-#         def addapt_numpy_float64(numpy_float64):
-#             return AsIs(numpy_float64)
-#
-#         def addapt_numpy_int64(numpy_int64):
-#             return AsIs(numpy_int64)
-#
-#         register_adapter(np.float64, addapt_numpy_float64)
-#         register_adapter(np.int64, addapt_numpy_int64)
-#
-#         try:
-#             if not self.df.empty:
-#                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-#                 table_name = raw_tables[3]
-#                 # данные, которые вставляются в таблицу PosqtgreSQL
-#                 data = [tuple(x) for x in self.df.to_records(index=False)]
-#                 # формируем строку запроса с плейсхолдерами для значений
-#                 query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, tags, source_vac, " \
-#                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
-#                 # исполняем запрос с использованием execute_values
-#                 self.log.info(f"Запрос вставки данных: {query}")
-#                 self.log.info(f"Данные для вставки: {data}")
-#                 execute_values(self.cur, query, data)
-#
-#                 self.conn.commit()
-#                 # закрываем курсор и соединение с базой данных
-#                 self.cur.close()
-#                 self.conn.close()
-#                 # логируем количество обработанных вакансий
-#                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
-#                               + str(len(self.df)) + "\n")
-#
-#         except Exception as e:
-#             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
-#             raise
+class YandJobParser(BaseJobParser):
+    def find_vacancies(self):
+        print('Старт парсинга вакансий Yandex')
+        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'company', 'tags', 'source_vac', 'date_created',
+                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
+        self.log.info("Создан DataFrame для записи вакансий")
+        self.browser.implicitly_wait(3)
+        # Поиск и запись вакансий на поисковой странице
+        for prof in self.profs:
+            text_str = self.url + '?text=' + str(prof['fullName'].replace(' ', '+')).lower()
+            self.browser.get(text_str)
+            self.browser.maximize_window()
+            self.browser.delete_all_cookies()
+            # """
+            # """
+            # input_str = self.browser.find_element(By.XPATH, '/html/body/div[3]/div/div/span/section/div[1]'
+            #                                                 '/div[1]/div[2]/section/div/div/div/div[3]/div'
+            #                                                 '/div[2]/div/div/span/input')
+            #
+            # input_str.send_keys(f"{prof}")
+            # click_button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div/div/span/section/div[1]'
+            #                                                    '/div[1]/div[2]/section/div/div/div/div[3]/div'
+            #                                                    '/div[2]/div/button')
+            # click_button.click()
+            # time.sleep(3)
+            # """
+            # """
+            self.browser.implicitly_wait(10)
+
+            # Прокрутка вниз до конца страницы
+            self.scroll_down_page()
+
+            try:
+                # Подсчет количества предложений
+                self.browser.implicitly_wait(60)
+                vacs_bar = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancies-list')
+                vacs = vacs_bar.find_elements(By.CLASS_NAME, 'lc-jobs-vacancy-card')
+                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
+                self.log.info(f"Количество: " + str(len(vacs)) + "\n")
+
+                for vac in vacs:
+                    try:
+                        vac_info = {}
+                        find_vacancy_id = vac.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-card__vacancy_id')
+                        vac_info['vacancy_id'] = find_vacancy_id.get_attribute('href')
+                        vac_info['company'] = vac.find_elements(By.CLASS_NAME, 'lc-styled-text')[0].text
+                        self.df.loc[len(self.df)] = vac_info
+
+                    except Exception as e:
+                        self.log.error(f"Произошла ошибка: {e}")
+                        continue
+
+            except Exception as e:
+                self.log.error(f"Ошибка {e}")
+
+        self.df = self.df.drop_duplicates()
+        self.df['date_created'] = datetime.now().date()
+        self.df['date_of_download'] = datetime.now().date()
+        self.df['source_vac'] = url_yand
+        self.df['description'] = None
+        self.df['status'] = 'existing'
+        self.df['actual'] = 1
+        self.df['version_vac'] = 1
+
+    def find_vacancies_description(self):
+        """
+        Метод для парсинга описаний вакансий для YandJobParser.
+        """
+        if not self.df.empty:
+            for descr in self.df.index:
+                try:
+                    link = self.df.loc[descr, 'vacancy_id']
+                    self.browser.get(link)
+                    self.browser.delete_all_cookies()
+                    self.browser.implicitly_wait(5)
+                    if isinstance(self, YandJobParser):
+                        desc = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-mvp__description').text
+                        desc = desc.replace(';', '')
+                        self.df.loc[descr, 'description'] = str(desc)
+                        tags = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-tags-block').text
+                        self.df.loc[descr, 'tags'] = str(desc)
+                        header = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-content-header')
+                        name = header.find_element(By.CLASS_NAME, 'lc-styled-text__text').text
+                        self.df.loc[descr, 'vacancy_name'] = str(desc)
+
+                except Exception as e:
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
+                    pass
+        else:
+            self.log.info(f"Нет вакансий для парсинга")
+
+
+    def save_df(self):
+        """
+        Метод для сохранения данных в базу данных Yandex
+        """
+        self.cur = self.conn.cursor()
+
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
+        try:
+            if not self.df.empty:
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                table_name = raw_tables[3]
+                # данные, которые вставляются в таблицу PosqtgreSQL
+                data = [tuple(x) for x in self.df.to_records(index=False)]
+                # формируем строку запроса с плейсхолдерами для значений
+                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, tags, source_vac, " \
+                        f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
+                # исполняем запрос с использованием execute_values
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Данные для вставки: {data}")
+                execute_values(self.cur, query, data)
+
+                self.conn.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.conn.close()
+                # логируем количество обработанных вакансий
+                self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
+                              + str(len(self.df)) + "\n")
+
+        except Exception as e:
+            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
+            raise
 
 
 db_manager = DatabaseManager(conn=conn)
 
 
-def run_vk_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий VK
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера ВК')
-    try:
-        parser = VKJobParser(url_vk, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер ВК успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера ВК: {e}')
-
-def run_sber_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Sber
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Сбербанка')
-    try:
-        parser = SberJobParser(url_sber, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Сбербанка успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
-
-def run_tin_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Tinkoff
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Тинькофф')
-    try:
-        parser = TinkoffJobParser(url_tin, profs, log, conn)
-        parser.open_all_pages()
-        parser.all_vacs_parser()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Тинькофф успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
+# def run_vk_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий VK
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера ВК')
+#     try:
+#         parser = VKJobParser(url_vk, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер ВК успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера ВК: {e}')
+#
+# def run_sber_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Sber
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Сбербанка')
+#     try:
+#         parser = SberJobParser(url_sber, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Сбербанка успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
+#
+# def run_tin_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Tinkoff
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Тинькофф')
+#     try:
+#         parser = TinkoffJobParser(url_tin, profs, log, conn)
+#         parser.open_all_pages()
+#         parser.all_vacs_parser()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Тинькофф успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
 
 def run_yand_parser(**context):
@@ -799,7 +799,6 @@ hello_bash_task = BashOperator(
     task_id='hello_task',
     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
-
 # Определение задачи
 create_raw_tables = PythonOperator(
     task_id='create_raw_tables',
@@ -808,33 +807,33 @@ create_raw_tables = PythonOperator(
     dag=initial_dag
 )
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=initial_dag
-)
-
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=initial_dag
-)
-
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=initial_dag
-)
-
-# parse_yand = PythonOperator(
-#     task_id='parse_yand',
-#     python_callable=run_yand_parser,
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
 #     provide_context=True,
 #     dag=initial_dag
 # )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+
+parse_yand = PythonOperator(
+    task_id='parse_yand',
+    python_callable=run_yand_parser,
+    provide_context=True,
+    dag=initial_dag
+)
 
 create_core_fact_table = PythonOperator(
     task_id='create_core_fact_table',
@@ -847,8 +846,8 @@ end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> \
-create_core_fact_table >> end_task
-
-# hello_bash_task >> create_raw_tables >> parse_yand >> \
+# hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
 # create_core_fact_table >> end_task
+
+hello_bash_task >> create_raw_tables >> parse_yand >> \
+create_core_fact_table >> end_task
