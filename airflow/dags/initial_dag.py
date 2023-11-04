@@ -83,7 +83,7 @@ raw_tables = ['raw_vk', 'raw_sber', 'raw_tin']
 
 options = ChromeOptions()
 
-profs = dag_variables['professions']
+profs = dag_variables.get('professions')
 
 logging_level = os.environ.get('LOGGING_LEVEL', 'DEBUG').upper()
 logging.basicConfig(level=logging_level)
