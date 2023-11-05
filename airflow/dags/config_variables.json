@@ -15,12 +15,16 @@
     {"fullName": "Business analyst"},
     {"fullName": "Project manager"},
     {"fullName": "Product manager"},
+    {"fullName": "Frontend developer"},
+    {"fullName": "Backend developer"},
+    {"fullName": "Fullstack developer"},
     {"fullName": "Front-end developer"},
     {"fullName": "Back-end developer"},
     {"fullName": "Full-stack developer"},
     {"fullName": "digital marketing specialist"},
     {"fullName": "Web designer"},
-    {"fullName": "UI/UX specialist"},
+    {"fullName": "UI/UX"},
+    {"fullName": "UX/UI"},
     {"fullName": "QA engineer"},
     {"fullName": "DevOps"}
   ]
