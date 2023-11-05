@@ -2,21 +2,17 @@ import dateparser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import csv, json
 import psycopg2
-from functools import partial
 from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
 from airflow import settings
 from sqlalchemy import create_engine
 from airflow import DAG
-import airflow
 from selenium.common.exceptions import NoSuchElementException
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
-# from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.subdag import SubDagOperator
 import logging
 from logging import handlers
 from airflow import models
@@ -30,7 +26,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 import pandas as pd
 import numpy as np
 import os
@@ -95,54 +90,13 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# # # Создаем DAG ручного запуска (инициализирующий режим).
-# create_raw_tables_dag = DAG(
-#     dag_id='create_raw_tables_dag',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
-#
-# vk_dag = DAG(
-#     dag_id='vk_dag',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
-#
-# sber_dag = DAG(
-#     dag_id='sber_dag',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
-#
-# tinkoff_dag = DAG(
-#     dag_id='tinkoff_dag',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
-#
-# yandex_dag = DAG(
-#     dag_id='yandex_dag',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
-#
-# create_core_fact_table = DAG(
-#     dag_id='create_core_fact_table',
-#     tags=['admin_1T'],
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     default_args=default_args
-#     )
+# Создаем DAG ручного запуска (инициализирующий режим).
+initial_dag = DAG(dag_id='initial_dag',
+                tags=['admin_1T'],
+                start_date=datetime(2023, 10, 29),
+                schedule_interval=None,
+                default_args=default_args
+                )
 
 class DatabaseManager:
     def __init__(self, conn):
@@ -221,15 +175,13 @@ class DatabaseManager:
             """
             self.cur.execute(create_core_fact_table)
             self.conn.commit()
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
             self.log.info(f'Таблица {table_name} создана в базе данных.')
         except Exception as e:
             self.log.error(f'Ошибка при создании таблицы {table_name}: {e}')
             self.conn.rollback()
-
-        finally:
-            # закрываем курсор и соединение с базой данных
-            self.cur.close()
-            self.conn.close()
 
 class BaseJobParser:
     def __init__(self, url, profs, log, conn):
@@ -276,7 +228,6 @@ class VKJobParser(BaseJobParser):
     """
     Парсер вакансий с сайта VK, наследованный от BaseJobParser
     """
-
     def find_vacancies(self):
         """
         Метод для нахождения вакансий с VK
@@ -378,17 +329,15 @@ class VKJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
-
-        finally:
-            # закрываем курсор и соединение с базой данных
-            self.cur.close()
-            self.conn.close()
 
 class SberJobParser(BaseJobParser):
     """
@@ -510,17 +459,15 @@ class SberJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
                               + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при загрузке данных в raw-слой Sber {e}")
-
-        finally:
-            # закрываем курсор и соединение с базой данных
-            self.cur.close()
-            self.conn.close()
 
 
 class TinkoffJobParser(BaseJobParser):
@@ -635,16 +582,14 @@ class TinkoffJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
-
-        finally:
-            # закрываем курсор и соединение с базой данных
-            self.cur.close()
-            self.conn.close()
 
 
 class YandJobParser(BaseJobParser):
@@ -757,6 +702,9 @@ class YandJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
+                # закрываем курсор и соединение с базой данных
+                self.cur.close()
+                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
@@ -764,20 +712,6 @@ class YandJobParser(BaseJobParser):
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
 
-        finally:
-            # закрываем курсор и соединение с базой данных
-            self.cur.close()
-            self.conn.close()
-
-
-# Создание общего DAG-а
-init_raw_dag = DAG(
-    dag_id='init_raw_dag',
-    tags=['admin_1T'],
-    start_date=datetime(2023, 11, 4),
-    schedule_interval=None,
-    default_args=default_args
-)
 
 db_manager = DatabaseManager(conn=conn)
 
@@ -830,6 +764,7 @@ def run_tin_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
+
 def run_yand_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Yandex
@@ -846,243 +781,57 @@ def run_yand_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
-# Создание субдаг-ов
-subdags = ['create_raw_tables_dag', 'vk_dag', 'sber_dag', 'tinkoff_dag', 'yandex_dag', 'create_core_fact_table']
-subdag_operator_prev = None
 
-for subdag_id in subdags:
-    subdag = DAG(
-        dag_id=f'init_raw_dag.{subdag_id}',
-        tags=['admin_1T'],
-        start_date=datetime(2023, 11, 4),
-        schedule_interval=None,
-        default_args=default_args
-    )
+hello_bash_task = BashOperator(
+    task_id='hello_task',
+    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
-    subdag_operator = SubDagOperator(
-        task_id=subdag_id,
-        subdag=subdag,
-        dag=init_raw_dag,
-        retries=2,  # Количество попыток запуска
-        retry_delay=timedelta(minutes=1)  # Задержка между попытками
-    )
+# Определение задачи
+create_raw_tables = PythonOperator(
+    task_id='create_raw_tables',
+    python_callable=db_manager.create_raw_tables,
+    provide_context=True,
+    dag=initial_dag
+)
 
-    # Назначаем subdag каждому task из исходного кода
-    if subdag_id == 'create_raw_tables_dag':
-        create_raw_tables = PythonOperator(
-            task_id='create_raw_tables',
-            python_callable=db_manager.create_raw_tables,
-            provide_context=True,
-            dag=subdag
-        )
-    elif subdag_id == 'vk_dag':
-        parse_vkjobs = PythonOperator(
-            task_id='parse_vkjobs',
-            python_callable=run_vk_parser,
-            provide_context=True,
-            dag=subdag
-        )
-    elif subdag_id == 'sber_dag':
-        parse_sber = PythonOperator(
-            task_id='parse_sber',
-            python_callable=run_sber_parser,
-            provide_context=True,
-            dag=subdag
-        )
-    elif subdag_id == 'tinkoff_dag':
-        parse_tink = PythonOperator(
-            task_id='parse_tink',
-            python_callable=run_tin_parser,
-            provide_context=True,
-            dag=subdag
-        )
-    elif subdag_id == 'yandex_dag':
-        parse_yand = PythonOperator(
-            task_id='parse_yand',
-            python_callable=run_yand_parser,
-            provide_context=True,
-            dag=subdag
-        )
-    elif subdag_id == 'create_core_fact_table':
-        create_core_fact_table = PythonOperator(
-            task_id='create_core_fact_table',
-            python_callable=db_manager.create_core_fact_table,
-            provide_context=True,
-            dag=subdag
-        )
+parse_vkjobs = PythonOperator(
+    task_id='parse_vkjobs',
+    python_callable=run_vk_parser,
+    provide_context=True,
+    dag=initial_dag
+)
 
-    if subdag_operator_prev is not None:
-        subdag_operator_prev >> subdag_operator
+parse_sber = PythonOperator(
+    task_id='parse_sber',
+    python_callable=run_sber_parser,
+    provide_context=True,
+    dag=initial_dag
+)
 
-    subdag_operator_prev = subdag_operator
+parse_tink = PythonOperator(
+    task_id='parse_tink',
+    python_callable=run_tin_parser,
+    provide_context=True,
+    dag=initial_dag
+)
+
+parse_yand = PythonOperator(
+    task_id='parse_yand',
+    python_callable=run_yand_parser,
+    provide_context=True,
+    dag=initial_dag
+)
+
+create_core_fact_table = PythonOperator(
+    task_id='create_core_fact_table',
+    python_callable=db_manager.create_core_fact_table,
+    provide_context=True,
+    dag=initial_dag
+)
 
 end_task = DummyOperator(
     task_id="end_task"
 )
 
-subdags_dict = {
-    'create_raw_tables_dag': create_raw_tables,
-    'vk_dag': parse_vkjobs,
-    'sber_dag': parse_sber,
-    'tinkoff_dag': parse_tink,
-    'yandex_dag': parse_yand,
-    'create_core_fact_table': create_core_fact_table
-}
-
-# Назначаем end_task в качестве завершающей задачи
-for subdag_id in subdags:
-    subdag_operator = subdags_dict[subdag_id]
-    subdag_operator >> end_task
-
-##################################################################
-# # Определение функции on_subdag_failure
-# def on_subdag_failure(subdag_id, context):
-#     dag_id = context['dag'].dag_id
-#     dagrun_id = context['dag_run'].run_id
-#     execution_date = context['execution_date']
-#     TriggerDagRunOperator(
-#         dag_id=dag_id,
-#         run_id=dagrun_id,
-#         execution_date=execution_date,
-#         state=airflow.models.DagRunState.RUNNING,
-#         conf=context.get('conf'),
-#         external_trigger=True,
-#     )
-#
-# # Определение общего DAG
-# initial_dag = DAG(
-#     dag_id='initial_dag',
-#     description='Initial DAG',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# # Определение bash-таска
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
-#     dag=initial_dag,
-# )
-#
-# # Определение SubDag для создания таблиц
-# create_raw_tables_dag = DAG(
-#     dag_id='initial_dag.create_raw_tables',
-#     description='Create Raw Tables DAG',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# create_raw_tables = PythonOperator(
-#     task_id='create_raw_tables',
-#     python_callable=db_manager.create_raw_tables,
-#     provide_context=True,
-#     dag=create_raw_tables_dag,
-# )
-#
-# # Определение SubDag для vk_parser
-# vk_parser_dag = DAG(
-#     dag_id='initial_dag.vk_parser_subdag',
-#     description='vk_parser_subdag',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=vk_parser_dag,
-# )
-#
-# # Определение SubDag для sber_parser
-# sber_parser_dag = DAG(
-#     dag_id='initial_dag.sber_parser_subdag',
-#     description='sber_parser_subdag',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# parse_sber = PythonOperator(
-#     task_id='parse_sber',
-#     python_callable=run_sber_parser,
-#     provide_context=True,
-#     dag=sber_parser_dag,
-# )
-#
-# # Определение SubDag для tink_parser
-# tink_parser_dag = DAG(
-#     dag_id='initial_dag.tink_parser_subdag',
-#     description='Tink Parser DAG',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# parse_tink = PythonOperator(
-#     task_id='parse_tink',
-#     python_callable=run_tin_parser,
-#     provide_context=True,
-#     dag=tink_parser_dag,
-# )
-#
-# # Определение SubDag для yand_parser
-# yand_parser_dag = DAG(
-#     dag_id='initial_dag.yand_parser_subdag',
-#     description='Yandex Parser DAG',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# parse_yand = PythonOperator(
-#     task_id='parse_yand',
-#     python_callable=run_yand_parser,
-#     provide_context=True,
-#     dag=yand_parser_dag,
-# )
-#
-# # Определение SubDag для create_core_fact_table
-# create_core_fact_table_dag = DAG(
-#     dag_id='initial_dag.create_core_fact_table_subdag',
-#     description='create_core_fact_table_subdag',
-#     start_date=datetime(2023, 11, 4),
-#     schedule_interval=None,
-#     on_failure_callback=on_subdag_failure,
-# )
-#
-# create_core_fact_table = PythonOperator(
-#     task_id='create_core_fact_table',
-#     python_callable=db_manager.create_core_fact_table,
-#     provide_context=True,
-#     dag=create_core_fact_table_dag,
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task",
-#     dag=initial_dag,
-# )
-#
-# # Установка связей между тасками
-# hello_bash_task >> create_raw_tables_dag >> vk_parser_dag >> sber_parser_dag >> tink_parser_dag >> yand_parser_dag >> \
-# create_core_fact_table_dag >> end_task
-#
-# # Возврат общего DAG
-# dag = initial_dag
-#
-# # # Установка связей между тасками
-# # hello_bash_task >> \
-# # SubDagOperator(subdag=create_raw_tables_dag, task_id='create_raw_tables', dag=initial_dag) >> \
-# # SubDagOperator(subdag=vk_parser_dag, task_id='vk_parser_subdag', dag=initial_dag) >> \
-# # SubDagOperator(subdag=sber_parser_dag, task_id='sber_parser_subdag', dag=initial_dag) >> \
-# # SubDagOperator(subdag=tink_parser_dag, task_id='tink_parser_subdag', dag=initial_dag) >> \
-# # SubDagOperator(subdag=yand_parser_dag, task_id='yand_parser_subdag', dag=initial_dag) >> \
-# # SubDagOperator(subdag=create_core_fact_table_dag, task_id='create_core_fact_table_subdag', dag=initial_dag) >> \
-# # end_task
-#
-# # # Возврат общего DAG
-# # dag = initial_dag
-
+hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
+create_core_fact_table >> end_task
