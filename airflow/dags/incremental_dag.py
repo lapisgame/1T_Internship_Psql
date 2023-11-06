@@ -206,12 +206,15 @@ class VKJobParser(BaseJobParser):
                 rows_to_delete = []
 
                 if rows_in_db:
-                    for row in rows_in_db:
-                        for index, df_row in self.df.iterrows():
-                            if row[0] == df_row['vacancy_id'] and row[1] == df_row['vacancy_name'] and \
-                                    row[2] == df_row['towns'] and row[3] == df_row['company']:
-                                rows_to_delete.append(index)
+                    for row_db in rows_in_db:
+                        for index, row_df in self.df.iterrows():
+                            if row_db[0] == row_df['vacancy_id']:
+                                if (row_db[1] == row_df['vacancy_name'] and
+                                        row_db[2] == row_df['towns'] and
+                                        row_db[3] == row_df['company']):
+                                    rows_to_delete.append(index)
                 self.df = self.df.drop(rows_to_delete)  # удаляем строки из self.df
+
                 self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
                 self.cur.close()
         except Exception as e:
