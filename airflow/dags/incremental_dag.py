@@ -29,7 +29,6 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 import pandas as pd
 import numpy as np
 import os
-
 # Connections settings
 # Загружаем данные подключений из JSON файла
 with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
@@ -90,11 +89,12 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# Создаем DAG ручного запуска (инициализирующий режим).
-updated_raw_dag = DAG(dag_id='updated_raw_dag',
+
+# Создаем DAG для автоматического запуска каждые 6 часов
+updated_raw_dag=DAG(dag_id='updated_raw_dag',
                 tags=['admin_1T'],
-                start_date=datetime(2023, 10, 29),
-                schedule_interval=None,
+                start_date=datetime(2023, 11, 5),
+                schedule_interval='0 */6 * * *',
                 default_args=default_args
                 )
 
@@ -147,196 +147,226 @@ class VKJobParser(BaseJobParser):
         """
         Метод для нахождения вакансий с VK
         """
+        self.df = pd.DataFrame(
+            columns=['vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
+                     'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
+                     'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac',
+                     'actual'])
+        self.log.info("Создан DataFrame для записи вакансий")
+        self.browser.implicitly_wait(3)
+        # Поиск и запись вакансий на поисковой странице
+        for prof in self.profs:
+            input_button = self.browser.find_element(By.XPATH,
+                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
+            input_button.send_keys(prof['fullName'])
+            click_button = self.browser.find_element(By.XPATH,
+                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/button')
+            click_button.click()
+            time.sleep(5)
+
+            # Прокрутка вниз до конца страницы
+            self.scroll_down_page()
+
+            try:
+                vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
+                vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
+                vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
+                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
+                self.log.info(f"Количество: " + str(len(vacs)) + "\n")
+
+                for vac in vacs:
+                    vac_info = {}
+                    vac_info['vacancy_id'] = str(vac.get_attribute('href'))
+                    vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
+                    vac_info['towns'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
+                    vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
+                    self.df.loc[len(self.df)] = vac_info
+
+            except Exception as e:
+                self.log.error(f"Произошла ошибка: {e}")
+                input_button.clear()
+
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+        self.df['date_created'] = datetime.now().date()
+        self.df['date_of_download'] = datetime.now().date()
+        self.df['source_vac'] = url_vk
+        self.df['status'] = 'existing'
+        self.df['version_vac'] = 1
+        self.df['actual'] = 1
+
+    def find_values_in_db(self):
+        """
+        Метод поиска измененных вакансий VKJobParser до парсинга описаний.
+        """
         try:
-            self.df = pd.DataFrame(columns=['link', 'name', 'location', 'level', 'company', 'salary', 'description',
-                                            'date_created', 'date_of_download', 'status', 'date_closed',
-                                            'version', 'sign'])
-            self.log.info('Старт парсинга вакансий')
-            self.browser.implicitly_wait(3)
-            # Поиск и запись вакансий на поисковой странице
-            for prof in self.profs:
-                input_button = self.browser.find_element(By.XPATH,
-                                        '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
-                input_button.send_keys(prof['fullName'])
-                click_button = self.browser.find_element(By.XPATH,
-                                        '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/button')
-                click_button.click()
-                time.sleep(5)
+            if not self.df.empty:
+                self.cur = self.conn.cursor()
+                table_name = raw_tables[0]
+                query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \
+                        f"WHERE version = (SELECT max(version_vac) FROM {table_name})" \
+                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1 "
+                self.cur.execute(query)
+                db_data = self.cur.fetchall()
 
-                # Прокрутка вниз до конца страницы
-                self.scroll_down_page()
-
-                try:
-                    vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
-                    vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
-                    vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
-                    self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
-                    self.log.info(f"Количество: " + str(len(vacs)) + "\n")
-
-                    for vac in vacs:
-                        vac_info = {}
-                        vac_info['link'] = str(vac.get_attribute('href'))
-                        vac_info['name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
-                        vac_info['location'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
-                        vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
-                        self.df.loc[len(self.df)] = vac_info
-
-                except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}")
-                    input_button.clear()
-
-            self.df = self.df.drop_duplicates()
-            self.df['date_created'] = datetime.now().date()
-            self.df['date_of_download'] = datetime.now().date()
-            self.df['level'] = None
-            self.df['status'] = 'existing'
-            self.df['version'] = 1
-            self.df['sign'] = 1
-            log.info(f'Всего вакансий после удаления дубликатов: {len(self.df)}.')
+                # Сравнение данных из db psql и self.df
+                for db_row in db_data:
+                    vacancy_id_db, vacancy_name_db, towns_db, company_db = db_row
+                    self.df = self.df.loc[
+                        ~(self.df['vacancy_id'] == vacancy_id_db) &
+                        ~(self.df['vacancy_name'] == vacancy_name_db) &
+                        ~(self.df['towns'] == towns_db) &
+                        ~(self.df['company'] == company_db)
+                        ]
+                self.cur.close()
         except Exception as e:
-            self.log.error(f"Ошибка при выполнении функции 'find_vacancies': {e}")
-            raise
+            self.log.error(f"Произошла ошибка: {e}")
 
     def find_vacancies_description(self):
         """
         Метод для парсинга описаний вакансий для VKJobParser.
         """
-        try:
-            if not self.df.empty:
-                self.log.info(f"Старт парсинга описаний вакансий")
-                self.df['description'] = None
-                for descr in self.df.index:
-                    try:
-                        link = self.df.loc[descr, 'link']
-                        self.browser.get(link)
-                        self.browser.delete_all_cookies()
-                        time.sleep(3)
-                        desc = self.browser.find_element(By.CLASS_NAME, 'section').text
-                        try:
-                            self.df.at[descr, 'description'] = str(desc).replace(';', '')
-                        except AttributeError as ae:
-                            self.log.error(f'Error when trying to encode: {ae}, desc type: {type(desc)}, value: {desc}')
-                            raise ae
-                    except Exception as e:
-                        self.log.error(f"Ошибка при обработке описаний вакансий: {e}, ссылка "
-                                       f"{self.df.loc[descr, 'link']}")
-            else:
-                self.log.info(f"Нет вакансий для парсинга")
+        if not self.df.empty:
+            self.log.info('Старт парсинга описаний вакансий')
+            for descr in self.df.index:
+                try:
+                    vacancy_id = self.df.loc[descr, 'vacancy_id']
+                    self.browser.get(vacancy_id)
+                    self.browser.delete_all_cookies()
+                    time.sleep(3)
+                    desc = self.browser.find_element(By.CLASS_NAME, 'section').text
+                    desc = desc.replace(';', '')
+                    self.df.loc[descr, 'description'] = str(desc)
 
-        except Exception as e:
-            self.log.error(f"Ошибка при выполнении функции 'find_vacancies_description': {e}")
-            raise
+                except Exception as e:
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    pass
+        else:
+            self.log.info(f"Нет вакансий для парсинга")
+
 
     def save_df(self):
         """
         Метод для сохранения данных в базу данных vk
         """
-        table_name = 'raw_vk'
-        # Одинаковый участок кода для всех парсеров
-
         try:
-            self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-            log.info('Собираем вакансии для сравнения')
-            links_in_db = self.client.execute(f"SELECT link FROM {config['database']}.{table_name}")
-
-            links_in_db_set = set(link for link, in links_in_db)
-            links_in_parsed = set(self.df['link'])
-
             if not self.df.empty:
+                table_name = raw_tables[0]
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                log.info('Собираем вакансии для сравнения')
+                query = f"SELECT vacancy_id FROM {table_name} " \
+                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
+                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"
+
+                links_in_db = self.cur.execute(query)
+                links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
+                links_in_parsed = set(self.df['vacancy_id'])
+
                 links_to_close = links_in_db_set - links_in_parsed
 
                 dataframe_to_closed = pd.DataFrame(columns=[
-                    'link', 'name', 'location', 'level', 'company', 'salary', 'description',
-                    'date_created', 'date_of_download', 'status', 'date_closed', 'version', 'sign'
+                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
+                    'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
+                    'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac',
+                    'actual'
                 ])
 
                 dataframe_to_update = pd.DataFrame(columns=[
-                    'link', 'name', 'location', 'level', 'company', 'salary', 'description',
-                    'date_created', 'date_of_download', 'status', 'version', 'sign'
+                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
+                     'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
+                     'source_vac', 'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
 
-                log.info('Присваиваем статус "closed"')
+                log.info('Создаем датафрейм dataframe_to_closed')
                 for link in links_to_close:
-                    records_to_close = self.client.execute(
+                    records_to_close = self.cur.execute(
                         f"""
-                                    SELECT * FROM {config['database']}.{table_name}
-                                    WHERE link = '{link}' 
-                                    AND status != 'closed' 
-                                    AND sign != '-1' 
-                                    AND version = (
-                                        SELECT max(version) FROM {config['database']}.{table_name}
-                                        WHERE link = '{link}')
-                                    ORDER BY date_of_download DESC, version DESC LIMIT 1
-                                    """
-                    )
+                            SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
+                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
+                            date_of_download, status, date_closed, version_vac, actual 
+                            FROM {table_name}
+                            WHERE vacancy_id = '{link}' 
+                            AND status != 'closed' 
+                            AND actual != '-1' 
+                            AND version_vac = (
+                                SELECT max(version_vac) FROM {table_name}
+                                WHERE vacancy_id = '{link}')
+                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1
+                            """)
                     for record in records_to_close:
-                        data = {'link': link, 'name': record[1], 'location': record[2], 'level': record[3],
-                                'company': record[4], 'salary': record[5], 'description': record[6],
-                                'date_created': record[7],
+                        data = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2], 'level': record[3],
+                                'company': record[4], 'salary_from': record[5], 'salary_to': record[6],
+                                'exp_from': record[7], 'exp_to': record[8], 'description': record[9],
+                                'job_type': record[10], 'job_format': record[11], 'languages': record[12],
+                                'skills': record[13], 'source_vac': record[14], 'date_created': record[15],
                                 'date_of_download': datetime.now().date(), 'status': 'closed',
-                                'date_closed': datetime.now().date(), 'version': record[11] + 1, 'sign': -1}
+                                'date_closed': datetime.now().date(), 'version': record[19] + 1, 'sign': -1}
                         dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
+                        log.info('Датафрейм dataframe_to_closed создан')
 
                 log.info('Присваиваем статусы изменений')
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
-                    # self.log.info(f"Проверка типов данных в tuple: \n {[type(r) for r in record]}")
                     link = record[0]
-                    records_in_db = self.client.execute(
-                        f"SELECT * FROM {config['database']}.{table_name} WHERE link = '{link}' ORDER BY date_of_download "
-                        f"DESC, version DESC LIMIT 1")
+                    records_in_db = self.cur.execute(
+                        f"""SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
+                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
+                            date_of_download, status, version_vac, actual FROM {table_name} 
+                            WHERE vacancy_id = '{link}' ORDER BY date_of_download DESC, version DESC LIMIT 1
+                        """)
                     if records_in_db:
                         for old_record in records_in_db:
-                            old_status = old_record[-3]
-                            next_version = old_record[11] + 1
+                            old_status = old_record[-4]
+                            next_version = old_record[-2] + 1
                             if old_status == 'new':
-                                data = {'link': link, 'name': record[1], 'location': record[2], 'level': record[3],
-                                        'company': record[4], 'salary': record[5], 'description': record[6],
-                                        'date_created': old_record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'existing',
-                                        'version': next_version, 'sign': 1}
-                                dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data, index=[0])])
+                                data_new_vac = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'level': record[3], 'company': record[4], 'salary_from': record[5],
+                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
+                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
+                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
+                                        'date_created': old_record[15], 'date_of_download': datetime.now().date(),
+                                        'status': 'existing', 'version_vac': next_version, 'actual': 1}
+                                dataframe_to_update = pd.concat([dataframe_to_update,
+                                                                 pd.DataFrame(data_new_vac, index=[0])])
                             if old_status == 'existing':
                                 if old_record[1] == record[1] and old_record[2] == record[2] and old_record[3] == \
                                         record[3] and old_record[4] == record[4] and old_record[5] == record[5] and \
                                         old_record[6] == record[6]:
                                     pass
                                 else:
-                                    data = {'link': link, 'name': record[1], 'location': record[2], 'level': record[3],
-                                            'company': record[4], 'salary': record[5], 'description': record[6],
-                                            'date_created': old_record[7],
-                                            'date_of_download': datetime.now().date(), 'status': 'existing',
-                                            'version': next_version, 'sign': 1}
                                     dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data, index=[0])])
+                                        [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])])
 
                             if old_status == 'closed':
                                 if link in links_in_parsed:
-                                    data = {'link': link, 'name': record[1], 'location': record[2], 'level': record[3],
-                                            'company': record[4], 'salary': record[5], 'description': record[6],
-                                            'date_created': old_record[7],
-                                            'date_of_download': datetime.now().date(), 'status': 'new',
-                                            'version': next_version,
-                                            'sign': 1}
+                                    data_clos_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                            'level': record[3], 'company': record[4], 'salary_from': record[5],
+                                            'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
+                                            'description': record[9], 'job_type': record[10], 'job_format': record[11],
+                                            'languages': record[12], 'skills': record[13], 'source_vac': record[14],
+                                            'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                            'status': 'new', 'version_vac': next_version, 'actual': 1}
                                     dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data, index=[0])])
+                                        [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])])
                     else:
-                        data = {'link': link, 'name': record[1], 'location': record[2], 'level': record[3],
-                                'company': record[4], 'salary': record[5], 'description': record[6],
-                                'date_created': datetime.now().date(), 'date_of_download': datetime.now().date(),
-                                'status': 'new', 'version': 1, 'sign': 1}
-                        dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data, index=[0])])
+                        data_full_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'level': record[3], 'company': record[4], 'salary_from': record[5],
+                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
+                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
+                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
+                                        'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                        'status': 'new', 'version_vac': 1, 'actual': 1}
+                        dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data_full_new, index=[0])])
 
                 if not dataframe_to_closed.empty:
                     try:
                         data_tuples_to_insert = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
                         cols = ",".join(dataframe_to_closed.columns)
                         log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
-                        self.client.execute(f"INSERT INTO {config['database']}.{table_name} ({cols}) VALUES",
-                                            data_tuples_to_insert)
+                        self.cur.execute(
+                            f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
                         self.log.info(f"Количество отмеченных удаленными вакансий VK: "
-                                      f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name} в БД "
-                                      f"{config['database']}.")
+                                      f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name}.")
                     except Exception as e:
                         self.log.error(f"Ошибка при вставке записей из dataframe_to_closed: {e}")
                         self.log.error(f"Содержимое dataframe_to_closed: {dataframe_to_closed}")
@@ -351,11 +381,10 @@ class VKJobParser(BaseJobParser):
                         data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
                         cols = ",".join(dataframe_to_update.columns)
                         log.info(f'Обновляем таблицу {table_name}.')
-                        self.client.execute(f"INSERT INTO {config['database']}.{table_name} ({cols}) VALUES",
-                                            data_tuples_to_insert)
+                        self.cur.execute(
+                            f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
                         self.log.info(f"Количество измененных вакансий VK: "
-                                      f"{str(len(dataframe_to_update))}, обновлена таблица {table_name} в БД "
-                                      f"{config['database']}.")
+                                      f"{str(len(dataframe_to_update))}, обновлена таблица {table_name}.")
                     except Exception as e:
                         self.log.error(f"Ошибка при вставке записей из dataframe_to_update: {e}")
                         self.log.error(f"Содержимое dataframe_to_update: {dataframe_to_update.columns}")
@@ -366,55 +395,55 @@ class VKJobParser(BaseJobParser):
 
                 # Код для вставки новых записей в таблицу core_fact_table
 
-                dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'level', 'company', 'salary',
-                 'description', 'date_created', 'date_of_download', 'status']]
-
-                if not dataframe_to_upd_core.empty:
-                    try:
-                        log.info(f'Обновляем таблицу core_fact_table.')
-                        core_fact_data_tuples = [tuple(x) for x in dataframe_to_upd_core.to_records(index=False)]
-                        cols = ",".join(dataframe_to_upd_core.columns)
-                        self.client.execute(f"INSERT INTO {config['database']}.core_fact_table ({cols}) VALUES",
-                                            core_fact_data_tuples)
-                        self.log.info(f"Количество строк вставлено в core_fact_table: "
-                                      f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-                                      f"в БД {config['database']}.")
-
-                    except Exception as e:
-                        self.log.error(f"Ошибка при вставке записей из dataframe_to_upd_core: {e}")
-                        self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_upd_core.columns}")
-                        raise
-
-                else:
-                    self.log.info(
-                        f"Обновленных вакансий VK нет, таблица 'core_fact_table' в БД {config['database']} не изменена.")
-
-                dataframe_to_delete = dataframe_to_closed[['link', 'name', 'location', 'level', 'company', 'salary',
-                 'description', 'date_created', 'date_of_download', 'status']]
-                # Код для удаления "closed" записей в таблице core_fact_table
-                if not dataframe_to_delete.empty:
-                    try:
-                        log.info(f'Удаляем из core_fact_table закрытые вакансии.')
-                        dataframe_to_delete_tuples = [tuple(x) for x in
-                                                      dataframe_to_delete[['link']].to_records(index=False)]
-                        for to_delete in dataframe_to_delete_tuples:
-                            self.client.execute(
-                                f"DELETE FROM {config['database']}.core_fact_table WHERE link = '{to_delete[0]}'")
-                        self.log.info(f"Количество строк удалено из core_fact_table: "
-                                      f"{len(dataframe_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-                                      f"{config['database']}.")
-
-                    except Exception as e:
-                        self.log.error(f"Ошибка при вставке записей из dataframe_to_delete: {e}")
-                        self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_delete.columns}")
-                        raise
-
-                else:
-                    self.log.info(f"Таблица 'core_fact_table' не изменена, нет строк для удаления.")
-
-            else:
-                self.log.info(f"Не найдено вакансий при парсинге данных.")
-
+        #         dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'level', 'company', 'salary',
+        #          'description', 'date_created', 'date_of_download', 'status']]
+        #
+        #         if not dataframe_to_upd_core.empty:
+        #             try:
+        #                 log.info(f'Обновляем таблицу core_fact_table.')
+        #                 core_fact_data_tuples = [tuple(x) for x in dataframe_to_upd_core.to_records(index=False)]
+        #                 cols = ",".join(dataframe_to_upd_core.columns)
+        #                 self.client.execute(f"INSERT INTO {config['database']}.core_fact_table ({cols}) VALUES",
+        #                                     core_fact_data_tuples)
+        #                 self.log.info(f"Количество строк вставлено в core_fact_table: "
+        #                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
+        #                               f"в БД {config['database']}.")
+        #
+        #             except Exception as e:
+        #                 self.log.error(f"Ошибка при вставке записей из dataframe_to_upd_core: {e}")
+        #                 self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_upd_core.columns}")
+        #                 raise
+        #
+        #         else:
+        #             self.log.info(
+        #                 f"Обновленных вакансий VK нет, таблица 'core_fact_table' в БД {config['database']} не изменена.")
+        #
+        #         dataframe_to_delete = dataframe_to_closed[['link', 'name', 'location', 'level', 'company', 'salary',
+        #          'description', 'date_created', 'date_of_download', 'status']]
+        #         # Код для удаления "closed" записей в таблице core_fact_table
+        #         if not dataframe_to_delete.empty:
+        #             try:
+        #                 log.info(f'Удаляем из core_fact_table закрытые вакансии.')
+        #                 dataframe_to_delete_tuples = [tuple(x) for x in
+        #                                               dataframe_to_delete[['link']].to_records(index=False)]
+        #                 for to_delete in dataframe_to_delete_tuples:
+        #                     self.client.execute(
+        #                         f"DELETE FROM {config['database']}.core_fact_table WHERE link = '{to_delete[0]}'")
+        #                 self.log.info(f"Количество строк удалено из core_fact_table: "
+        #                               f"{len(dataframe_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+        #                               f"{config['database']}.")
+        #
+        #             except Exception as e:
+        #                 self.log.error(f"Ошибка при вставке записей из dataframe_to_delete: {e}")
+        #                 self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_delete.columns}")
+        #                 raise
+        #
+        #         else:
+        #             self.log.info(f"Таблица 'core_fact_table' не изменена, нет строк для удаления.")
+        #
+        #     else:
+        #         self.log.info(f"Не найдено вакансий при парсинге данных.")
+        #
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
@@ -1015,8 +1044,6 @@ class TinkoffJobParser(BaseJobParser):
             raise
 
 
-db_manager = DatabaseManager(client=client, database=config['database'])
-
 def run_vk_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий VK
@@ -1025,8 +1052,9 @@ def run_vk_parser(**context):
     log.info('Запуск парсера ВК')
     try:
         try:
-            parser = VKJobParser(url_vk, profs, log, client)
+            parser = VKJobParser(url_vk, profs, log, conn)
             parser.find_vacancies()
+            parser.find_values_in_db()
             parser.find_vacancies_description()
             parser.save_df()
             parser.stop()
@@ -1036,82 +1064,76 @@ def run_vk_parser(**context):
     except Exception as e_outer:
         log.error(f'Исключение в функции run_vk_parser: {e_outer}')
 
-def run_sber_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Sber
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Сбербанка')
-    try:
-        try:
-            parser = SberJobParser(url_sber, profs, log, client)
-            parser.find_vacancies()
-            parser.find_vacancies_description()
-            parser.save_df()
-            parser.stop()
-            log.info('Парсер Сбербанка успешно провел работу')
-        except Exception as e:
-            log.error(f'Ошибка во время работы парсера Сбер: {e}')
-    except Exception as e_outer:
-        log.error(f'Исключение в функции run_sber_parser: {e_outer}')
-
-def run_tin_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Tinkoff
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Тинькофф')
-    try:
-        try:
-            parser = TinkoffJobParser(url_vk, profs, log, client)
-            parser.open_all_pages()
-            parser.all_vacs_parser()
-            parser.find_vacancies_description()
-            parser.save_df()
-            parser.stop()
-            log.info('Парсер Тинькофф успешно провел работу')
-        except Exception as e:
-            log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
-    except Exception as e_outer:
-        log.error(f'Исключение в функции run_tin_parser: {e_outer}')
+# def run_sber_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Sber
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Сбербанка')
+#     try:
+#         try:
+#             parser = SberJobParser(url_sber, profs, log, client)
+#             parser.find_vacancies()
+#             parser.find_vacancies_description()
+#             parser.save_df()
+#             parser.stop()
+#             log.info('Парсер Сбербанка успешно провел работу')
+#         except Exception as e:
+#             log.error(f'Ошибка во время работы парсера Сбер: {e}')
+#     except Exception as e_outer:
+#         log.error(f'Исключение в функции run_sber_parser: {e_outer}')
+#
+# def run_tin_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Tinkoff
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Тинькофф')
+#     try:
+#         try:
+#             parser = TinkoffJobParser(url_vk, profs, log, client)
+#             parser.open_all_pages()
+#             parser.all_vacs_parser()
+#             parser.find_vacancies_description()
+#             parser.save_df()
+#             parser.stop()
+#             log.info('Парсер Тинькофф успешно провел работу')
+#         except Exception as e:
+#             log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
+#     except Exception as e_outer:
+#         log.error(f'Исключение в функции run_tin_parser: {e_outer}')
 
 
 hello_bash_task = BashOperator(
     task_id='hello_task',
     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
-# Определение задачи
-create_raw_tables = PythonOperator(
-    task_id='create_raw_tables',
-    python_callable=db_manager.create_raw_tables,
-    provide_context=True,
-    dag=daily_raw_dag
-)
 
 parse_vkjobs = PythonOperator(
     task_id='parse_vkjobs',
     python_callable=run_vk_parser,
     provide_context=True,
-    dag=daily_raw_dag
+    dag=updated_raw_dag
 )
-
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=daily_raw_dag
-)
-
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=daily_raw_dag
-)
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=daily_raw_dag
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=daily_raw_dag
+# )
 
 
 end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
+hello_bash_task >> parse_vkjobs >> end_task
+# hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> end_task

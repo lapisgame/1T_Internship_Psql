@@ -416,7 +416,7 @@ class SberJobParser(BaseJobParser):
                     vacancy_id = self.df.loc[descr, 'vacancy_id']
                     self.browser.get(vacancy_id)
                     self.browser.delete_all_cookies()
-                    self.browser.implicitly_wait(3)
+                    self.browser.implicitly_wait(10)
                     desc = self.browser.find_element(By.XPATH, '/html/body/div[1]/div/div[2]/div[3]'
                                                                '/div/div/div[3]/div[3]').text
                     desc = desc.replace(';', '')
