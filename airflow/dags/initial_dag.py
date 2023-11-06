@@ -65,7 +65,7 @@ url_yand = dag_variables.get('base_yand')
 url_vk = dag_variables.get('base_vk')
 url_tin = dag_variables.get('base_tin')
 
-raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex']
+raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex', 'del_vacancy_core']
 
 options = ChromeOptions()
 
@@ -329,15 +329,17 @@ class VKJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
-                # закрываем курсор и соединение с базой данных
-                self.cur.close()
-                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
+
+        finally:
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
 
 class SberJobParser(BaseJobParser):
     """
