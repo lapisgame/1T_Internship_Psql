@@ -199,8 +199,9 @@ class VKJobParser(BaseJobParser):
                 query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \
                         f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
                         f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1 "
-                self.cur.execute(query)
-                rows_in_db = self.cur.fetchall()  # получаем все строки из БД
+                # self.cur.execute(query)
+                # rows_in_db = self.cur.fetchall()  # получаем все строки из БД
+                rows_in_db = self.cur.execute(query)
 
                 # Создаем список для хранения индексов строк, которые нужно удалить из self.df
                 rows_to_delete = []
@@ -240,12 +241,6 @@ class VKJobParser(BaseJobParser):
                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
                     pass
 
-            self.df['date_created'] = datetime.now().date()
-            self.df['date_of_download'] = datetime.now().date()
-            self.df['source_vac'] = url_vk
-            self.df['status'] = 'existing'
-            self.df['version_vac'] = 1
-            self.df['actual'] = 1
         else:
             self.log.info(f"Нет вакансий для парсинга")
 
@@ -257,6 +252,13 @@ class VKJobParser(BaseJobParser):
         self.cur = self.conn.cursor()
         try:
             if not self.df.empty:
+                self.df['date_created'] = datetime.now().date()
+                self.df['date_of_download'] = datetime.now().date()
+                self.df['source_vac'] = url_vk
+                self.df['status'] = 'existing'
+                self.df['version_vac'] = 1
+                self.df['actual'] = 1
+
                 table_name = raw_tables[0]
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
                 log.info('Собираем вакансии для сравнения')
@@ -281,28 +283,36 @@ class VKJobParser(BaseJobParser):
                 ])
 
                 log.info('Создаем датафрейм dataframe_to_closed')
-                for link in links_to_close:
-                    records_to_close = self.cur.execute(
-                        f"""
-                            SELECT vacancy_id, vacancy_name, towns, company, description, source_vac, 
-                            date_created, date_of_download, status, version_vac, actual 
+                if links_to_close:
+                    for link in links_to_close:
+                        records_to_close = self.cur.execute(
+                            f"""
+                            SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
+                            date_created, date_of_download, status, version_vac, actual
                             FROM {table_name}
-                            WHERE vacancy_id = '{link}' 
-                            AND status != 'closed' 
-                            AND actual != '-1' 
+                            WHERE vacancy_id = '{link}'
+                            AND status != 'closed'
+                            AND actual != '-1'
                             AND version_vac = (
                                 SELECT max(version_vac) FROM {table_name}
-                                WHERE vacancy_id = '{link}')
+                                WHERE vacancy_id = '{link}'
+                            )
                             ORDER BY date_of_download DESC, version_vac DESC LIMIT 1
-                            """)
-                    for record in records_to_close:
-                        data = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                'company': record[3], 'description': record[4], 'source_vac': record[5],
-                                'date_created': record[6], 'date_of_download': datetime.now().date(),
-                                'status': 'closed', 'date_closed': datetime.now().date(),
-                                'version_vac': record[-2] + 1, 'sign': -1}
-                        dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
-                        log.info('Датафрейм dataframe_to_closed создан')
+                            """
+                        )
+                        if records_to_close:
+                            for record in records_to_close:
+                                data = {
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                    'company': record[3], 'description': record[4], 'source_vac': record[5],
+                                    'date_created': record[6], 'date_of_download': datetime.now().date(),
+                                    'status': 'closed', 'date_closed': datetime.now().date(),
+                                    'version_vac': record[-2] + 1, 'sign': -1
+                                }
+                                dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
+                                log.info('Датафрейм dataframe_to_closed создан')
+                else:
+                    log.info('Список links_to_close пуст')
 
                 log.info('Присваиваем статусы изменений')
                 data = [tuple(x) for x in self.df.to_records(index=False)]
