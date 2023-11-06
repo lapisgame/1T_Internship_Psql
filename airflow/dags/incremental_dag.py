@@ -240,6 +240,14 @@ class VKJobParser(BaseJobParser):
 
             self.df['level'] = None
             self.df['salary_from'] = None
+            self.df['salary_to'] = None
+            self.df['exp_from'] = None
+            self.df['exp_to'] = None
+            self.df['job_type'] = None
+            self.df['job_format'] = None
+            self.df['languages'] = None
+            self.df['skills'] = None
+            self.df['date_closed'] = None
             self.df['date_created'] = datetime.now().date()
             self.df['date_of_download'] = datetime.now().date()
             self.df['source_vac'] = url_vk
