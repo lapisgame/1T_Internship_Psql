@@ -271,12 +271,12 @@ class VKJobParser(BaseJobParser):
                 links_to_close = links_in_db_set - links_in_parsed
 
                 dataframe_to_closed = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
 
                 dataframe_to_update = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
 
@@ -284,8 +284,8 @@ class VKJobParser(BaseJobParser):
                 for link in links_to_close:
                     records_to_close = self.cur.execute(
                         f"""
-                            SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac, 
-                            date_created, date_of_download, status, date_closed, version_vac, actual 
+                            SELECT vacancy_id, vacancy_name, towns, company, description, source_vac, 
+                            date_created, date_of_download, status, version_vac, actual 
                             FROM {table_name}
                             WHERE vacancy_id = '{link}' 
                             AND status != 'closed' 
@@ -296,11 +296,11 @@ class VKJobParser(BaseJobParser):
                             ORDER BY date_of_download DESC, version_vac DESC LIMIT 1
                             """)
                     for record in records_to_close:
-                        data = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2], 'level': record[3],
-                                'company': record[4], 'description': record[5], 'source_vac': record[6],
-                                'date_created': record[7], 'date_of_download': datetime.now().date(),
+                        data = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                'company': record[3], 'description': record[4], 'source_vac': record[5],
+                                'date_created': record[6], 'date_of_download': datetime.now().date(),
                                 'status': 'closed', 'date_closed': datetime.now().date(),
-                                'version_vac': record[19] + 1, 'sign': -1}
+                                'version_vac': record[-2] + 1, 'sign': -1}
                         dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
                         log.info('Датафрейм dataframe_to_closed создан')
 
@@ -309,7 +309,7 @@ class VKJobParser(BaseJobParser):
                 for record in data:
                     link = record[0]
                     records_in_db = self.cur.execute(
-                        f"""SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac, 
+                        f"""SELECT vacancy_id, vacancy_name, towns, company, description, source_vac, 
                             date_created, date_of_download, status, version_vac, actual 
                             FROM {table_name} 
                             WHERE vacancy_id = '{link}' 
@@ -322,8 +322,8 @@ class VKJobParser(BaseJobParser):
                             next_version = old_record[-2] + 1
                             if old_status == 'new':
                                 data_new_vac = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': old_record[7],
+                                        'company': record[3], 'description': record[4],
+                                        'source_vac': record[5], 'date_created': old_record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'existing',
                                         'version_vac': next_version, 'actual': 1}
                                 dataframe_to_update = pd.concat([dataframe_to_update,
@@ -340,16 +340,16 @@ class VKJobParser(BaseJobParser):
                             if old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                            'level': record[3], 'company': record[4], 'description': record[5],
-                                            'source_vac': record[6], 'date_created': record[7],
+                                            'company': record[3], 'description': record[4],
+                                            'source_vac': record[5], 'date_created': record[6],
                                             'date_of_download': datetime.now().date(), 'status': 'new',
                                             'version_vac': next_version, 'actual': 1}
                                     dataframe_to_update = pd.concat(
                                         [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])])
                     else:
                         data_full_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                         'source_vac': record[6], 'date_created': record[7],
+                                         'company': record[3], 'description': record[4],
+                                         'source_vac': record[5], 'date_created': record[6],
                                          'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
                                          'actual': 1}
                         dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data_full_new, index=[0])])
