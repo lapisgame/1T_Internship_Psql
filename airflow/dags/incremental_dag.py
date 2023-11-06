@@ -277,16 +277,13 @@ class VKJobParser(BaseJobParser):
                 links_to_close = links_in_db_set - links_in_parsed
 
                 dataframe_to_closed = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
-                    'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
-                    'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac',
-                    'actual'
+                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
 
                 dataframe_to_update = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
-                     'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
-                     'source_vac', 'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
+                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
 
                 log.info('Создаем датафрейм dataframe_to_closed')
