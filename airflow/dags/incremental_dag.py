@@ -148,10 +148,8 @@ class VKJobParser(BaseJobParser):
         Метод для нахождения вакансий с VK
         """
         self.df = pd.DataFrame(
-            columns=['vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to',
-                     'exp_from', 'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills',
-                     'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac',
-                     'actual'])
+            columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac', 'date_created',
+                     'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(3)
         # Поиск и запись вакансий на поисковой странице
@@ -238,16 +236,16 @@ class VKJobParser(BaseJobParser):
                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
                     pass
 
-            self.df['level'] = None
-            self.df['salary_from'] = None
-            self.df['salary_to'] = None
-            self.df['exp_from'] = None
-            self.df['exp_to'] = None
-            self.df['job_type'] = None
-            self.df['job_format'] = None
-            self.df['languages'] = None
-            self.df['skills'] = None
-            self.df['date_closed'] = None
+            # self.df['level'] = None
+            # self.df['salary_from'] = None
+            # self.df['salary_to'] = None
+            # self.df['exp_from'] = None
+            # self.df['exp_to'] = None
+            # self.df['job_type'] = None
+            # self.df['job_format'] = None
+            # self.df['languages'] = None
+            # self.df['skills'] = None
+            # self.df['date_closed'] = None
             self.df['date_created'] = datetime.now().date()
             self.df['date_of_download'] = datetime.now().date()
             self.df['source_vac'] = url_vk

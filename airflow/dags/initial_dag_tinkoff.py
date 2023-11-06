@@ -351,7 +351,7 @@ class SberJobParser(BaseJobParser):
         self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
-        self.browser.implicitly_wait(1)
+        self.browser.implicitly_wait(10)
         # Поиск и запись вакансий на поисковой странице
         for prof in self.profs:
             self.browser.implicitly_wait(10)
@@ -475,6 +475,7 @@ class TinkoffJobParser(BaseJobParser):
     Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
     """
     def open_all_pages(self):
+        self.browser.implicitly_wait(10)
         elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
         for element in elements:
             element.click()
@@ -715,37 +716,38 @@ class YandJobParser(BaseJobParser):
 
 db_manager = DatabaseManager(conn=conn)
 
-def run_vk_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий VK
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера ВК')
-    try:
-        parser = VKJobParser(url_vk, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер ВК успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера ВК: {e}')
-
-def run_sber_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Sber
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Сбербанка')
-    try:
-        parser = SberJobParser(url_sber, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Сбербанка успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
+# def run_vk_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий VK
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера ВК')
+#     try:
+#         parser = VKJobParser(url_vk, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер ВК успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера ВК: {e}')
+#
+# def run_sber_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Sber
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Сбербанка')
+#     try:
+#         parser = SberJobParser(url_sber, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Сбербанка успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
+#
 
 def run_tin_parser(**context):
     """
@@ -764,22 +766,22 @@ def run_tin_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
-
-def run_yand_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий Yandex
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера Yandex')
-    try:
-        parser = YandJobParser(url_yand, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер Yandex успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера Yandex: {e}')
+#
+# def run_yand_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий Yandex
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера Yandex')
+#     try:
+#         parser = YandJobParser(url_yand, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер Yandex успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
 hello_bash_task = BashOperator(
@@ -794,19 +796,19 @@ create_raw_tables = PythonOperator(
     dag=initial_dag
 )
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=initial_dag
-)
-
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
 
 parse_tink = PythonOperator(
     task_id='parse_tink',
@@ -815,12 +817,12 @@ parse_tink = PythonOperator(
     dag=initial_dag
 )
 
-parse_yand = PythonOperator(
-    task_id='parse_yand',
-    python_callable=run_yand_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+# parse_yand = PythonOperator(
+#     task_id='parse_yand',
+#     python_callable=run_yand_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
 
 create_core_fact_table = PythonOperator(
     task_id='create_core_fact_table',
@@ -833,5 +835,7 @@ end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
-create_core_fact_table >> end_task
+# hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
+# create_core_fact_table >> end_task
+
+hello_bash_task >> create_raw_tables >> parse_tink >> end_task
