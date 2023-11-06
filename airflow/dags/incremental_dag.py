@@ -200,6 +200,7 @@ class VKJobParser(BaseJobParser):
                 query = f"""SELECT vacancy_id, vacancy_name, towns, company
                             FROM {table_name}
                             WHERE version_vac = (SELECT max(version_vac) FROM {table_name})
+                            AND actual != -1
                             ORDER BY date_of_download DESC, version_vac DESC
                             LIMIT 1"""
                 self.cur.execute(query)
@@ -256,23 +257,23 @@ class VKJobParser(BaseJobParser):
                 self.df['source_vac'] = url_vk
                 self.df['status'] = 'existing'
                 self.df['actual'] = 1
-                table_name = raw_tables[0]
-                self.log.info(f"Проверка типов данных в DataFrame: \\n {self.df.dtypes}")
+                self.table_name = raw_tables[0]
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
                 self.log.info('Собираем вакансии для сравнения')
-                query = f"""SELECT vacancy_id FROM {table_name}
-                            WHERE version_vac = (SELECT max(version_vac) FROM {table_name})
+                query = f"""SELECT vacancy_id FROM {self.table_name}
+                            WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
                             ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
                 self.cur.execute(query)
                 links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
                 links_in_parsed = set(self.df['vacancy_id'])
                 links_to_close = links_in_db_set - links_in_parsed
-                dataframe_to_closed = pd.DataFrame(columns=[
+                self.dataframe_to_closed = pd.DataFrame(columns=[
                     'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
-                dataframe_to_update = pd.DataFrame(columns=[
+                self.dataframe_to_update = pd.DataFrame(columns=[
                     'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
@@ -284,12 +285,12 @@ class VKJobParser(BaseJobParser):
                             f"""
                             SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                    date_created, date_of_download, status, version_vac, actual
-                            FROM {table_name}
+                            FROM {self.table_name}
                             WHERE vacancy_id = '{link}'
                                 AND status != 'closed'
                                 AND actual != '-1'
                                 AND version_vac = (
-                                    SELECT max(version_vac) FROM {table_name}
+                                    SELECT max(version_vac) FROM {self.table_name}
                                     WHERE vacancy_id = '{link}'
                                 )
                             ORDER BY date_of_download DESC, version_vac DESC
@@ -305,7 +306,7 @@ class VKJobParser(BaseJobParser):
                                     'status': 'closed', 'date_closed': datetime.now().date(),
                                     'version_vac': record[-2] + 1, 'sign': -1
                                 }
-                                dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
+                                self.dataframe_to_closed = pd.concat([self.dataframe_to_closed, pd.DataFrame(data, index=[0])])
                     self.log.info('Датафрейм dataframe_to_closed создан')
                 else:
                     self.log.info('Список links_to_close пуст')
@@ -318,7 +319,7 @@ class VKJobParser(BaseJobParser):
                         f"""
                         SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                date_created, date_of_download, status, version_vac, actual
-                        FROM {table_name}
+                        FROM {self.table_name}
                         WHERE vacancy_id = '{link}'
                         ORDER BY date_of_download DESC, version_vac DESC
                         LIMIT 1
@@ -337,8 +338,8 @@ class VKJobParser(BaseJobParser):
                                     'date_of_download': datetime.now().date(), 'status': 'existing',
                                     'version_vac': next_version, 'actual': 1
                                 }
-                                dataframe_to_update = pd.concat(
-                                    [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                                self.dataframe_to_update = pd.concat(
+                                    [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
                             elif old_status == 'existing':
                                 if (
@@ -358,8 +359,8 @@ class VKJobParser(BaseJobParser):
                                         'date_of_download': datetime.now().date(), 'status': 'existing',
                                         'version_vac': next_version, 'actual': 1
                                     }
-                                    dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                                    self.dataframe_to_update = pd.concat(
+                                        [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                     )
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
@@ -370,8 +371,8 @@ class VKJobParser(BaseJobParser):
                                         'date_of_download': datetime.now().date(), 'status': 'new',
                                         'version_vac': next_version, 'actual': 1
                                     }
-                                    dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
+                                    self.dataframe_to_update = pd.concat(
+                                        [self.dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
                                     )
                                 else:
                                     data_full_new = {
@@ -381,114 +382,85 @@ class VKJobParser(BaseJobParser):
                                         'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
                                         'actual': 1
                                     }
-                                    dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
+                                    self.dataframe_to_update = pd.concat(
+                                        [self.dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
                                     )
 
-                if not dataframe_to_closed.empty:
-                    data_tuples_to_closed = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
-                    cols = ",".join(dataframe_to_closed.columns)
-                    self.log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
-                    query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
-                    self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_tuples_to_closed)
-                    self.conn.commit()
-                    self.log.info(
-                        f"Количество отмеченных удаленными вакансий VK: {str(len(dataframe_to_closed))}, "
-                        f"обновлена таблица {table_name}."
-                    )
-                else:
-                    self.log.info(
-                        f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} не изменена."
-                    )
-
-                if not dataframe_to_update.empty:
-                    data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
-                    cols = ",".join(dataframe_to_update.columns)
-                    self.log.info(f'Обновляем таблицу {table_name}.')
-                    query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
-                    self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_tuples_to_insert)
-                    self.conn.commit()
-                    self.log.info(
-                        f"Количество измененных вакансий VK: {str(len(dataframe_to_update))}, "
-                        f"обновлена таблица {table_name}."
-                    )
-                else:
-                    self.log.info(
-                        f"Измененных вакансий VK нет, таблица {table_name} в БД {config['database']} не изменена."
-                    )
-
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
 
-                        # # совершение транзакции
-                        # self.conn.commit()
-                        # self.log.info("Транзакция успешно завершена")
+    def update_database_queries(self):
+        """
+        Метод для выполнения запросов к базе данных.
+        """
+        try:
+            self.cur = self.conn.cursor()
+            self.conn.begin()
 
-                    # except Exception as e:
-                    #     self.log.error(f"Ошибка в транзакции. Отмена всех остальных операций транзакции, {e}")
-                    #     self.conn.rollback()
-                    # finally:
-                    #     if self.conn:
-                    #         self.cur.close()
-                    #         self.conn.close()
-                    #         self.log.info("Соединение с PostgreSQL закрыто")
-                # Код для вставки новых записей в таблицу core_fact_table
+            if not self.dataframe_to_closed.empty:
+                self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
+                data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_closed.columns)
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_closed)
+                self.log.info(f"Количество строк удалено из core_fact_table: "
+                              f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
+                              f"{config['database']}.")
 
-        #         dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'company', 'salary',
-        #          'description', 'date_created', 'date_of_download', 'status']]
-        #
-        #         if not dataframe_to_upd_core.empty:
-        #             try:
-        #                 log.info(f'Обновляем таблицу core_fact_table.')
-        #                 core_fact_data_tuples = [tuple(x) for x in dataframe_to_upd_core.to_records(index=False)]
-        #                 cols = ",".join(dataframe_to_upd_core.columns)
-        #                 self.client.execute(f"INSERT INTO {config['database']}.core_fact_table ({cols}) VALUES",
-        #                                     core_fact_data_tuples)
-        #                 self.log.info(f"Количество строк вставлено в core_fact_table: "
-        #                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-        #                               f"в БД {config['database']}.")
-        #
-        #             except Exception as e:
-        #                 self.log.error(f"Ошибка при вставке записей из dataframe_to_upd_core: {e}")
-        #                 self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_upd_core.columns}")
-        #                 raise
-        #
-        #         else:
-        #             self.log.info(
-        #                 f"Обновленных вакансий VK нет, таблица 'core_fact_table' в БД {config['database']} не изменена.")
-        #
-        #         dataframe_to_delete = dataframe_to_closed[['link', 'name', 'location', 'level', 'company', 'salary',
-        #          'description', 'date_created', 'date_of_download', 'status']]
-        #         # Код для удаления "closed" записей в таблице core_fact_table
-        #         if not dataframe_to_delete.empty:
-        #             try:
-        #                 log.info(f'Удаляем из core_fact_table закрытые вакансии.')
-        #                 dataframe_to_delete_tuples = [tuple(x) for x in
-        #                                               dataframe_to_delete[['link']].to_records(index=False)]
-        #                 for to_delete in dataframe_to_delete_tuples:
-        #                     self.client.execute(
-        #                         f"DELETE FROM {config['database']}.core_fact_table WHERE link = '{to_delete[0]}'")
-        #                 self.log.info(f"Количество строк удалено из core_fact_table: "
-        #                               f"{len(dataframe_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-        #                               f"{config['database']}.")
-        #
-        #             except Exception as e:
-        #                 self.log.error(f"Ошибка при вставке записей из dataframe_to_delete: {e}")
-        #                 self.log.error(f"Содержимое dataframe_to_upd_core: {dataframe_to_delete.columns}")
-        #                 raise
-        #
-        #         else:
-        #             self.log.info(f"Таблица 'core_fact_table' не изменена, нет строк для удаления.")
-        #
-        #     else:
-        #         self.log.info(f"Не найдено вакансий при парсинге данных.")
-        #
+                self.log.info(f'Вставлем строки удаленных вакансий в таблицу del_vacancy_core.')
+                data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_closed.columns)
+                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_closed)
+                self.log.info(f"Количество строк вставлено в del_vacancy_core: "
+                              f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
+                              f"{config['database']}.")
+
+                log.info(f'Удаляем из core_fact_table закрытые вакансии.')
+                data_to_delete_tuples = [tuple(x) for x in
+                                              self.dataframe_to_closed[['link']].to_records(index=False)]
+                for to_delete in data_to_delete_tuples:
+                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    self.log.info(f"Запрос вставки данных: {query}")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
+
+            if not self.dataframe_to_update.empty:
+                data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_update.columns)
+                self.log.info(f'Обновляем таблицу {self.table_name}.')
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_insert)
+                self.log.info(f"Количество строк вставлено в {self.table_name}: "
+                              f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
+                              f"в БД {config['database']}.")
+
+                log.info(f'Обновляем таблицу core_fact_table.')
+                core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_update.columns)
+                query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, core_fact_data_tuples)
+                self.log.info(f"Количество строк вставлено в core_fact_table: "
+                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
+                              f"в БД {config['database']}.")
+
+            self.conn.commit()
+            self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблице {self.table_name}.")
+
         except Exception as e:
-            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
-            raise
+            self.conn.rollback()
+            self.log.error(f"Произошла ошибка: {e}")
+
+        finally:
+            self.cur.close()
+
 
 class SberJobParser(BaseJobParser):
     """
@@ -1099,6 +1071,7 @@ def run_vk_parser(**context):
             parser.find_values_in_db()
             parser.find_vacancies_description()
             parser.save_df()
+            parser.update_database_queries()
             parser.stop()
             log.info('Парсер ВК успешно провел работу')
         except Exception as e:
