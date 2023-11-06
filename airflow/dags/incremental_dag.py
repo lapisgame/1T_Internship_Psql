@@ -426,9 +426,6 @@ class VKJobParser(BaseJobParser):
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
-            else:
-                self.log.info(
-                    f"Нет вакансий VK для удаления, таблицы в БД {config['database']} не изменены.")
 
             if not self.dataframe_to_update.empty:
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
@@ -448,12 +445,9 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
-            else:
-                self.log.info(
-                    f"Нет вакансий VK для обновления, таблицы в БД {config['database']} не изменены.")
 
             self.conn.commit()
-            self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблице {self.table_name}.")
+            self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
 
         except Exception as e:
             self.conn.rollback()
