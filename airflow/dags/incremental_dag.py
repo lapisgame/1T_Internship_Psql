@@ -284,9 +284,8 @@ class VKJobParser(BaseJobParser):
                 for link in links_to_close:
                     records_to_close = self.cur.execute(
                         f"""
-                            SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, date_closed, version_vac, actual 
+                            SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac, 
+                            date_created, date_of_download, status, date_closed, version_vac, actual 
                             FROM {table_name}
                             WHERE vacancy_id = '{link}' 
                             AND status != 'closed' 
@@ -298,12 +297,10 @@ class VKJobParser(BaseJobParser):
                             """)
                     for record in records_to_close:
                         data = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2], 'level': record[3],
-                                'company': record[4], 'salary_from': record[5], 'salary_to': record[6],
-                                'exp_from': record[7], 'exp_to': record[8], 'description': record[9],
-                                'job_type': record[10], 'job_format': record[11], 'languages': record[12],
-                                'skills': record[13], 'source_vac': record[14], 'date_created': record[15],
-                                'date_of_download': datetime.now().date(), 'status': 'closed',
-                                'date_closed': datetime.now().date(), 'version_vac': record[19] + 1, 'sign': -1}
+                                'company': record[4], 'description': record[5], 'source_vac': record[6],
+                                'date_created': record[7], 'date_of_download': datetime.now().date(),
+                                'status': 'closed', 'date_closed': datetime.now().date(),
+                                'version_vac': record[19] + 1, 'sign': -1}
                         dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
                         log.info('Датафрейм dataframe_to_closed создан')
 
@@ -312,23 +309,23 @@ class VKJobParser(BaseJobParser):
                 for record in data:
                     link = record[0]
                     records_in_db = self.cur.execute(
-                        f"""SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, version_vac, actual FROM {table_name} 
-                            WHERE vacancy_id = '{link}' ORDER BY date_of_download DESC, version_vac DESC LIMIT 1
+                        f"""SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac, 
+                            date_created, date_of_download, status, version_vac, actual 
+                            FROM {table_name} 
+                            WHERE vacancy_id = '{link}' 
+                            ORDER BY date_of_download DESC, version_vac DESC 
+                            LIMIT 1
                         """)
                     if records_in_db:
                         for old_record in records_in_db:
-                            old_status = old_record[-4]
+                            old_status = old_record[-3]
                             next_version = old_record[-2] + 1
                             if old_status == 'new':
                                 data_new_vac = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': old_record[15], 'date_of_download': datetime.now().date(),
-                                        'status': 'existing', 'version_vac': next_version, 'actual': 1}
+                                        'level': record[3], 'company': record[4], 'description': record[5],
+                                        'source_vac': record[6], 'date_created': old_record[7],
+                                        'date_of_download': datetime.now().date(), 'status': 'existing',
+                                        'version_vac': next_version, 'actual': 1}
                                 dataframe_to_update = pd.concat([dataframe_to_update,
                                                                  pd.DataFrame(data_new_vac, index=[0])])
                             if old_status == 'existing':
@@ -343,22 +340,18 @@ class VKJobParser(BaseJobParser):
                             if old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                            'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                            'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                            'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                            'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                            'date_created': record[15], 'date_of_download': datetime.now().date(),
-                                            'status': 'new', 'version_vac': next_version, 'actual': 1}
+                                            'level': record[3], 'company': record[4], 'description': record[5],
+                                            'source_vac': record[6], 'date_created': record[7],
+                                            'date_of_download': datetime.now().date(), 'status': 'new',
+                                            'version_vac': next_version, 'actual': 1}
                                     dataframe_to_update = pd.concat(
                                         [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])])
                     else:
                         data_full_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': record[15], 'date_of_download': datetime.now().date(),
-                                        'status': 'new', 'version_vac': 1, 'actual': 1}
+                                        'level': record[3], 'company': record[4], 'description': record[5],
+                                         'source_vac': record[6], 'date_created': record[7],
+                                         'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
+                                         'actual': 1}
                         dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data_full_new, index=[0])])
 
                     try:
@@ -373,7 +366,8 @@ class VKJobParser(BaseJobParser):
                                           f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name}.")
                         else:
                             self.log.info(
-                                f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} не изменена.")
+                                f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} "
+                                f"не изменена.")
 
                         if not dataframe_to_update.empty:
                             data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
@@ -402,7 +396,7 @@ class VKJobParser(BaseJobParser):
                             self.log.info("Соединение с PostgreSQL закрыто")
                 # Код для вставки новых записей в таблицу core_fact_table
 
-        #         dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'level', 'company', 'salary',
+        #         dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'company', 'salary',
         #          'description', 'date_created', 'date_of_download', 'status']]
         #
         #         if not dataframe_to_upd_core.empty:
