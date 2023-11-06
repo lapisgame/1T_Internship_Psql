@@ -461,15 +461,17 @@ class SberJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
-                # закрываем курсор и соединение с базой данных
-                self.cur.close()
-                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий после удаления дубликатов: "
                               + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при загрузке данных в raw-слой Sber {e}")
+
+        finally:
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
 
 
 class TinkoffJobParser(BaseJobParser):
@@ -584,14 +586,16 @@ class TinkoffJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
-                # закрываем курсор и соединение с базой данных
-                self.cur.close()
-                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при загрузке данных в raw-слой Tinkoff {e}")
+
+        finally:
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
 
 
 class YandJobParser(BaseJobParser):
@@ -704,15 +708,17 @@ class YandJobParser(BaseJobParser):
                 execute_values(self.cur, query, data)
 
                 self.conn.commit()
-                # закрываем курсор и соединение с базой данных
-                self.cur.close()
-                self.conn.close()
                 # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
+
+        finally:
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
 
 
 db_manager = DatabaseManager(conn=conn)
