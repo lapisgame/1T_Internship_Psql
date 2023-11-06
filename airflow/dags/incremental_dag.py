@@ -188,12 +188,6 @@ class VKJobParser(BaseJobParser):
 
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
-        self.df['date_created'] = datetime.now().date()
-        self.df['date_of_download'] = datetime.now().date()
-        self.df['source_vac'] = url_vk
-        self.df['status'] = 'existing'
-        self.df['version_vac'] = 1
-        self.df['actual'] = 1
 
     def find_values_in_db(self):
         """
@@ -202,6 +196,7 @@ class VKJobParser(BaseJobParser):
         try:
             if not self.df.empty:
                 self.cur = self.conn.cursor()
+                self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
                 table_name = raw_tables[0]
                 query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \
                         f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name})" \
@@ -218,6 +213,7 @@ class VKJobParser(BaseJobParser):
                         ~(self.df['towns'] == towns_db) &
                         ~(self.df['company'] == company_db)
                         ]
+                    self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
                 self.cur.close()
         except Exception as e:
             self.log.error(f"Произошла ошибка: {e}")
@@ -241,6 +237,15 @@ class VKJobParser(BaseJobParser):
                 except Exception as e:
                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
                     pass
+
+            self.df['level'] = None
+            self.df['salary_from'] = None
+            self.df['date_created'] = datetime.now().date()
+            self.df['date_of_download'] = datetime.now().date()
+            self.df['source_vac'] = url_vk
+            self.df['status'] = 'existing'
+            self.df['version_vac'] = 1
+            self.df['actual'] = 1
         else:
             self.log.info(f"Нет вакансий для парсинга")
 
