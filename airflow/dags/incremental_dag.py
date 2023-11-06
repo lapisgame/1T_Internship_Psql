@@ -246,61 +246,54 @@ class VKJobParser(BaseJobParser):
         else:
             self.log.info(f"Нет вакансий для парсинга")
 
-
     def save_df(self):
-        """
-        Метод для сохранения данных в базу данных vk
-        """
-        self.cur = self.conn.cursor()
+        """Метод для сохранения данных в базу данных vk"""
         try:
             if not self.df.empty:
+                self.cur = self.conn.cursor()
                 self.df['date_created'] = datetime.now().date()
                 self.df['date_of_download'] = datetime.now().date()
                 self.df['source_vac'] = url_vk
                 self.df['status'] = 'existing'
-                # self.df['version_vac'] = 1
                 self.df['actual'] = 1
-
                 table_name = raw_tables[0]
-                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-                log.info('Собираем вакансии для сравнения')
-                query = f"SELECT vacancy_id FROM {table_name} " \
-                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
-                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"
+                self.log.info(f"Проверка типов данных в DataFrame: \\n {self.df.dtypes}")
 
+                self.log.info('Собираем вакансии для сравнения')
+                query = f"""SELECT vacancy_id FROM {table_name}
+                            WHERE version_vac = (SELECT max(version_vac) FROM {table_name})
+                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
                 self.cur.execute(query)
                 links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
                 links_in_parsed = set(self.df['vacancy_id'])
-
                 links_to_close = links_in_db_set - links_in_parsed
-
                 dataframe_to_closed = pd.DataFrame(columns=[
                     'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
-
                 dataframe_to_update = pd.DataFrame(columns=[
                     'vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
 
-                log.info('Создаем датафрейм dataframe_to_closed')
+                self.log.info('Создаем датафрейм dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
                         records_to_close = self.cur.execute(
                             f"""
                             SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
-                            date_created, date_of_download, status, version_vac, actual
+                                   date_created, date_of_download, status, version_vac, actual
                             FROM {table_name}
                             WHERE vacancy_id = '{link}'
-                            AND status != 'closed'
-                            AND actual != '-1'
-                            AND version_vac = (
-                                SELECT max(version_vac) FROM {table_name}
-                                WHERE vacancy_id = '{link}'
-                            )
-                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1
+                                AND status != 'closed'
+                                AND actual != '-1'
+                                AND version_vac = (
+                                    SELECT max(version_vac) FROM {table_name}
+                                    WHERE vacancy_id = '{link}'
+                                )
+                            ORDER BY date_of_download DESC, version_vac DESC
+                            LIMIT 1
                             """
                         )
                         if records_to_close:
@@ -313,105 +306,122 @@ class VKJobParser(BaseJobParser):
                                     'version_vac': record[-2] + 1, 'sign': -1
                                 }
                                 dataframe_to_closed = pd.concat([dataframe_to_closed, pd.DataFrame(data, index=[0])])
-                                log.info('Датафрейм dataframe_to_closed создан')
+                    self.log.info('Датафрейм dataframe_to_closed создан')
                 else:
-                    log.info('Список links_to_close пуст')
+                    self.log.info('Список links_to_close пуст')
 
-                log.info('Присваиваем статусы изменений')
+                self.log.info('Присваиваем статусы изменений')
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
                     records_in_db = self.cur.execute(
-                        f"""SELECT vacancy_id, vacancy_name, towns, company, description, source_vac, 
-                            date_created, date_of_download, status, version_vac, actual 
-                            FROM {table_name} 
-                            WHERE vacancy_id = '{link}' 
-                            ORDER BY date_of_download DESC, version_vac DESC 
-                            LIMIT 1
-                        """)
+                        f"""
+                        SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
+                               date_created, date_of_download, status, version_vac, actual
+                        FROM {table_name}
+                        WHERE vacancy_id = '{link}'
+                        ORDER BY date_of_download DESC, version_vac DESC
+                        LIMIT 1
+                        """
+                    )
                     if records_in_db:
                         for old_record in records_in_db:
                             old_status = old_record[-3]
                             next_version = old_record[-2] + 1
+
                             if old_status == 'new':
-                                data_new_vac = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                data_new_vac = {
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                    'company': record[3], 'description': record[4],
+                                    'source_vac': record[5], 'date_created': old_record[6],
+                                    'date_of_download': datetime.now().date(), 'status': 'existing',
+                                    'version_vac': next_version, 'actual': 1
+                                }
+                                dataframe_to_update = pd.concat(
+                                    [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                                )
+                            elif old_status == 'existing':
+                                if (
+                                        old_record[1].strip().lower() == record[1].strip().lower() and
+                                        old_record[2].strip().lower() == record[2].strip().lower() and
+                                        old_record[3].strip().lower() == record[3].strip().lower() and
+                                        old_record[4].strip().lower() == record[4].strip().lower() and
+                                        old_record[5].strip().lower() == record[5].strip().lower() and
+                                        old_record[6].strip().lower() == record[6].strip().lower()
+                                ):
+                                    pass
+                                else:
+                                    data_new_vac = {
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': old_record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'existing',
-                                        'version_vac': next_version, 'actual': 1}
-                                dataframe_to_update = pd.concat([dataframe_to_update,
-                                                                 pd.DataFrame(data_new_vac, index=[0])])
-                            if old_status == 'existing':
-                                if old_record[1] == record[1] and old_record[2] == record[2] and old_record[3] == \
-                                        record[3] and old_record[4] == record[4] and old_record[5] == record[5] and \
-                                        old_record[6] == record[6]:
-                                    pass
-                                else:
+                                        'version_vac': next_version, 'actual': 1
+                                    }
                                     dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])])
-
-                            if old_status == 'closed':
+                                        [dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                                    )
+                            elif old_status == 'closed':
                                 if link in links_in_parsed:
-                                    data_clos_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                            'company': record[3], 'description': record[4],
-                                            'source_vac': record[5], 'date_created': record[6],
-                                            'date_of_download': datetime.now().date(), 'status': 'new',
-                                            'version_vac': next_version, 'actual': 1}
+                                    data_clos_new = {
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'company': record[3], 'description': record[4],
+                                        'source_vac': record[5], 'date_created': record[6],
+                                        'date_of_download': datetime.now().date(), 'status': 'new',
+                                        'version_vac': next_version, 'actual': 1
+                                    }
                                     dataframe_to_update = pd.concat(
-                                        [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])])
-                    else:
-                        data_full_new = {'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                         'company': record[3], 'description': record[4],
-                                         'source_vac': record[5], 'date_created': record[6],
-                                         'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
-                                         'actual': 1}
-                        dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data_full_new, index=[0])])
+                                        [dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
+                                    )
+                                else:
+                                    data_full_new = {
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'company': record[3], 'description': record[4],
+                                        'source_vac': record[5], 'date_created': record[6],
+                                        'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
+                                        'actual': 1
+                                    }
+                                    dataframe_to_update = pd.concat(
+                                        [dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
+                                    )
 
+                if not dataframe_to_closed.empty:
+                    data_tuples_to_closed = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
+                    cols = ",".join(dataframe_to_closed.columns)
+                    self.log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
+                    query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
+                    self.log.info(f"Запрос вставки данных: {query}")
+                    self.cur.executemany(query, data_tuples_to_closed)
+                    self.conn.commit()
+                    self.log.info(
+                        f"Количество отмеченных удаленными вакансий VK: {str(len(dataframe_to_closed))}, "
+                        f"обновлена таблица {table_name}."
+                    )
+                else:
+                    self.log.info(
+                        f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} не изменена."
+                    )
 
-                    if not dataframe_to_closed.empty:
-                        try:
-                            data_tuples_to_closed = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
-                            cols = ",".join(dataframe_to_closed.columns)
-                            log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
-                            query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
-                            # исполняем запрос с использованием execute_values
-                            self.log.info(f"Запрос вставки данных: {query}")
-                            execute_values(self.cur, query, data_tuples_to_closed)
+                if not dataframe_to_update.empty:
+                    data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
+                    cols = ",".join(dataframe_to_update.columns)
+                    self.log.info(f'Обновляем таблицу {table_name}.')
+                    query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
+                    self.log.info(f"Запрос вставки данных: {query}")
+                    self.cur.executemany(query, data_tuples_to_insert)
+                    self.conn.commit()
+                    self.log.info(
+                        f"Количество измененных вакансий VK: {str(len(dataframe_to_update))}, "
+                        f"обновлена таблица {table_name}."
+                    )
+                else:
+                    self.log.info(
+                        f"Измененных вакансий VK нет, таблица {table_name} в БД {config['database']} не изменена."
+                    )
 
-                            self.conn.commit()
-                            self.log.info(f"Количество отмеченных удаленными вакансий VK: "
-                                          f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name}.")
-                        except Exception as e:
-                            self.log.error(f"Ошибка при вставке записей из dataframe_to_closed: {e}")
-                            self.log.error(f"Содержимое dataframe_to_closed: {dataframe_to_closed}")
-                            raise
-
-                    else:
-                        self.log.info(
-                            f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} "
-                            f"не изменена.")
-
-                    if not dataframe_to_update.empty:
-                        try:
-                            data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
-                            cols = ",".join(dataframe_to_update.columns)
-                            log.info(f'Обновляем таблицу {table_name}.')
-                            query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
-                            # исполняем запрос с использованием execute_values
-                            self.log.info(f"Запрос вставки данных: {query}")
-                            execute_values(self.cur, query, data_tuples_to_insert)
-                            self.conn.commit()
-                            self.log.info(f"Количество измененных вакансий VK: "
-                                          f"{str(len(dataframe_to_update))}, обновлена таблица {table_name}.")
-                        except Exception as e:
-                            self.log.error(f"Ошибка при вставке записей из dataframe_to_update: {e}")
-                            self.log.error(f"Содержимое dataframe_to_update: {dataframe_to_update.columns}")
-                            raise
-
-                    else:
-                        self.log.info(
-                            f"Измененных вакансий VK нет, таблица {table_name} в БД {config['database']} "
-                            f"не изменена.")
+        except Exception as e:
+            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
+            raise
 
                         # # совершение транзакции
                         # self.conn.commit()
