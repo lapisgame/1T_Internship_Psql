@@ -396,7 +396,7 @@ class VKJobParser(BaseJobParser):
         """
         try:
             self.cur = self.conn.cursor()
-            self.conn.begin()
+            self.conn.autocommit = False
 
             if not self.dataframe_to_closed.empty:
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
@@ -408,10 +408,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
-
-                self.log.info(f'Вставлем строки удаленных вакансий в таблицу del_vacancy_core.')
-                data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
-                cols = ",".join(self.dataframe_to_closed.columns)
+                self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
@@ -419,9 +416,9 @@ class VKJobParser(BaseJobParser):
                               f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
                               f"{config['database']}.")
 
-                log.info(f'Удаляем из core_fact_table закрытые вакансии.')
+                self.log.info(f'Удаляем из core_fact_table закрытые вакансии.')
                 data_to_delete_tuples = [tuple(x) for x in
-                                              self.dataframe_to_closed[['link']].to_records(index=False)]
+                                         self.dataframe_to_closed[['link']].to_records(index=False)]
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
@@ -429,6 +426,9 @@ class VKJobParser(BaseJobParser):
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
+            else:
+                self.log.info(
+                    f"Нет вакансий VK для удаления, таблицы в БД {config['database']} не изменены.")
 
             if not self.dataframe_to_update.empty:
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
@@ -440,26 +440,28 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
-
-                log.info(f'Обновляем таблицу core_fact_table.')
+                self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                cols = ",".join(self.dataframe_to_update.columns)
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, core_fact_data_tuples)
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
+            else:
+                self.log.info(
+                    f"Нет вакансий VK для обновления, таблицы в БД {config['database']} не изменены.")
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблице {self.table_name}.")
 
         except Exception as e:
             self.conn.rollback()
-            self.log.error(f"Произошла ошибка: {e}")
+            self.log.error(f"Произошла ошибка: {str(e)}")
 
         finally:
             self.cur.close()
+            self.conn.autocommit = True
 
 
 class SberJobParser(BaseJobParser):
