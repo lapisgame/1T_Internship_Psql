@@ -369,11 +369,14 @@ class VKJobParser(BaseJobParser):
 
                     if not dataframe_to_closed.empty:
                         try:
-                            data_tuples_to_insert = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
+                            data_tuples_to_closed = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
                             cols = ",".join(dataframe_to_closed.columns)
                             log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
-                            self.cur.execute(
-                                f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
+                            query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
+                            # исполняем запрос с использованием execute_values
+                            self.log.info(f"Запрос вставки данных: {query}")
+                            execute_values(self.cur, query, data_tuples_to_closed)
+
                             self.conn.commit()
                             self.log.info(f"Количество отмеченных удаленными вакансий VK: "
                                           f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name}.")
@@ -392,8 +395,10 @@ class VKJobParser(BaseJobParser):
                             data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
                             cols = ",".join(dataframe_to_update.columns)
                             log.info(f'Обновляем таблицу {table_name}.')
-                            self.cur.execute(
-                                f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
+                            query = f"""INSERT INTO {table_name} ({cols}) VALUES %s"""
+                            # исполняем запрос с использованием execute_values
+                            self.log.info(f"Запрос вставки данных: {query}")
+                            execute_values(self.cur, query, data_tuples_to_insert)
                             self.conn.commit()
                             self.log.info(f"Количество измененных вакансий VK: "
                                           f"{str(len(dataframe_to_update))}, обновлена таблица {table_name}.")
