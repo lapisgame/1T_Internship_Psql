@@ -838,4 +838,4 @@ end_task = DummyOperator(
 # hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
 # create_core_fact_table >> end_task
 
-hello_bash_task >> create_raw_tables >> parse_tink >> end_task
+hello_bash_task >> create_raw_tables >> parse_tink >> create_core_fact_table >> end_task
