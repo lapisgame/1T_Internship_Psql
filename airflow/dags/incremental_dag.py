@@ -1063,17 +1063,14 @@ def run_vk_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера ВК')
     try:
-        try:
-            parser = VKJobParser(url_vk, profs, log, conn)
-            parser.find_vacancies()
-            parser.find_values_in_db()
-            parser.find_vacancies_description()
-            parser.save_df()
-            parser.update_database_queries()
-            parser.stop()
-            log.info('Парсер ВК успешно провел работу')
-        except Exception as e:
-            log.error(f'Ошибка во время работы парсера ВК: {e}')
+        parser = VKJobParser(url_vk, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_values_in_db()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.update_database_queries()
+        parser.stop()
+        log.info('Парсер ВК успешно провел работу')
     except Exception as e_outer:
         log.error(f'Исключение в функции run_vk_parser: {e_outer}')
 
