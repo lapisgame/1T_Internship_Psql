@@ -196,9 +196,11 @@ class VKJobParser(BaseJobParser):
                 self.cur = self.conn.cursor()
                 self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
                 table_name = raw_tables[0]
-                query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \ 
+                query = f"SELECT vacancy_id, vacancy_name, towns, company " \
+                        f"FROM {table_name} " \ 
                         f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \ 
-                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"
+                        f"ORDER BY date_of_download DESC, version_vac DESC " \
+                        f"LIMIT 1"
                 self.cur.execute(query)
                 rows_in_db = self.cur.fetchall()  # получаем все строки из БД
 
