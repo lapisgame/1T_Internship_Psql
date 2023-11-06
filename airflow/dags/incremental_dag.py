@@ -354,46 +354,59 @@ class VKJobParser(BaseJobParser):
                                          'actual': 1}
                         dataframe_to_update = pd.concat([dataframe_to_update, pd.DataFrame(data_full_new, index=[0])])
 
-                    try:
-                        if not dataframe_to_closed.empty:
 
+                    if not dataframe_to_closed.empty:
+                        try:
                             data_tuples_to_insert = [tuple(x) for x in dataframe_to_closed.to_records(index=False)]
                             cols = ",".join(dataframe_to_closed.columns)
                             log.info(f'Добавляем строки удаленных вакансий в таблицу {table_name}.')
                             self.cur.execute(
                                 f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
+                            self.conn.commit()
                             self.log.info(f"Количество отмеченных удаленными вакансий VK: "
                                           f"{str(len(dataframe_to_closed))}, обновлена таблица {table_name}.")
-                        else:
-                            self.log.info(
-                                f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} "
-                                f"не изменена.")
+                        except Exception as e:
+                            self.log.error(f"Ошибка при вставке записей из dataframe_to_closed: {e}")
+                            self.log.error(f"Содержимое dataframe_to_closed: {dataframe_to_closed}")
+                            raise
 
-                        if not dataframe_to_update.empty:
+                    else:
+                        self.log.info(
+                            f"Удаленных вакансий VK нет, таблица {table_name} в БД {config['database']} "
+                            f"не изменена.")
+
+                    if not dataframe_to_update.empty:
+                        try:
                             data_tuples_to_insert = [tuple(x) for x in dataframe_to_update.to_records(index=False)]
                             cols = ",".join(dataframe_to_update.columns)
                             log.info(f'Обновляем таблицу {table_name}.')
                             self.cur.execute(
                                 f"""INSERT INTO {table_name} ({cols}) VALUES""", data_tuples_to_insert)
+                            self.conn.commit()
                             self.log.info(f"Количество измененных вакансий VK: "
                                           f"{str(len(dataframe_to_update))}, обновлена таблица {table_name}.")
-                        else:
-                            self.log.info(
-                                f"Измененных вакансий VK нет, таблица {table_name} в БД {config['database']} "
-                                f"не изменена.")
+                        except Exception as e:
+                            self.log.error(f"Ошибка при вставке записей из dataframe_to_update: {e}")
+                            self.log.error(f"Содержимое dataframe_to_update: {dataframe_to_update.columns}")
+                            raise
 
-                        # совершение транзакции
-                        self.conn.commit()
-                        self.log.info("Транзакция успешно завершена")
+                    else:
+                        self.log.info(
+                            f"Измененных вакансий VK нет, таблица {table_name} в БД {config['database']} "
+                            f"не изменена.")
 
-                    except Exception as e:
-                        self.log.error(f"Ошибка в транзакции. Отмена всех остальных операций транзакции, {e}")
-                        self.conn.rollback()
-                    finally:
-                        if self.conn:
-                            self.cur.close()
-                            self.conn.close()
-                            self.log.info("Соединение с PostgreSQL закрыто")
+                        # # совершение транзакции
+                        # self.conn.commit()
+                        # self.log.info("Транзакция успешно завершена")
+
+                    # except Exception as e:
+                    #     self.log.error(f"Ошибка в транзакции. Отмена всех остальных операций транзакции, {e}")
+                    #     self.conn.rollback()
+                    # finally:
+                    #     if self.conn:
+                    #         self.cur.close()
+                    #         self.conn.close()
+                    #         self.log.info("Соединение с PostgreSQL закрыто")
                 # Код для вставки новых записей в таблицу core_fact_table
 
         #         dataframe_to_upd_core = dataframe_to_update[['link', 'name', 'location', 'company', 'salary',
