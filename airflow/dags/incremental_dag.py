@@ -394,11 +394,12 @@ class VKJobParser(BaseJobParser):
         """
         Метод для выполнения запросов к базе данных.
         """
-        try:
-            self.cur = self.conn.cursor()
-            self.conn.autocommit = False
+        self.cur = self.conn.cursor()
+        self.conn.autocommit = False
 
+        try:
             if not self.dataframe_to_closed.empty:
+
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
@@ -408,6 +409,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
+
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
@@ -428,6 +430,7 @@ class VKJobParser(BaseJobParser):
                                   f"{config['database']}.")
 
             if not self.dataframe_to_update.empty:
+
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
@@ -437,6 +440,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
+
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
@@ -448,11 +452,9 @@ class VKJobParser(BaseJobParser):
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
-
         except Exception as e:
             self.conn.rollback()
             self.log.error(f"Произошла ошибка: {str(e)}")
-
         finally:
             self.cur.close()
             self.conn.autocommit = True
