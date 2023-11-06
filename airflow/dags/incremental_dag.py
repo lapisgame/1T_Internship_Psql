@@ -197,21 +197,22 @@ class VKJobParser(BaseJobParser):
                 self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
                 table_name = raw_tables[0]
                 query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \
-                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name})" \
+                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
                         f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1 "
                 self.cur.execute(query)
-                db_data = self.cur.fetchall()
+                rows_in_db = self.cur.fetchall()  # получаем все строки из БД
 
-                # Сравнение данных из db psql и self.df
-                for db_row in db_data:
-                    vacancy_id_db, vacancy_name_db, towns_db, company_db = db_row
-                    self.df = self.df.loc[
-                        ~(self.df['vacancy_id'] == vacancy_id_db) &
-                        ~(self.df['vacancy_name'] == vacancy_name_db) &
-                        ~(self.df['towns'] == towns_db) &
-                        ~(self.df['company'] == company_db)
-                        ]
-                    self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
+                # Создаем список для хранения индексов строк, которые нужно удалить из self.df
+                rows_to_delete = []
+
+                if rows_in_db:
+                    for row in rows_in_db:
+                        for index, df_row in self.df.iterrows():
+                            if row[0] == df_row['vacancy_id'] and row[1] == df_row['vacancy_name'] and \
+                                    row[2] == df_row['towns'] and row[3] == df_row['company']:
+                                rows_to_delete.append(index)
+                self.df = self.df.drop(rows_to_delete)  # удаляем строки из self.df
+                self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
                 self.cur.close()
         except Exception as e:
             self.log.error(f"Произошла ошибка: {e}")
@@ -236,16 +237,6 @@ class VKJobParser(BaseJobParser):
                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
                     pass
 
-            # self.df['level'] = None
-            # self.df['salary_from'] = None
-            # self.df['salary_to'] = None
-            # self.df['exp_from'] = None
-            # self.df['exp_to'] = None
-            # self.df['job_type'] = None
-            # self.df['job_format'] = None
-            # self.df['languages'] = None
-            # self.df['skills'] = None
-            # self.df['date_closed'] = None
             self.df['date_created'] = datetime.now().date()
             self.df['date_of_download'] = datetime.now().date()
             self.df['source_vac'] = url_vk
