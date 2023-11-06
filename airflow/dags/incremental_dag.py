@@ -257,7 +257,7 @@ class VKJobParser(BaseJobParser):
                 self.df['date_of_download'] = datetime.now().date()
                 self.df['source_vac'] = url_vk
                 self.df['status'] = 'existing'
-                self.df['version_vac'] = 1
+                # self.df['version_vac'] = 1
                 self.df['actual'] = 1
 
                 table_name = raw_tables[0]
