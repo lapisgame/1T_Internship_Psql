@@ -196,12 +196,11 @@ class VKJobParser(BaseJobParser):
                 self.cur = self.conn.cursor()
                 self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
                 table_name = raw_tables[0]
-                query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \
-                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
-                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1 "
-                # self.cur.execute(query)
-                # rows_in_db = self.cur.fetchall()  # получаем все строки из БД
-                rows_in_db = self.cur.execute(query)
+                query = f"SELECT vacancy_id, vacancy_name, towns, company FROM {table_name} " \ 
+                        f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \ 
+                        f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"
+                self.cur.execute(query)
+                rows_in_db = self.cur.fetchall()  # получаем все строки из БД
 
                 # Создаем список для хранения индексов строк, которые нужно удалить из self.df
                 rows_to_delete = []
@@ -210,12 +209,12 @@ class VKJobParser(BaseJobParser):
                     for row_db in rows_in_db:
                         for index, row_df in self.df.iterrows():
                             if row_db[0] == row_df['vacancy_id']:
-                                if (row_db[1] == row_df['vacancy_name'] and
-                                        row_db[2] == row_df['towns'] and
-                                        row_db[3] == row_df['company']):
+                                if row_db[1] == row_df['vacancy_name'] and \
+                                        row_db[2] == row_df['towns'] and  \
+                                        row_db[3] == row_df['company']:
                                     rows_to_delete.append(index)
-                self.df = self.df.drop(rows_to_delete)  # удаляем строки из self.df
 
+                self.df = self.df.drop(rows_to_delete)  # удаляем строки из self.df
                 self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
                 self.cur.close()
         except Exception as e:
@@ -266,7 +265,8 @@ class VKJobParser(BaseJobParser):
                         f"WHERE version_vac = (SELECT max(version_vac) FROM {table_name}) " \
                         f"ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"
 
-                links_in_db = self.cur.execute(query)
+                self.cur.execute(query)
+                links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
                 links_in_parsed = set(self.df['vacancy_id'])
 
