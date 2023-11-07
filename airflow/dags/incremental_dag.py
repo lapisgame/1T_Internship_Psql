@@ -194,43 +194,6 @@ class VKJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
-    def find_values_in_db(self):
-        """
-        Метод поиска измененных вакансий VKJobParser до парсинга описаний.
-        """
-        try:
-            if not self.df.empty:
-                self.cur = self.conn.cursor()
-                self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
-                table_name = raw_tables[0]
-
-                query = f"""SELECT vacancy_id, vacancy_name, towns, company
-                            FROM {table_name}
-                            WHERE version_vac = (SELECT max(version_vac) FROM {table_name})
-                            AND actual != -1
-                            ORDER BY date_of_download DESC, version_vac DESC
-                            LIMIT 1"""
-                self.cur.execute(query)
-                rows_in_db = self.cur.fetchall()
-
-                rows_to_delete = []
-                if rows_in_db:
-                    for row_db in rows_in_db:
-                        for index, row_df in self.df.iterrows():
-                            if row_db[0].strip() == row_df['vacancy_id'].strip() and \
-                                    row_db[1].strip() == row_df['vacancy_name'].strip() and  \
-                                    row_db[2].strip() == row_df['towns'].strip() and  \
-                                    row_db[3].strip() == row_df['company'].strip():
-                                rows_to_delete.append(index)
-
-                    self.df = self.df.drop(rows_to_delete)
-
-                self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
-                self.cur.close()
-
-        except Exception as e:
-            self.log.error(f"Произошла ошибка: {e}")
-
     def find_vacancies_description(self):
         """
         Метод для парсинга описаний вакансий для VKJobParser.
@@ -536,43 +499,6 @@ class SberJobParser(BaseJobParser):
         self.df['description'] = None
         self.df['actual'] = 1
 
-    def find_values_in_db(self):
-        """
-        Метод поиска измененных вакансий VKJobParser до парсинга описаний.
-        """
-        try:
-            if not self.df.empty:
-                self.cur = self.conn.cursor()
-                self.log.info('Поиск измененных вакансий VKJobParser до парсинга описаний')
-                table_name = raw_tables[0]
-
-                query = f"""SELECT vacancy_id, vacancy_name, towns, company
-                            FROM {table_name}
-                            WHERE version_vac = (SELECT max(version_vac) FROM {table_name})
-                            AND actual != -1
-                            ORDER BY date_of_download DESC, version_vac DESC
-                            LIMIT 1"""
-                self.cur.execute(query)
-                rows_in_db = self.cur.fetchall()
-
-                rows_to_delete = []
-                if rows_in_db:
-                    for row_db in rows_in_db:
-                        for index, row_df in self.df.iterrows():
-                            if row_db[0].strip() == row_df['vacancy_id'].strip() and \
-                                    row_db[1].strip() == row_df['vacancy_name'].strip() and  \
-                                    row_db[2].strip() == row_df['towns'].strip() and  \
-                                    row_db[3].strip() == row_df['company'].strip():
-                                rows_to_delete.append(index)
-
-                    self.df = self.df.drop(rows_to_delete)
-
-                self.log.info(f'Количество вакансий для парсинга описаний вакансий: {len(self.df)}.')
-                self.cur.close()
-
-        except Exception as e:
-            self.log.error(f"Произошла ошибка: {e}")
-
     def find_vacancies_description(self):
         """
         Метод для парсинга описаний вакансий для SberJobParser.
@@ -824,93 +750,65 @@ class TinkoffJobParser(BaseJobParser):
     Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
     """
     def open_all_pages(self):
+        self.log.info('Работает функция open_all_pages')
+        self.browser.implicitly_wait(10)
         elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
         for element in elements:
             element.click()
+        self.log.info('Работает успешно завершена')
 
     def all_vacs_parser(self):
         """
         Метод для нахождения вакансий с Tinkoff
         """
-        self.df = pd.DataFrame(columns=['link', 'name', 'location', 'level', 'company', 'date_created',
-                                        'date_of_download', 'status', 'version', 'sign', 'description'])
+        self.cur = self.conn.cursor()
 
+        self.df = pd.DataFrame(
+            columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac', 'date_created',
+                     'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'])
         self.log.info("Создан DataFrame для записи вакансий")
 
-        self.browser.implicitly_wait(3)
-        vacs = self.browser.find_elements(By.TAG_NAME, 'tr')
-        vacs = [div for div in vacs if 'eM3bvP' in str(div.get_attribute('class'))]
-        for vac in vacs:
-            try:
-                vac_info = {}
-                vac_info['link'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
-                data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
-                vac_info['name'] = data[0].text
-                vac_info['level'] = data[1].text
-                vac_info['location'] = data[2].text
-                self.df.loc[len(self.df)] = vac_info
-            except Exception as e:
-                self.log.error(f"Произошла ошибка: {e}")
+        try:
+            # vac_index = 0
+            # while True:
+            #     try:
+            #         vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
+            #     except IndexError:
+            #         break  # Закончили обработку всех элементов
+
+            #     self.log.info(f"Обработка вакансии номер {vac_index + 1}")
+
+            self.browser.implicitly_wait(3)
+            vacs = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')
+            for vac in vacs:
+                try:
+                    vac_info = {}
+                    vac_info['vacancy_id'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                    data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
+                    vac_info['vacancy_name'] = data[0].text
+                    vac_info['level'] = data[1].text
+                    vac_info['towns'] = data[2].text
+                    self.df.loc[len(self.df)] = vac_info
+                except Exception as e:
+                    log.error(f"Произошла ошибка: {e}, ссылка на вакансию: {vac_info['vacancy_id']}")
 
             self.df = self.df.drop_duplicates()
+            self.log.info("Общее количество найденных вакансий после удаления дубликатов: "
+                          + str(len(self.df)) + "\n")
             self.df['company'] = 'Тинькофф'
             self.df['date_created'] = datetime.now().date()
             self.df['date_of_download'] = datetime.now().date()
+            self.df['source_vac'] = url_tin
             self.df['description'] = None
             self.df['status'] = 'existing'
-            self.df['sign'] = 1
-            self.df['version'] = 1
+            self.df['actual'] = 1
 
             self.log.info(
-                f"Парсер завершил работу. Обработано {len(vacs)} вакансий. Оставлены только уникальные записи. "
+                f"Парсер завершил работу. Обработано {len(self.df)} вакансий. Оставлены только уникальные записи. "
                 f"Записи обновлены данными о компании, дате создания и загрузки.")
 
-    # def all_vacs_parser(self):
-    #     """
-    #     Метод для нахождения вакансий с Tinkoff
-    #     """
-    #     self.df = pd.DataFrame(
-    #         columns=['link', 'name', 'location', 'level', 'company', 'date_created', 'date_of_download', 'status',
-    #                  'version', 'sign', 'description'])
-    #
-    #     self.log.info("Создан DataFrame для записи вакансий")
-    #
-    #     self.browser.implicitly_wait(3)
-    #     try:
-    #         vac_index = 0
-    #         while True:
-    #             try:
-    #                 vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
-    #             except IndexError:
-    #                 break  # Закончили обработку всех элементов
-    #
-    #             self.log.info(f"Обработка вакансии номер {vac_index + 1}")
-    #
-    #             vac_info = {}
-    #             vac_info['link'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
-    #             data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
-    #             vac_info['name'] = data[0].text
-    #             vac_info['level'] = data[1].text
-    #             vac_info['location'] = data[2].text
-    #             self.df.loc[len(self.df)] = vac_info
-    #             vac_index += 1
-    #
-    #         self.df = self.df.drop_duplicates()
-    #         self.df['company'] = 'Тинькофф'
-    #         self.df['date_created'] = datetime.now().date()
-    #         self.df['date_of_download'] = datetime.now().date()
-    #         self.df['description'] = None
-    #         self.df['status'] = 'existing'
-    #         self.df['sign'] = 1
-    #         self.df['version'] = 1
-    #         self.df['salary'] = np.nan
-    #
-    #         self.log.info(
-    #             f"Парсер завершил работу. Обработано {vac_index} вакансий. Оставлены только уникальные записи. "
-    #             f"Записи обновлены данными о компании, дате создания и загрузки.")
-    #
-    #     except Exception as e:
-    #         self.log.error(f"Произошла ошибка: {e}")
+        except Exception as e:
+            self.log.error(f"Произошла ошибка: {e}")
 
     def find_vacancies_description(self):
         """
@@ -919,8 +817,8 @@ class TinkoffJobParser(BaseJobParser):
         if not self.df.empty:
             for descr in self.df.index:
                 try:
-                    link = self.df.loc[descr, 'link']
-                    self.browser.get(link)
+                    vacancy_id = self.df.loc[descr, 'vacancy_id']
+                    self.browser.get(vacancy_id)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(3)
                     desc = str(self.browser.find_element(By.CLASS_NAME, 'dyzaXu').text)
@@ -930,16 +828,28 @@ class TinkoffJobParser(BaseJobParser):
                     self.log.info(f"Описание успешно добавлено для вакансии {descr + 1}")
 
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
                     pass
         else:
-            self.log.info(f"Нет вакансий для парсинга")
+            self.log.info(f"Нет описания вакансий для парсинга")
 
     def save_df(self):
         """
         Метод для сохранения данных в базу данных Tinkoff
         """
+        self.cur = self.conn.cursor()
+
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
         self.df['description'] = self.df['description'].astype(str)
+
         table_name = 'raw_tin'
         self.log.info("Общее количество вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
         try:
@@ -1139,7 +1049,6 @@ def run_vk_parser(**context):
     try:
         parser = VKJobParser(url_vk, profs, log, conn)
         parser.find_vacancies()
-        parser.find_values_in_db()
         parser.find_vacancies_description()
         parser.save_df()
         parser.update_database_queries()
@@ -1157,7 +1066,6 @@ def run_sber_parser(**context):
     try:
         parser = SberJobParser(url_sber, profs, log, conn)
         parser.find_vacancies()
-        parser.find_values_in_db()
         parser.find_vacancies_description()
         parser.save_df()
         parser.update_database_queries()

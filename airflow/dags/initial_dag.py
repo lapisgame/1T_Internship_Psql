@@ -478,10 +478,14 @@ class TinkoffJobParser(BaseJobParser):
     """
     Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
     """
+
     def open_all_pages(self):
+        self.log.info('Работает функция open_all_pages')
+        self.browser.implicitly_wait(10)
         elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
         for element in elements:
             element.click()
+        self.log.info('Работает успешно завершена')
 
     def all_vacs_parser(self):
         """
@@ -494,25 +498,29 @@ class TinkoffJobParser(BaseJobParser):
                      'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
 
-        self.browser.implicitly_wait(3)
         try:
-            vac_index = 0
-            while True:
+            # vac_index = 0
+            # while True:
+            #     try:
+            #         vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
+            #     except IndexError:
+            #         break  # Закончили обработку всех элементов
+
+            #     self.log.info(f"Обработка вакансии номер {vac_index + 1}")
+
+            self.browser.implicitly_wait(3)
+            vacs = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')
+            for vac in vacs:
                 try:
-                    vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
-                except IndexError:
-                    break  # Закончили обработку всех элементов
-
-                self.log.info(f"Обработка вакансии номер {vac_index + 1}")
-
-                vac_info = {}
-                vac_info['vacancy_id'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
-                data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
-                vac_info['vacancy_name'] = data[0].text
-                vac_info['level'] = data[1].text
-                vac_info['towns'] = data[2].text
-                self.df.loc[len(self.df)] = vac_info
-                vac_index += 1
+                    vac_info = {}
+                    vac_info['vacancy_id'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                    data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
+                    vac_info['vacancy_name'] = data[0].text
+                    vac_info['level'] = data[1].text
+                    vac_info['towns'] = data[2].text
+                    self.df.loc[len(self.df)] = vac_info
+                except Exception as e:
+                    log.error(f"Произошла ошибка: {e}, ссылка на вакансию: {vac_info['vacancy_id']}")
 
             self.df = self.df.drop_duplicates()
             self.log.info("Общее количество найденных вакансий после удаления дубликатов: "
@@ -527,7 +535,7 @@ class TinkoffJobParser(BaseJobParser):
             self.df['version_vac'] = 1
 
             self.log.info(
-                f"Парсер завершил работу. Обработано {vac_index} вакансий. Оставлены только уникальные записи. "
+                f"Парсер завершил работу. Обработано {len(self.df)} вакансий. Оставлены только уникальные записи. "
                 f"Записи обновлены данными о компании, дате создания и загрузки.")
 
         except Exception as e:
