@@ -319,15 +319,11 @@ class VKJobParser(BaseJobParser):
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
                             elif old_status == 'existing':
-                                if (
-                                        old_record[1].strip().lower() == record[1].strip().lower() and
-                                        old_record[2].strip().lower() == record[2].strip().lower() and
-                                        old_record[3].strip().lower() == record[3].strip().lower() and
-                                        old_record[4].strip().lower() == record[4].strip().lower() and
-                                        old_record[5].strip().lower() == record[5].strip().lower() and
-                                        old_record[6].strip().lower() == record[6].strip().lower()
-                                ):
+                                if old_record[1] == record[1] and old_record[2] == record[2] and \
+                                    old_record[3] == record[3] and old_record[4] == record[4] and \
+                                    old_record[5] == record[5] and old_record[6] == record[6]:
                                     pass
+
                                 else:
                                     data_new_vac = {
                                         'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
@@ -404,6 +400,8 @@ class VKJobParser(BaseJobParser):
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_closed пуст.")
 
             if not self.dataframe_to_update.empty:
 
@@ -425,6 +423,8 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_update пуст.")
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -630,14 +630,9 @@ class SberJobParser(BaseJobParser):
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
                             elif old_status == 'existing':
-                                if (
-                                        old_record[1].strip().lower() == record[1].strip().lower() and
-                                        old_record[2].strip().lower() == record[2].strip().lower() and
-                                        old_record[3].strip().lower() == record[3].strip().lower() and
-                                        old_record[4].strip().lower() == record[4].strip().lower() and
-                                        old_record[5].strip().lower() == record[5].strip().lower() and
-                                        old_record[6].strip().lower() == record[6].strip().lower()
-                                ):
+                                if old_record[1] == record[1] and old_record[2] == record[2] and \
+                                        old_record[3] == record[3] and old_record[4] == record[4] and \
+                                        old_record[5] == record[5] and old_record[6] == record[6]:
                                     pass
                                 else:
                                     data_new_vac = {
@@ -715,6 +710,9 @@ class SberJobParser(BaseJobParser):
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_closed пуст.")
+
 
             if not self.dataframe_to_update.empty:
 
@@ -736,6 +734,8 @@ class SberJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_closed пуст.")
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -943,16 +943,11 @@ class TinkoffJobParser(BaseJobParser):
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
                             elif old_status == 'existing':
-                                if (
-                                        old_record[1].strip().lower() == record[1].strip().lower() and
-                                        old_record[2].strip().lower() == record[2].strip().lower() and
-                                        old_record[3].strip().lower() == record[3].strip().lower() and
-                                        old_record[4].strip().lower() == record[4].strip().lower() and
-                                        old_record[5].strip().lower() == record[5].strip().lower() and
-                                        old_record[6].strip().lower() == record[6].strip().lower() and
-                                        old_record[7].strip().lower() == record[7].strip().lower()
-                                ):
+                                if old_record[1] == record[1] and old_record[2] == record[2] and \
+                                    old_record[3] == record[3] and old_record[4] == record[4] and \
+                                    old_record[5] == record[5] and old_record[6] == record[6]:
                                     pass
+
                                 else:
                                     data_new_vac = {
                                         'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
@@ -1000,7 +995,6 @@ class TinkoffJobParser(BaseJobParser):
 
         try:
             if not self.dataframe_to_closed.empty:
-
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
@@ -1030,6 +1024,9 @@ class TinkoffJobParser(BaseJobParser):
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
 
+            else:
+                self.log.info(f"dataframe_to_closed пуст.")
+
             if not self.dataframe_to_update.empty:
 
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
@@ -1050,6 +1047,9 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_update пуст.")
+
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -1250,15 +1250,9 @@ class YandJobParser(BaseJobParser):
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
                             elif old_status == 'existing':
-                                if (
-                                        old_record[1].strip().lower() == record[1].strip().lower() and
-                                        old_record[2].strip().lower() == record[2].strip().lower() and
-                                        old_record[3].strip().lower() == record[3].strip().lower() and
-                                        old_record[4].strip().lower() == record[4].strip().lower() and
-                                        old_record[5].strip().lower() == record[5].strip().lower() and
-                                        old_record[6].strip().lower() == record[6].strip().lower() and
-                                        old_record[7].strip().lower() == record[7].strip().lower()
-                                ):
+                                if old_record[1] == record[1] and old_record[2] == record[2] and \
+                                    old_record[3] == record[3] and old_record[4] == record[4] and \
+                                    old_record[5] == record[5] and old_record[6] == record[6]:
                                     pass
                                 else:
                                     data_new_vac = {
