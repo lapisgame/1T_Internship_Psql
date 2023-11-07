@@ -2,7 +2,7 @@ apiVersion: 1
 datasources:
   - name: postgresql_db
     type: postgres
-    url: host.docker.internal:10121
+    url: 146.120.224.155:10121
     user: admin
     secureJsonData:
       password: 'password'
@@ -15,13 +15,13 @@ datasources:
       connMaxLifetime: 14400 # Grafana v5.4+
       postgresVersion: 1500 # 903=9.3, 904=9.4, 905=9.5, 906=9.6, 1000=10
       timescaledb: false
-  - name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://localhost:10125
-    jsonData:
-      httpMethod: POST
-      manageAlerts: true
+#  - name: Prometheus
+#    type: prometheus
+#    access: proxy
+#    url: http://localhost:10125
+#    jsonData:
+#      httpMethod: POST
+#      manageAlerts: true
       #
 #      prometheusType: Prometheus
 #      prometheusVersion: 2.44.0
