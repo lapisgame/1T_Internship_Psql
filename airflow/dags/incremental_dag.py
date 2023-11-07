@@ -385,14 +385,14 @@ class VKJobParser(BaseJobParser):
                 query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, [data_tuples_to_closed])
-                self.log.info(f"Количество строк удалено из {self.table_name}: "
+                self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
 
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
                               f"{config['database']}.")
@@ -403,10 +403,11 @@ class VKJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.cur.executemany(query, [data_to_delete_tuples])
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
+
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
@@ -425,7 +426,7 @@ class VKJobParser(BaseJobParser):
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
+                self.cur.executemany(query, [core_fact_data_tuples])
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
@@ -439,7 +440,6 @@ class VKJobParser(BaseJobParser):
             self.log.error(f"Произошла ошибка: {str(e)}")
         finally:
             self.cur.close()
-
 
 class SberJobParser(BaseJobParser):
     """
@@ -700,7 +700,7 @@ class SberJobParser(BaseJobParser):
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
                               f"{config['database']}.")
@@ -711,10 +711,11 @@ class SberJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.cur.executemany(query, [data_to_delete_tuples])
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
+
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
@@ -733,12 +734,13 @@ class SberJobParser(BaseJobParser):
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
+                self.cur.executemany(query, [core_fact_data_tuples])
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
             else:
-                self.log.info(f"dataframe_to_closed пуст.")
+                self.log.info(f"dataframe_to_update пуст.")
+
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -747,7 +749,6 @@ class SberJobParser(BaseJobParser):
             self.log.error(f"Произошла ошибка: {str(e)}")
         finally:
             self.cur.close()
-
 
 class TinkoffJobParser(BaseJobParser):
     """
@@ -1012,7 +1013,7 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
                               f"{config['database']}.")
@@ -1023,7 +1024,7 @@ class TinkoffJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.cur.executemany(query, [data_to_delete_tuples])
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
@@ -1046,13 +1047,12 @@ class TinkoffJobParser(BaseJobParser):
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
+                self.cur.executemany(query, [core_fact_data_tuples])
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
-
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -1307,7 +1307,7 @@ class YandJobParser(BaseJobParser):
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
                 query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
                               f"{config['database']}.")
@@ -1318,7 +1318,7 @@ class YandJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.cur.executemany(query, [data_to_delete_tuples])
                     self.log.info(f"Количество строк удалено из core_fact_table: "
                                   f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
                                   f"{config['database']}.")
@@ -1341,13 +1341,12 @@ class YandJobParser(BaseJobParser):
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
+                self.cur.executemany(query, [core_fact_data_tuples])
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
                               f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
                               f"в БД {config['database']}.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
-
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
