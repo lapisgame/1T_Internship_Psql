@@ -46,6 +46,7 @@ config = {
 }
 
 conn = psycopg2.connect(**config)
+conn.autocommit = False
 
 # Variables settings
 # Загружаем переменные из JSON файла
@@ -407,7 +408,6 @@ class VKJobParser(BaseJobParser):
         Метод для выполнения запросов к базе данных.
         """
         self.cur = self.conn.cursor()
-        self.conn.autocommit = False
 
         try:
             if not self.dataframe_to_closed.empty:
@@ -469,7 +469,6 @@ class VKJobParser(BaseJobParser):
             self.log.error(f"Произошла ошибка: {str(e)}")
         finally:
             self.cur.close()
-            self.conn.autocommit = True
 
 
 class SberJobParser(BaseJobParser):
@@ -757,7 +756,6 @@ class SberJobParser(BaseJobParser):
         Метод для выполнения запросов к базе данных.
         """
         self.cur = self.conn.cursor()
-        self.conn.autocommit = False
 
         try:
             if not self.dataframe_to_closed.empty:
@@ -819,7 +817,6 @@ class SberJobParser(BaseJobParser):
             self.log.error(f"Произошла ошибка: {str(e)}")
         finally:
             self.cur.close()
-            self.conn.autocommit = True
 
 
 class TinkoffJobParser(BaseJobParser):
