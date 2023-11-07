@@ -2,7 +2,7 @@ apiVersion: 1
 datasources:
   - name: postgresql_db
     type: postgres
-    url: 146.120.224.155:10121
+    url: postgresql_db:5432
     user: admin
     secureJsonData:
       password: 'password'
