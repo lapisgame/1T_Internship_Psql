@@ -95,8 +95,7 @@ default_args = {
 updated_raw_dag=DAG(dag_id='updated_raw_dag',
                 tags=['admin_1T'],
                 start_date=datetime(2023, 11, 5),
-                # schedule_interval='0 */6 * * *',
-                schedule_interval=None,
+                schedule_interval='daily',
                 default_args=default_args
                 )
 
