@@ -379,14 +379,13 @@ class VKJobParser(BaseJobParser):
 
         try:
             if not self.dataframe_to_closed.empty:
-
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
-                self.log.info(f"Количество строк удалено из core_fact_table: "
+                self.cur.executemany(query, [data_tuples_to_closed])
+                self.log.info(f"Количество строк удалено из {self.table_name}: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
 
@@ -412,13 +411,12 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"dataframe_to_closed пуст.")
 
             if not self.dataframe_to_update.empty:
-
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_insert)
+                self.cur.executemany(query, [data_tuples_to_insert])
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
@@ -689,13 +687,12 @@ class SberJobParser(BaseJobParser):
 
         try:
             if not self.dataframe_to_closed.empty:
-
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
@@ -721,15 +718,13 @@ class SberJobParser(BaseJobParser):
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
-
             if not self.dataframe_to_update.empty:
-
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_insert)
+                self.cur.executemany(query, [data_tuples_to_insert])
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
@@ -1007,9 +1002,9 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
@@ -1037,13 +1032,12 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f"dataframe_to_closed пуст.")
 
             if not self.dataframe_to_update.empty:
-
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_insert)
+                self.cur.executemany(query, [data_tuples_to_insert])
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
@@ -1303,9 +1297,9 @@ class YandJobParser(BaseJobParser):
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_closed)
+                self.cur.executemany(query, [data_tuples_to_closed])
                 self.log.info(f"Количество строк удалено из core_fact_table: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
@@ -1333,13 +1327,12 @@ class YandJobParser(BaseJobParser):
                 self.log.info(f"dataframe_to_closed пуст.")
 
             if not self.dataframe_to_update.empty:
-
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, data_tuples_to_insert)
+                self.cur.executemany(query, [data_tuples_to_insert])
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
                               f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
                               f"в БД {config['database']}.")
