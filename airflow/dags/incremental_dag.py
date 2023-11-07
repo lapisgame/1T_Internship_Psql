@@ -1148,23 +1148,23 @@ def run_vk_parser(**context):
     except Exception as e_outer:
         log.error(f'Исключение в функции run_vk_parser: {e_outer}')
 
-# def run_sber_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий Sber
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера Сбербанка')
-#     try:
-#         parser = SberJobParser(url_sber, profs, log, conn)
-#         parser.find_vacancies()
-#         parser.find_values_in_db()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.update_database_queries()
-#         parser.stop()
-#         log.info('Парсер Сбербанка успешно провел работу')
-#     except Exception as e_outer:
-#         log.error(f'Исключение в функции run_sber_parser: {e_outer}')
+def run_sber_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий Sber
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера Сбербанка')
+    try:
+        parser = SberJobParser(url_sber, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_values_in_db()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.update_database_queries()
+        parser.stop()
+        log.info('Парсер Сбербанка успешно провел работу')
+    except Exception as e_outer:
+        log.error(f'Исключение в функции run_sber_parser: {e_outer}')
 #
 # def run_tin_parser(**context):
 #     """
@@ -1199,13 +1199,13 @@ parse_vkjobs = PythonOperator(
     dag=updated_raw_dag
 )
 
-# parse_sber = PythonOperator(
-#     task_id='parse_sber',
-#     python_callable=run_sber_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
+parse_sber = PythonOperator(
+    task_id='parse_sber',
+    python_callable=run_sber_parser,
+    provide_context=True,
+    dag=updated_raw_dag
+)
+
 # parse_tink = PythonOperator(
 #     task_id='parse_tink',
 #     python_callable=run_tin_parser,
@@ -1218,5 +1218,5 @@ end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> parse_vkjobs >> end_task
+hello_bash_task >> parse_vkjobs >> parse_sber >> end_task
 # hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
