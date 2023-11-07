@@ -626,7 +626,7 @@ class SberJobParser(BaseJobParser):
 
                             if old_status == 'new':
                                 data_new_vac = {
-                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                    'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
                                     'company': record[3], 'description': record[4],
                                     'source_vac': record[5], 'date_created': old_record[6],
                                     'date_of_download': datetime.now().date(), 'status': 'existing',
@@ -642,7 +642,7 @@ class SberJobParser(BaseJobParser):
                                     pass
                                 else:
                                     data_new_vac = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': old_record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'existing',
@@ -654,7 +654,7 @@ class SberJobParser(BaseJobParser):
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'new',
@@ -665,7 +665,7 @@ class SberJobParser(BaseJobParser):
                                     )
                                 else:
                                     data_full_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
@@ -723,7 +723,7 @@ class SberJobParser(BaseJobParser):
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) ({", ".join(["%s"] * 11)})"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_insert)
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
@@ -1296,7 +1296,7 @@ class YandJobParser(BaseJobParser):
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) ({", ".join(["%s"] * 12)})"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -1304,7 +1304,7 @@ class YandJobParser(BaseJobParser):
                               f"{config['database']}.")
 
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
-                query = f"""INSERT INTO del_vacancy_core ({cols}) ({", ".join(["%s"] * 12)})"""
+                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
@@ -1329,7 +1329,7 @@ class YandJobParser(BaseJobParser):
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) ({", ".join(["%s"] * 11)})"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_insert)
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
@@ -1338,7 +1338,7 @@ class YandJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) ({", ".join(["%s"] * 11)})"""
+                query = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, core_fact_data_tuples)
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
