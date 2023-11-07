@@ -1472,4 +1472,4 @@ end_task = DummyOperator(
 )
 
 # hello_bash_task >> parse_tink >> end_task
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
+hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
