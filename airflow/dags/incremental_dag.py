@@ -449,8 +449,8 @@ class SberJobParser(BaseJobParser):
         Метод для нахождения вакансий с Sberbank
         """
         self.cur = self.conn.cursor()
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
-                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
+        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'description', 'source_vac',
+                                        'date_created', 'date_of_download', 'status', 'version_vac', 'actual'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(1)
         # Поиск и запись вакансий на поисковой странице
@@ -625,7 +625,7 @@ class SberJobParser(BaseJobParser):
 
                             if old_status == 'new':
                                 data_new_vac = {
-                                    'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'company': record[3], 'description': record[4],
                                     'source_vac': record[5], 'date_created': old_record[6],
                                     'date_of_download': datetime.now().date(), 'status': 'existing',
@@ -641,7 +641,7 @@ class SberJobParser(BaseJobParser):
                                     pass
                                 else:
                                     data_new_vac = {
-                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': old_record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'existing',
@@ -653,7 +653,7 @@ class SberJobParser(BaseJobParser):
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
-                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'new',
@@ -664,7 +664,7 @@ class SberJobParser(BaseJobParser):
                                     )
                                 else:
                                     data_full_new = {
-                                        'vacancy_id': record[0], 'vacancy_name': record[1], 'towns': record[2],
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'company': record[3], 'description': record[4],
                                         'source_vac': record[5], 'date_created': record[6],
                                         'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
@@ -768,8 +768,8 @@ class TinkoffJobParser(BaseJobParser):
         self.cur = self.conn.cursor()
 
         self.df = pd.DataFrame(
-            columns=['vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac', 'date_created',
-                     'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'])
+            columns=['vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'])
         self.log.info("Создан DataFrame для записи вакансий")
 
         try:
@@ -1063,8 +1063,8 @@ class TinkoffJobParser(BaseJobParser):
 class YandJobParser(BaseJobParser):
     def find_vacancies(self):
         self.log.info('Старт парсинга вакансий Yandex')
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'company', 'skills', 'source_vac', 'date_created',
-                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
+        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'company', 'description', 'skills', 'source_vac',
+                                        'date_created', 'date_of_download', 'status', 'version_vac', 'actual'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(3)
         # Поиск и запись вакансий на поисковой странице
@@ -1232,7 +1232,6 @@ class YandJobParser(BaseJobParser):
                         for old_record in records_in_db:
                             old_status = old_record[-3]
                             next_version = old_record[-2] + 1
-
                             if old_status == 'new':
                                 data_new_vac = {
                                     'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
