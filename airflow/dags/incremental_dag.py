@@ -881,44 +881,40 @@ class TinkoffJobParser(BaseJobParser):
                 ])
 
                 self.log.info('Создаем датафрейм dataframe_to_closed')
-                if links_to_close:
-                    for link in links_to_close:
-                        records_to_close = self.cur.execute(
-                            f"""
-                            SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
-                                date_created, date_of_download, status, version_vac, actual
-                            FROM {self.table_name}
-                            WHERE vacancy_id = '{link}'
-                                AND status != 'closed'
-                                AND actual != '-1'
-                                AND version_vac = (
-                                    SELECT max(version_vac) FROM {self.table_name}
-                                    WHERE vacancy_id = '{link}'
-                                )
-                            ORDER BY date_of_download DESC, version_vac DESC
-                            LIMIT 1
-                            """
-                        )
-                        if records_to_close:
-                            for record in records_to_close:
-                                data = {
-                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                    'level': record[3], 'company': record[4], 'description': record[5],
-                                    'source_vac': record[6], 'date_created': record[7],
-                                    'date_of_download': datetime.now().date(), 'status': 'closed',
-                                    'date_closed': datetime.now().date(), 'version_vac': record[-2] + 1, 'sign': -1
-                                }
-                                self.dataframe_to_closed = pd.concat(
-                                    [self.dataframe_to_closed, pd.DataFrame(data, index=[0])])
-                    self.log.info('Датафрейм dataframe_to_closed создан')
-                else:
-                    self.log.info('Список links_to_close пуст')
+                for link in links_to_close:
+                    self.cur.execute(
+                        f"""
+                        SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
+                            date_created, date_of_download, status, version_vac, actual
+                        FROM {self.table_name}
+                        WHERE vacancy_id = '{link}'
+                            AND status != 'closed'
+                            AND actual != '-1'
+                            AND version_vac = (
+                                SELECT max(version_vac) FROM {self.table_name}
+                                WHERE vacancy_id = '{link}'
+                            )
+                        ORDER BY date_of_download DESC, version_vac DESC
+                        LIMIT 1
+                        """)
+                    records_to_close = self.cur.fetchall()
+                    for record in records_to_close:
+                        data = {
+                            'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                            'level': record[3], 'company': record[4], 'description': record[5],
+                            'source_vac': record[6], 'date_created': record[7],
+                            'date_of_download': datetime.now().date(), 'status': 'closed',
+                            'date_closed': datetime.now().date(), 'version_vac': record[-2] + 1, 'sign': -1
+                        }
+                        self.dataframe_to_closed = pd.concat(
+                            [self.dataframe_to_closed, pd.DataFrame(data, index=[0])])
+                self.log.info('Датафрейм dataframe_to_closed создан')
 
                 self.log.info('Присваиваем статусы изменений')
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
-                    records_in_db = self.cur.execute(
+                    self.cur.execute(
                         f"""
                         SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
                                date_created, date_of_download, status, version_vac, actual
@@ -928,12 +924,29 @@ class TinkoffJobParser(BaseJobParser):
                         LIMIT 1
                         """
                     )
-                    if records_in_db:
-                        for old_record in records_in_db:
-                            old_status = old_record[-3]
-                            next_version = old_record[-2] + 1
+                    records_in_db = self.cur.fetchall()
+                    for old_record in records_in_db:
+                        old_status = old_record[-3]
+                        next_version = old_record[-2] + 1
 
-                            if old_status == 'new':
+                        if old_status == 'new':
+                            data_new_vac = {
+                                'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                'level': record[3], 'company': record[4], 'description': record[5],
+                                'source_vac': record[6], 'date_created': old_record[7],
+                                'date_of_download': datetime.now().date(), 'status': 'existing',
+                                'version_vac': next_version, 'actual': 1
+                            }
+                            self.dataframe_to_update = pd.concat(
+                                [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                            )
+                        elif old_status == 'existing':
+                            if old_record[1] == record[1] and old_record[2] == record[2] and \
+                                old_record[3] == record[3] and old_record[4] == record[4] and \
+                                old_record[5] == record[5] and old_record[6] == record[6]:
+                                pass
+
+                            else:
                                 data_new_vac = {
                                     'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'level': record[3], 'company': record[4], 'description': record[5],
@@ -944,46 +957,29 @@ class TinkoffJobParser(BaseJobParser):
                                 self.dataframe_to_update = pd.concat(
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                 )
-                            elif old_status == 'existing':
-                                if old_record[1] == record[1] and old_record[2] == record[2] and \
-                                    old_record[3] == record[3] and old_record[4] == record[4] and \
-                                    old_record[5] == record[5] and old_record[6] == record[6]:
-                                    pass
-
-                                else:
-                                    data_new_vac = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': old_record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'existing',
-                                        'version_vac': next_version, 'actual': 1
-                                    }
-                                    self.dataframe_to_update = pd.concat(
-                                        [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
-                                    )
-                            elif old_status == 'closed':
-                                if link in links_in_parsed:
-                                    data_clos_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'new',
-                                        'version_vac': next_version, 'actual': 1
-                                    }
-                                    self.dataframe_to_update = pd.concat(
-                                        [self.dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
-                                    )
-                                else:
-                                    data_full_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
-                                        'actual': 1
-                                    }
-                                    self.dataframe_to_update = pd.concat(
-                                        [self.dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
-                                    )
+                        elif old_status == 'closed':
+                            if link in links_in_parsed:
+                                data_clos_new = {
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                    'level': record[3], 'company': record[4], 'description': record[5],
+                                    'source_vac': record[6], 'date_created': record[7],
+                                    'date_of_download': datetime.now().date(), 'status': 'new',
+                                    'version_vac': next_version, 'actual': 1
+                                }
+                                self.dataframe_to_update = pd.concat(
+                                    [self.dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
+                                )
+                            else:
+                                data_full_new = {
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
+                                    'level': record[3], 'company': record[4], 'description': record[5],
+                                    'source_vac': record[6], 'date_created': record[7],
+                                    'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
+                                    'actual': 1
+                                }
+                                self.dataframe_to_update = pd.concat(
+                                    [self.dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
+                                )
 
         except Exception as e:
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
