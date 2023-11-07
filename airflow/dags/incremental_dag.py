@@ -880,8 +880,7 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info('Создаем датафрейм dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
-                        records_to_close = self.cur.execute(
-                            f"""
+                        query =  f"""
                                  SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
                                         date_created, date_of_download, status, version_vac, actual
                                  FROM {self.table_name}
@@ -895,7 +894,8 @@ class TinkoffJobParser(BaseJobParser):
                                  ORDER BY date_of_download DESC, version_vac DESC
                                  LIMIT 1
                                  """
-                        )
+                        self.cur.execute(query)
+                        records_to_close = self.cur.fetchall()
                         if records_to_close:
                             for record in records_to_close:
                                 data = {
@@ -915,8 +915,7 @@ class TinkoffJobParser(BaseJobParser):
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
-                    self.cur.execute(
-                        f"""
+                    query = f"""
                         SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
                                date_created, date_of_download, status, version_vac, actual
                         FROM {self.table_name}
@@ -924,7 +923,7 @@ class TinkoffJobParser(BaseJobParser):
                         ORDER BY date_of_download DESC, version_vac DESC
                         LIMIT 1
                         """
-                    )
+                    self.cur.execute(query)
                     records_in_db = self.cur.fetchall()
                     if records_in_db:
                         for old_record in records_in_db:
