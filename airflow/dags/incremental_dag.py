@@ -858,12 +858,15 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
                 self.log.info('Собираем вакансии для сравнения')
-                query = f"""SELECT vacancy_id FROM {self.table_name}
-                            WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
-                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
+                query = f"""
+                    SELECT vacancy_id FROM {self.table_name}
+                    WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
+                    ORDER BY date_of_download DESC, version_vac DESC
+                    LIMIT 1
+                """
                 self.cur.execute(query)
-
                 links_in_db = self.cur.fetchall()
+
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
                 links_in_parsed = set(self.df['vacancy_id'])
                 links_to_close = links_in_db_set - links_in_parsed
@@ -872,7 +875,6 @@ class TinkoffJobParser(BaseJobParser):
                     'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
-
                 self.dataframe_to_update = pd.DataFrame(columns=[
                     'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
@@ -884,7 +886,7 @@ class TinkoffJobParser(BaseJobParser):
                         records_to_close = self.cur.execute(
                             f"""
                             SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
-                                   date_created, date_of_download, status, version_vac, actual
+                                date_created, date_of_download, status, version_vac, actual
                             FROM {self.table_name}
                             WHERE vacancy_id = '{link}'
                                 AND status != 'closed'
@@ -906,8 +908,8 @@ class TinkoffJobParser(BaseJobParser):
                                     'date_of_download': datetime.now().date(), 'status': 'closed',
                                     'date_closed': datetime.now().date(), 'version_vac': record[-2] + 1, 'sign': -1
                                 }
-                                self.dataframe_to_closed = pd.concat([self.dataframe_to_closed,
-                                                                      pd.DataFrame(data, index=[0])])
+                                self.dataframe_to_closed = pd.concat(
+                                    [self.dataframe_to_closed, pd.DataFrame(data, index=[0])])
                     self.log.info('Датафрейм dataframe_to_closed создан')
                 else:
                     self.log.info('Список links_to_close пуст')
