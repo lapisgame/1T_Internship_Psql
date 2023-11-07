@@ -140,6 +140,12 @@ class BaseJobParser:
         """
         raise NotImplementedError("Вы должны определить метод save_df")
 
+    def update_database_queries(self):
+        """
+        Метод для выполнения запросов к базе данных.
+        """
+        raise NotImplementedError("Вы должны определить метод save_df")
+
 
 class VKJobParser(BaseJobParser):
     """
@@ -258,8 +264,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info('Создаем датафрейм dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
-                        records_to_close = self.cur.execute(
-                            f"""
+                        query = f"""
                             SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                    date_created, date_of_download, status, version_vac, actual
                             FROM {self.table_name}
@@ -273,7 +278,9 @@ class VKJobParser(BaseJobParser):
                             ORDER BY date_of_download DESC, version_vac DESC
                             LIMIT 1
                             """
-                        )
+                        self.cur.execute(query)
+                        records_to_close = self.cur.fetchall()
+
                         if records_to_close:
                             for record in records_to_close:
                                 data = {
@@ -292,8 +299,7 @@ class VKJobParser(BaseJobParser):
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
-                    records_in_db = self.cur.execute(
-                        f"""
+                    query = f"""
                         SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                date_created, date_of_download, status, version_vac, actual
                         FROM {self.table_name}
@@ -301,7 +307,9 @@ class VKJobParser(BaseJobParser):
                         ORDER BY date_of_download DESC, version_vac DESC
                         LIMIT 1
                         """
-                    )
+                    self.cur.execute(query)
+                    records_in_db = self.cur.fetchall()
+
                     if records_in_db:
                         for old_record in records_in_db:
                             old_status = old_record[-3]
@@ -569,8 +577,7 @@ class SberJobParser(BaseJobParser):
                 self.log.info('Создаем датафрейм dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
-                        records_to_close = self.cur.execute(
-                            f"""
+                        query = f"""
                             SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                    date_created, date_of_download, status, version_vac, actual
                             FROM {self.table_name}
@@ -584,7 +591,8 @@ class SberJobParser(BaseJobParser):
                             ORDER BY date_of_download DESC, version_vac DESC
                             LIMIT 1
                             """
-                        )
+                        self.cur.execute(query)
+                        records_to_close = self.cur.fetchall()
                         if records_to_close:
                             for record in records_to_close:
                                 data = {
@@ -603,8 +611,7 @@ class SberJobParser(BaseJobParser):
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
-                    records_in_db = self.cur.execute(
-                        f"""
+                    query = f"""
                         SELECT vacancy_id, vacancy_name, towns, company, description, source_vac,
                                date_created, date_of_download, status, version_vac, actual
                         FROM {self.table_name}
@@ -612,7 +619,8 @@ class SberJobParser(BaseJobParser):
                         ORDER BY date_of_download DESC, version_vac DESC
                         LIMIT 1
                         """
-                    )
+                    self.cur.execute(query)
+                    records_in_db = self.cur.fetchall()
                     if records_in_db:
                         for old_record in records_in_db:
                             old_status = old_record[-3]
@@ -1104,12 +1112,7 @@ class YandJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий в Yandex после удаления дубликатов: " +
                       str(len(self.df)) + "\n")
-        self.df['date_created'] = datetime.now().date()
-        self.df['date_of_download'] = datetime.now().date()
-        self.df['source_vac'] = url_yand
         self.df['description'] = None
-        self.df['status'] = 'existing'
-        self.df['actual'] = 1
         # self.df['version_vac'] = 1
 
     def find_vacancies_description(self):
@@ -1159,10 +1162,10 @@ class YandJobParser(BaseJobParser):
                 self.cur = self.conn.cursor()
                 self.df['date_created'] = datetime.now().date()
                 self.df['date_of_download'] = datetime.now().date()
-                self.df['source_vac'] = url_tin
+                self.df['source_vac'] = url_yand
                 self.df['status'] = 'existing'
                 self.df['actual'] = 1
-                self.table_name = raw_tables[2]
+                self.table_name = raw_tables[3]
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
                 self.log.info('Собираем вакансии для сравнения')
@@ -1170,28 +1173,26 @@ class YandJobParser(BaseJobParser):
                             WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
                             ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
                 self.cur.execute(query)
-
                 links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
                 links_in_parsed = set(self.df['vacancy_id'])
                 links_to_close = links_in_db_set - links_in_parsed
 
                 self.dataframe_to_closed = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'vacancy_id', 'vacancy_name', 'company', 'description', 'skills', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
                 ])
 
                 self.dataframe_to_update = pd.DataFrame(columns=[
-                    'vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'description', 'source_vac',
+                    'vacancy_id', 'vacancy_name', 'company', 'description', 'skills', 'source_vac',
                     'date_created', 'date_of_download', 'status', 'version_vac', 'actual'
                 ])
 
                 self.log.info('Создаем датафрейм dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
-                        records_to_close = self.cur.execute(
-                            f"""
-                            SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
+                        query = f"""
+                            SELECT vacancy_id, vacancy_name, company, description, skills, source_vac,
                                    date_created, date_of_download, status, version_vac, actual
                             FROM {self.table_name}
                             WHERE vacancy_id = '{link}'
@@ -1204,15 +1205,16 @@ class YandJobParser(BaseJobParser):
                             ORDER BY date_of_download DESC, version_vac DESC
                             LIMIT 1
                             """
-                        )
+                        self.cur.execute(query)
+                        records_to_close = self.cur.fetchall()
                         if records_to_close:
                             for record in records_to_close:
                                 data = {
-                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                    'level': record[3], 'company': record[4], 'description': record[5],
-                                    'source_vac': record[6], 'date_created': record[7],
-                                    'date_of_download': datetime.now().date(), 'status': 'closed',
-                                    'date_closed': datetime.now().date(), 'version_vac': record[-2] + 1, 'sign': -1
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
+                                    'description': record[3], 'skills': record[4], 'source_vac': record[5],
+                                    'date_created': record[6], 'date_of_download': datetime.now().date(),
+                                    'status': 'closed', 'date_closed': datetime.now().date(),
+                                    'version_vac': record[-2] + 1, 'sign': -1
                                 }
                                 self.dataframe_to_closed = pd.concat([self.dataframe_to_closed,
                                                                       pd.DataFrame(data, index=[0])])
@@ -1224,16 +1226,16 @@ class YandJobParser(BaseJobParser):
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
-                    records_in_db = self.cur.execute(
-                        f"""
-                        SELECT vacancy_id, vacancy_name, towns, level, company, description, source_vac,
+                    query = f"""
+                        SELECT vacancy_id, vacancy_name, company, description, skills, source_vac,
                                date_created, date_of_download, status, version_vac, actual
                         FROM {self.table_name}
                         WHERE vacancy_id = '{link}'
                         ORDER BY date_of_download DESC, version_vac DESC
                         LIMIT 1
                         """
-                    )
+                    self.cur.execute(query)
+                    records_in_db = self.cur.fetchall()
                     if records_in_db:
                         for old_record in records_in_db:
                             old_status = old_record[-3]
@@ -1241,11 +1243,10 @@ class YandJobParser(BaseJobParser):
 
                             if old_status == 'new':
                                 data_new_vac = {
-                                    'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                    'level': record[3], 'company': record[4], 'description': record[5],
-                                    'source_vac': record[6], 'date_created': old_record[7],
-                                    'date_of_download': datetime.now().date(), 'status': 'existing',
-                                    'version_vac': next_version, 'actual': 1
+                                    'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
+                                    'description': record[3], 'skills': record[4], 'source_vac': record[5],
+                                    'date_created': old_record[6], 'date_of_download': datetime.now().date(),
+                                    'status': 'existing', 'version_vac': next_version, 'actual': 1
                                 }
                                 self.dataframe_to_update = pd.concat(
                                     [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
@@ -1257,11 +1258,10 @@ class YandJobParser(BaseJobParser):
                                     pass
                                 else:
                                     data_new_vac = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': old_record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'existing',
-                                        'version_vac': next_version, 'actual': 1
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
+                                        'description': record[3], 'skills': record[4], 'source_vac': record[5],
+                                        'date_created': old_record[6], 'date_of_download': datetime.now().date(),
+                                        'status': 'existing', 'version_vac': next_version, 'actual': 1
                                     }
                                     self.dataframe_to_update = pd.concat(
                                         [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
@@ -1269,22 +1269,20 @@ class YandJobParser(BaseJobParser):
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'new',
-                                        'version_vac': next_version, 'actual': 1
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
+                                        'description': record[3], 'skills': record[4], 'source_vac': record[5],
+                                        'date_created': record[6], 'date_of_download': datetime.now().date(),
+                                        'status': 'new', 'version_vac': next_version, 'actual': 1
                                     }
                                     self.dataframe_to_update = pd.concat(
                                         [self.dataframe_to_update, pd.DataFrame(data_clos_new, index=[0])]
                                     )
                                 else:
                                     data_full_new = {
-                                        'vacancy_id': link, 'vacancy_name': record[1], 'towns': record[2],
-                                        'level': record[3], 'company': record[4], 'description': record[5],
-                                        'source_vac': record[6], 'date_created': record[7],
-                                        'date_of_download': datetime.now().date(), 'status': 'new', 'version_vac': 1,
-                                        'actual': 1
+                                        'vacancy_id': link, 'vacancy_name': record[1], 'company': record[2],
+                                        'description': record[3], 'skills': record[4], 'source_vac': record[5],
+                                        'date_created': record[6], 'date_of_download': datetime.now().date(),
+                                        'status': 'new', 'version_vac': 1, 'actual': 1
                                     }
                                     self.dataframe_to_update = pd.concat(
                                         [self.dataframe_to_update, pd.DataFrame(data_full_new, index=[0])]
@@ -1294,40 +1292,111 @@ class YandJobParser(BaseJobParser):
             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
             raise
 
+    def update_database_queries(self):
+        """
+        Метод для выполнения запросов к базе данных.
+        """
+        self.cur = self.conn.cursor()
 
-# def run_vk_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий VK
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера ВК')
-#     try:
-#         parser = VKJobParser(url_vk, profs, log, conn)
-#         parser.find_vacancies()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.update_database_queries()
-#         parser.stop()
-#         log.info('Парсер ВК успешно провел работу')
-#     except Exception as e_outer:
-#         log.error(f'Исключение в функции run_vk_parser: {e_outer}')
-#
-# def run_sber_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий Sber
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера Сбербанка')
-#     try:
-#         parser = SberJobParser(url_sber, profs, log, conn)
-#         parser.find_vacancies()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.update_database_queries()
-#         parser.stop()
-#         log.info('Парсер Сбербанка успешно провел работу')
-#     except Exception as e_outer:
-#         log.error(f'Исключение в функции run_sber_parser: {e_outer}')
+        try:
+            if not self.dataframe_to_closed.empty:
+                self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
+                data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_closed.columns)
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_closed)
+                self.log.info(f"Количество строк удалено из core_fact_table: "
+                              f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
+                              f"{config['database']}.")
+
+                self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
+                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_closed)
+                self.log.info(f"Количество строк вставлено в del_vacancy_core: "
+                              f"{len(data_tuples_to_closed)}, обновлена таблица del_vacancy_core в БД "
+                              f"{config['database']}.")
+
+                self.log.info(f'Удаляем из core_fact_table закрытые вакансии.')
+                data_to_delete_tuples = [tuple(x) for x in
+                                         self.dataframe_to_closed[['link']].to_records(index=False)]
+                for to_delete in data_to_delete_tuples:
+                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    self.log.info(f"Запрос вставки данных: {query}")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
+
+            else:
+                self.log.info(f"dataframe_to_closed пуст.")
+
+            if not self.dataframe_to_update.empty:
+
+                data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
+                cols = ",".join(self.dataframe_to_update.columns)
+                self.log.info(f'Обновляем таблицу {self.table_name}.')
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, data_tuples_to_insert)
+                self.log.info(f"Количество строк вставлено в {self.table_name}: "
+                              f"{len(data_tuples_to_insert)}, обновлена таблица {self.table_name} "
+                              f"в БД {config['database']}.")
+
+                self.log.info(f'Обновляем таблицу core_fact_table.')
+                core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
+                query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
+                self.log.info(f"Запрос вставки данных: {query}")
+                self.cur.executemany(query, core_fact_data_tuples)
+                self.log.info(f"Количество строк вставлено в core_fact_table: "
+                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
+                              f"в БД {config['database']}.")
+            else:
+                self.log.info(f"dataframe_to_update пуст.")
+
+
+            self.conn.commit()
+            self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
+        except Exception as e:
+            self.conn.rollback()
+            self.log.error(f"Произошла ошибка: {str(e)}")
+        finally:
+            self.cur.close()
+
+def run_vk_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий VK
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера ВК')
+    try:
+        parser = VKJobParser(url_vk, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.update_database_queries()
+        parser.stop()
+        log.info('Парсер ВК успешно провел работу')
+    except Exception as e_outer:
+        log.error(f'Исключение в функции run_vk_parser: {e_outer}')
+
+def run_sber_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий Sber
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера Сбербанка')
+    try:
+        parser = SberJobParser(url_sber, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.update_database_queries()
+        parser.stop()
+        log.info('Парсер Сбербанка успешно провел работу')
+    except Exception as e_outer:
+        log.error(f'Исключение в функции run_sber_parser: {e_outer}')
 
 def run_tin_parser(**context):
     """
@@ -1347,25 +1416,42 @@ def run_tin_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
+def run_yand_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий Yandex
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера Yandex')
+    try:
+        parser = YandJobParser(url_yand, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.update_database_queries()
+        parser.stop()
+        log.info('Парсер Yandex успешно провел работу')
+    except Exception as e:
+        log.error(f'Ошибка во время работы парсера Yandex: {e}')
+
 
 hello_bash_task = BashOperator(
     task_id='hello_task',
     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
 
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_sber = PythonOperator(
-#     task_id='parse_sber',
-#     python_callable=run_sber_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
+parse_vkjobs = PythonOperator(
+    task_id='parse_vkjobs',
+    python_callable=run_vk_parser,
+    provide_context=True,
+    dag=updated_raw_dag
+)
+
+parse_sber = PythonOperator(
+    task_id='parse_sber',
+    python_callable=run_sber_parser,
+    provide_context=True,
+    dag=updated_raw_dag
+)
 
 parse_tink = PythonOperator(
     task_id='parse_tink',
@@ -1374,10 +1460,16 @@ parse_tink = PythonOperator(
     dag=updated_raw_dag
 )
 
+parse_yand = PythonOperator(
+    task_id='parse_yand',
+    python_callable=run_yand_parser,
+    provide_context=True,
+    dag=updated_raw_dag
+)
 
 end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> parse_tink >> end_task
-# hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
+# hello_bash_task >> parse_tink >> end_task
+hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> end_task
