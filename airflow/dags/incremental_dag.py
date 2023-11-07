@@ -1341,7 +1341,7 @@ def run_tin_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Тинькофф')
     try:
-        parser = TinkoffJobParser(url_vk, profs, log, conn)
+        parser = TinkoffJobParser(url_tin, profs, log, conn)
         parser.open_all_pages()
         parser.all_vacs_parser()
         parser.find_vacancies_description()
@@ -1349,8 +1349,8 @@ def run_tin_parser(**context):
         parser.update_database_queries()
         parser.stop()
         log.info('Парсер Тинькофф успешно провел работу')
-    except Exception as e_outer:
-        log.error(f'Исключение в функции run_tin_parser: {e_outer}')
+    except Exception as e:
+        log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
 
 hello_bash_task = BashOperator(

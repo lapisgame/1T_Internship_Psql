@@ -478,7 +478,6 @@ class TinkoffJobParser(BaseJobParser):
     """
     Парсер вакансий с сайта Tinkoff, наследованный от BaseJobParser
     """
-
     def open_all_pages(self):
         self.log.info('Работает функция open_all_pages')
         self.browser.implicitly_wait(10)
