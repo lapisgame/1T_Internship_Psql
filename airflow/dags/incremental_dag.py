@@ -1453,28 +1453,28 @@ with updated_raw_dag:
             task_id='parse_vkjobs',
             python_callable=run_vk_parser,
             provide_context=True,
-            dag=parsers
+            dag=updated_raw_dag
         )
 
         parse_sber = PythonOperator(
             task_id='parse_sber',
             python_callable=run_sber_parser,
             provide_context=True,
-            dag=parsers
+            dag=updated_raw_dag
         )
 
         parse_tink = PythonOperator(
             task_id='parse_tink',
             python_callable=run_tin_parser,
             provide_context=True,
-            dag=parsers
+            dag=updated_raw_dag
         )
 
         parse_yand = PythonOperator(
             task_id='parse_yand',
             python_callable=run_yand_parser,
             provide_context=True,
-            dag=parsers
+            dag=updated_raw_dag
         )
 
 end_task = DummyOperator(
