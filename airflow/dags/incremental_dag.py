@@ -9,9 +9,9 @@ from airflow import settings
 from sqlalchemy import create_engine
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
 from airflow.operators.subdag import SubDagOperator
-from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
@@ -1425,145 +1425,102 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
+# Устанавливаем параметры
 default_args = {
-    "owner": "admin_1T",
+    'owner': 'admin_1T',
     'retry_delay': timedelta(minutes=5),
-    'start_date': datetime(2023, 11, 8),
 }
 
-dag_main = DAG(
-    'main_dag',
+# Объявляем основной DAG
+updated_raw_dag = DAG(
+    'updated_raw_dag',
     default_args=default_args,
-    schedule_interval=None,
-    start_date=datetime(2023, 11, 8)
+    schedule_interval=timedelta(days=1),  # ежедневно
+    start_date=days_ago(1),
+    tags=['main_dag'],
 )
 
-dag_ids = ['parse_vkjobs', 'parse_sber', 'parse_tink', 'parse_yand']
-task_ids = ['trigger_vkjobs', 'trigger_sber', 'trigger_tink', 'trigger_yand']
+# Начало основного DAG
+start_task = DummyOperator(
+    task_id='start_task',
+    dag=updated_raw_dag,
+)
 
-tasks = {}
+# Создаем subDAG для каждого парсера
+with updated_raw_dag:
+    with TaskGroup("parsers") as parsers:
+        parse_vkjobs = PythonOperator(
+            task_id='parse_vkjobs',
+            python_callable=run_vk_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
-for task_id, dag_id in zip(task_ids, dag_ids):
-    tasks[task_id] = TriggerDagRunOperator(
-        task_id=task_id,
-        trigger_dag_id=dag_id,
-        dag=dag_main,
-        default_args=default_args,
-        start_date=datetime(2023, 11, 8)
-    )
+        parse_sber = PythonOperator(
+            task_id='parse_sber',
+            python_callable=run_sber_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
-#
-# ##################### Объявление dags для каждого парсера #####################
-#
-# # Parse VK Jobs DAG
-# dag_vkjobs = DAG(
-#     dag_id='parse_vkjobs',
-#     default_args=default_args,
-#     schedule_interval=None,
-# )
-#
-# # Parse Sber Jobs DAG
-# dag_sber = DAG(
-#     dag_id='parse_sber',
-#     default_args=default_args,
-#     schedule_interval=None,
-# )
-#
-# # Parse Tink Jobs DAG
-# dag_tink = DAG(
-#     dag_id='parse_tink',
-#     default_args=default_args,
-#     schedule_interval=None,
-# )
-#
-# # Parse Yand Jobs DAG
-# dag_yand = DAG(
-#     dag_id='parse_yand',
-#     default_args=default_args,
-#     schedule_interval=None,
-# )
-#
-# # Main DAG
-# dag_main = DAG(
-#     'main_dag',
-#     default_args=default_args,
-#     schedule_interval=None,
-# )
+        parse_tink = PythonOperator(
+            task_id='parse_tink',
+            python_callable=run_tin_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
-# ##################### Определение задач для dag_main #####################
-#
-# parse_vkjobs = TriggerDagRunOperator(
-#     task_id='parse_vkjobs',
-#     trigger_dag_id="parse_vkjobs",
-#     dag=dag_main
-# )
-#
-# parse_sber = TriggerDagRunOperator(
-#     task_id='parse_sber',
-#     trigger_dag_id="parse_sber",
-#     dag=dag_main
-# )
-#
-# parse_tink = TriggerDagRunOperator(
-#     task_id='parse_tink',
-#     trigger_dag_id="parse_tink",
-#     dag=dag_main
-# )
-#
-# parse_yand = TriggerDagRunOperator(
-#     task_id='parse_yand',
-#     trigger_dag_id="parse_yand",
-#     dag=dag_main
-# )
+        parse_yand = PythonOperator(
+            task_id='parse_yand',
+            python_callable=run_yand_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
-##################### Определение отдельных задач #####################
+end_task = DummyOperator(
+    task_id="end_task",
+    dag=updated_raw_dag,
+)
 
-hello_bash_task = BashOperator(
-    task_id='hello_task',
-    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+# Создаем последовательность задач внутри основного dag
+start_task >> parsers >> end_task
 
-
+# hello_bash_task = BashOperator(
+#     task_id='hello_task',
+#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+#
+#
 # parse_vkjobs = PythonOperator(
 #     task_id='parse_vkjobs',
 #     python_callable=run_vk_parser,
 #     provide_context=True,
-#     dag=dag_vkjobs
+#     dag=updated_raw_dag
 # )
 #
 # parse_sber = PythonOperator(
 #     task_id='parse_sber',
 #     python_callable=run_sber_parser,
 #     provide_context=True,
-#     dag=dag_sber
+#     dag=updated_raw_dag
 # )
 #
 # parse_tink = PythonOperator(
 #     task_id='parse_tink',
 #     python_callable=run_tin_parser,
 #     provide_context=True,
-#     dag=dag_tink
+#     dag=updated_raw_dag
 # )
 #
 # parse_yand = PythonOperator(
 #     task_id='parse_yand',
 #     python_callable=run_yand_parser,
 #     provide_context=True,
-#     dag=dag_yand
+#     dag=updated_raw_dag
 # )
-
-end_task = DummyOperator(
-    task_id="end_task"
-)
-
-##################### Определение порядка запуска для dag_main #####################
-
-hello_bash_task >> \
-tasks['trigger_vkjobs'] >> \
-tasks['trigger_sber'] >> \
-tasks['trigger_tink'] >> \
-tasks['trigger_yand'] >> \
-end_task
-
+#
+# end_task = DummyOperator(
+#     task_id="end_task"
+# )
 #
 # # hello_bash_task >> parse_tink >> end_task
 # hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
