@@ -9,7 +9,7 @@ from airflow import settings
 from sqlalchemy import create_engine
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
-
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.subdag import SubDagOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
@@ -1425,95 +1425,71 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
-# Параметры по умолчанию
 default_args = {
     "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
 }
 
-def create_parser_subdag(parent_dag_id, subdag_id, start_date, schedule_interval, args, python_callable):
-    """
-    Создает SubDAG для заданного парсера.
-    """
-    subdag = DAG(
-        dag_id=f"{parent_dag_id}.{subdag_id}",
-        schedule_interval=schedule_interval,
-        start_date=start_date,
-        default_args=args,
-    )
+start_date = datetime(2023, 11, 8)
+dag_kwargs = {'default_args': default_args, 'start_date': start_date}
 
-    with subdag:
+######################## КОД ДЛЯ КАЖДОГО ПАРСЕРА ########################
+
+def create_individual_dag(dag_id, python_callable):
+    dag = DAG(dag_id=dag_id, **dag_kwargs)
+    with dag:
+        start = DummyOperator(task_id='start')
+        end = DummyOperator(task_id='end')
         task = PythonOperator(
-            task_id='task',
+            task_id='run_parser',
             python_callable=python_callable,
             provide_context=True,
         )
-
-        start = DummyOperator(
-            task_id="start"
-        )
-
-        end = DummyOperator(
-            task_id="end"
-        )
-
         start >> task >> end
+    return dag
 
-    return subdag
+dag1 = create_individual_dag('vk_parser_dag', run_vk_parser)
+dag2 = create_individual_dag('sber_parser_dag', run_sber_parser)
+dag3 = create_individual_dag('tinkoff_parser_dag', run_tin_parser)
+dag4 = create_individual_dag('yandex_parser_dag', run_yand_parser)
 
+######################## Мастер DAG ########################
 
-################ Топ-уровневый DAG ################
+master_dag = DAG(dag_id='master_dag', **dag_kwargs)
+with master_dag:
+    start = DummyOperator(task_id='start')
+    end = DummyOperator(task_id='end')
 
-start_date = datetime(2023, 11, 8)
-
-updated_raw_dag_id = 'updated_raw_dag'
-updated_raw_dag = DAG(
-    updated_raw_dag_id,
-    schedule_interval=None,
-    default_args=default_args,
-    start_date=start_date
-)
-
-with updated_raw_dag:
-    start_hello_task = DummyOperator(
-        task_id='start_hello_task'
+    trigger_vk_parser = TriggerDagRunOperator(
+        task_id="trigger_vk_parser",
+        trigger_dag_id="vk_parser_dag",
     )
 
-    end_main_task = DummyOperator(
-        task_id='end_main_task'
+    trigger_sber_parser = TriggerDagRunOperator(
+        task_id="trigger_sber_parser",
+        trigger_dag_id="sber_parser_dag",
     )
 
-    subdag_run_vk_parser = SubDagOperator(
-        task_id='run_vk_parser',
-        subdag=create_parser_subdag(updated_raw_dag_id, 'run_vk_parser', start_date, None, default_args,
-                                    run_vk_parser),
-        dag=updated_raw_dag,
+    trigger_tinkoff_parser = TriggerDagRunOperator(
+        task_id="trigger_tinkoff_parser",
+        trigger_dag_id="tinkoff_parser_dag",
     )
 
-    subdag_run_sber_parser = SubDagOperator(
-        task_id='run_sber_parser',
-        subdag=create_parser_subdag(updated_raw_dag_id, 'run_sber_parser', start_date, None, default_args,
-                                    run_sber_parser),
-        dag=updated_raw_dag,
+    trigger_yandex_parser = TriggerDagRunOperator(
+        task_id="trigger_yandex_parser",
+        trigger_dag_id="yandex_parser_dag",
     )
 
-    subdag_run_tin_parser = SubDagOperator(
-        task_id='run_tin_parser',
-        subdag=create_parser_subdag(updated_raw_dag_id, 'run_tin_parser', start_date, None, default_args,
-                                    run_tin_parser),
-        dag=updated_raw_dag,
-    )
+    start >> trigger_vk_parser >> trigger_sber_parser >> trigger_tinkoff_parser >> \
+    trigger_yandex_parser >> end
 
-    subdag_run_yand_parser = SubDagOperator(
-        task_id='run_yand_parser',
-        subdag=create_parser_subdag(updated_raw_dag_id, 'run_yand_parser', start_date, None, default_args,
-                                    run_yand_parser),
-        dag=updated_raw_dag,
-    )
+# Объявление глобальных переменных DAG
+globals()["vk_parser_dag"] = dag1
+globals()["sber_parser_dag"] = dag2
+globals()["tinkoff_parser_dag"] = dag3
+globals()["yandex_parser_dag"] = dag4
+globals()["master_dag"] = master_dag
 
-    # Схема последовательного исполнения задач
-    start_hello_task >> subdag_run_vk_parser >> subdag_run_sber_parser >> subdag_run_tin_parser >> \
-    subdag_run_yand_parser >> end_main_task
 
 
 # hello_bash_task = BashOperator(
