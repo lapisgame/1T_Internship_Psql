@@ -1428,7 +1428,7 @@ def run_yand_parser(**context):
 default_args = {
     "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
-    'start_date': datetime(2023, 11, 8),
+    'start_date': datetime(2023, 11, 7)
 }
 
 dag_main = DAG(
