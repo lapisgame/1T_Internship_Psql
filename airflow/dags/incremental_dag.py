@@ -9,6 +9,8 @@ from airflow import settings
 from sqlalchemy import create_engine
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
+
+from airflow.operators.subdag import SubDagOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
@@ -26,6 +28,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from airflow.utils.task_group import TaskGroup
+from airflow.utils.dates import days_ago
 import pandas as pd
 import numpy as np
 import os
@@ -83,22 +87,22 @@ log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
-# Параметры по умолчанию
-default_args = {
-    "owner": "admin_1T",
-    # 'start_date': days_ago(1),
-    'retry_delay': timedelta(minutes=5),
-}
-
-
-# Создаем DAG для автоматического запуска каждые 6 часов
-updated_raw_dag=DAG(dag_id='updated_raw_dag',
-                tags=['admin_1T'],
-                start_date=datetime(2023, 11, 5),
-                schedule_interval=None,
-                # schedule_interval='@daily',
-                default_args=default_args
-                )
+# # Параметры по умолчанию
+# default_args = {
+#     "owner": "admin_1T",
+#     # 'start_date': days_ago(1),
+#     'retry_delay': timedelta(minutes=5),
+# }
+#
+#
+# # Создаем DAG для автоматического запуска каждые 6 часов
+# updated_raw_dag=DAG(dag_id='updated_raw_dag',
+#                 tags=['admin_1T'],
+#                 start_date=datetime(2023, 11, 5),
+#                 schedule_interval=None,
+#                 # schedule_interval='@daily',
+#                 default_args=default_args
+#                 )
 
 class BaseJobParser:
     def __init__(self, url, profs, log, conn):
@@ -1421,42 +1425,102 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
-hello_bash_task = BashOperator(
-    task_id='hello_task',
-    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+# Устанавливаем параметры
+default_args = {
+    'owner': 'admin_1T',
+    'retry_delay': timedelta(minutes=5),
+}
 
-
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=updated_raw_dag
+# Объявляем основной DAG
+updated_raw_dag = DAG(
+    'updated_raw_dag',
+    default_args=default_args,
+    schedule_interval=timedelta(days=1),  # ежедневно
+    start_date=days_ago(1),
+    tags=['main_dag'],
 )
 
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=updated_raw_dag
+# Начало основного DAG
+start_task = DummyOperator(
+    task_id='start_task',
+    dag=updated_raw_dag,
 )
 
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=updated_raw_dag
-)
+# Создаем subDAG для каждого парсера
+with updated_raw_dag:
+    with TaskGroup("parsers") as parsers:
+        parse_vkjobs = PythonOperator(
+            task_id='parse_vkjobs',
+            python_callable=run_vk_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
-parse_yand = PythonOperator(
-    task_id='parse_yand',
-    python_callable=run_yand_parser,
-    provide_context=True,
-    dag=updated_raw_dag
-)
+        parse_sber = PythonOperator(
+            task_id='parse_sber',
+            python_callable=run_sber_parser,
+            provide_context=True,
+            dag=parsers
+        )
+
+        parse_tink = PythonOperator(
+            task_id='parse_tink',
+            python_callable=run_tin_parser,
+            provide_context=True,
+            dag=parsers
+        )
+
+        parse_yand = PythonOperator(
+            task_id='parse_yand',
+            python_callable=run_yand_parser,
+            provide_context=True,
+            dag=parsers
+        )
 
 end_task = DummyOperator(
-    task_id="end_task"
+    task_id="end_task",
+    dag=updated_raw_dag,
 )
 
-# hello_bash_task >> parse_tink >> end_task
-hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
+# Создаем последовательность задач внутри основного dag
+start_task >> parsers >> end_task
+
+# hello_bash_task = BashOperator(
+#     task_id='hello_task',
+#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+#
+#
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
+#     provide_context=True,
+#     dag=updated_raw_dag
+# )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=updated_raw_dag
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=updated_raw_dag
+# )
+#
+# parse_yand = PythonOperator(
+#     task_id='parse_yand',
+#     python_callable=run_yand_parser,
+#     provide_context=True,
+#     dag=updated_raw_dag
+# )
+#
+# end_task = DummyOperator(
+#     task_id="end_task"
+# )
+#
+# # hello_bash_task >> parse_tink >> end_task
+# hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
