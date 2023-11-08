@@ -1425,133 +1425,118 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
-
 default_args = {
     "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
+    'start_date': datetime(2023, 11, 8),
 }
 
-start_date = datetime(2023, 11, 8)
-dag_kwargs = {'default_args': default_args, 'start_date': start_date, 'schedule_interval': '@once'}
+##################### Объявление dags для каждого парсера #####################
+
+# Parse VK Jobs DAG
+dag_vkjobs = DAG(
+    dag_id='parse_vkjobs',
+    default_args=default_args,
+    schedule_interval=None,
+)
+
+# Parse Sber Jobs DAG
+dag_sber = DAG(
+    dag_id='parse_sber',
+    default_args=default_args,
+    schedule_interval=None,
+)
+
+# Parse Tink Jobs DAG
+dag_tink = DAG(
+    dag_id='parse_tink',
+    default_args=default_args,
+    schedule_interval=None,
+)
+
+# Parse Yand Jobs DAG
+dag_yand = DAG(
+    dag_id='parse_yand',
+    default_args=default_args,
+    schedule_interval=None,
+)
+
+# Main DAG
+dag_main = DAG(
+    'main_dag',
+    default_args=default_args,
+    schedule_interval=None,
+)
+
+##################### Определение задач для dag_main #####################
+
+parse_vkjobs = TriggerDagRunOperator(
+    task_id='parse_vkjobs',
+    trigger_dag_id="parse_vkjobs",
+    dag=dag_main
+)
+
+parse_sber = TriggerDagRunOperator(
+    task_id='parse_sber',
+    trigger_dag_id="parse_sber",
+    dag=dag_main
+)
+
+parse_tink = TriggerDagRunOperator(
+    task_id='parse_tink',
+    trigger_dag_id="parse_tink",
+    dag=dag_main
+)
+
+parse_yand = TriggerDagRunOperator(
+    task_id='parse_yand',
+    trigger_dag_id="parse_yand",
+    dag=dag_main
+)
+
+##################### Определение отдельных задач #####################
+
+hello_bash_task = BashOperator(
+    task_id='hello_task',
+    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
 
-def create_individual_dag(dag_id, python_callable):
-    dag = DAG(dag_id=dag_id, **dag_kwargs)
-    with dag:
-        start = DummyOperator(task_id='start')
-        end = DummyOperator(task_id='end')
-        task = PythonOperator(
-            task_id='run_parser',
-            python_callable=python_callable,
-            provide_context=True,
-        )
-        start >> task >> end
-    return dag
+parse_vkjobs = PythonOperator(
+    task_id='parse_vkjobs',
+    python_callable=run_vk_parser,
+    provide_context=True,
+    dag=dag_vkjobs
+)
 
-dag1 = create_individual_dag('vk_parser_dag', run_vk_parser)
-dag2 = create_individual_dag('sber_parser_dag', run_sber_parser)
-dag3 = create_individual_dag('tinkoff_parser_dag', run_tin_parser)
-dag4 = create_individual_dag('yandex_parser_dag', run_yand_parser)
+parse_sber = PythonOperator(
+    task_id='parse_sber',
+    python_callable=run_sber_parser,
+    provide_context=True,
+    dag=dag_sber
+)
 
-def conditionally_trigger(context):
-    if context['dag_run'].conf.get('continue_processing', False):
-        return True
-    return False
+parse_tink = PythonOperator(
+    task_id='parse_tink',
+    python_callable=run_tin_parser,
+    provide_context=True,
+    dag=dag_tink
+)
 
-master_dag = DAG(dag_id='master_dag', **dag_kwargs)
-with master_dag:
-    start = DummyOperator(task_id='start')
-    end = DummyOperator(task_id='end')
+parse_yand = PythonOperator(
+    task_id='parse_yand',
+    python_callable=run_yand_parser,
+    provide_context=True,
+    dag=dag_yand
+)
 
-    trigger_vk_parser = TriggerDagRunOperator(
-        task_id="trigger_vk_parser",
-        trigger_dag_id="vk_parser_dag",
-    )
+end_task = DummyOperator(
+    task_id="end_task"
+)
 
-    conditionally_trigger_vk_parser = ShortCircuitOperator(
-        task_id="conditionally_trigger_vk_parser",
-        python_callable=conditionally_trigger
-    )
+##################### Определение порядка запуска для dag_main #####################
 
-    trigger_sber_parser = TriggerDagRunOperator(
-        task_id="trigger_sber_parser",
-        trigger_dag_id="sber_parser_dag",
-    )
+hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
 
-    conditionally_trigger_sber_parser = ShortCircuitOperator(
-        task_id="conditionally_trigger_sber_parser",
-        python_callable=conditionally_trigger
-    )
-
-    trigger_tinkoff_parser = TriggerDagRunOperator(
-        task_id="trigger_tinkoff_parser",
-        trigger_dag_id="tinkoff_parser_dag",
-
-    )
-
-    conditionally_trigger_tinkoff_parser = ShortCircuitOperator(
-        task_id="conditionally_trigger_tinkoff_parser",
-        python_callable=conditionally_trigger
-    )
-
-    trigger_yandex_parser = TriggerDagRunOperator(
-        task_id="trigger_yandex_parser",
-        trigger_dag_id="yandex_parser_dag",
-    )
-
-    conditionally_trigger_yandex_parser = ShortCircuitOperator(
-        task_id="conditionally_trigger_yandex_parser",
-        python_callable=conditionally_trigger
-    )
-
-    start >> conditionally_trigger_vk_parser >> trigger_vk_parser >> \
-    conditionally_trigger_sber_parser >> trigger_sber_parser >> \
-    conditionally_trigger_tinkoff_parser >> trigger_tinkoff_parser >> \
-    conditionally_trigger_yandex_parser >> trigger_yandex_parser >> end
-
-globals()["vk_parser_dag"] = dag1
-globals()["sber_parser_dag"] = dag2
-globals()["tinkoff_parser_dag"] = dag3
-globals()["yandex_parser_dag"] = dag4
-globals()["master_dag"] = master_dag
-
-
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
-#
-#
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_sber = PythonOperator(
-#     task_id='parse_sber',
-#     python_callable=run_sber_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_tink = PythonOperator(
-#     task_id='parse_tink',
-#     python_callable=run_tin_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_yand = PythonOperator(
-#     task_id='parse_yand',
-#     python_callable=run_yand_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task"
-# )
 #
 # # hello_bash_task >> parse_tink >> end_task
 # hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
