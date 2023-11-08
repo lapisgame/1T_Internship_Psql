@@ -1425,65 +1425,96 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
-# Устанавливаем параметры
+# Параметры по умолчанию
 default_args = {
-    'owner': 'admin_1T',
+    "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
 }
 
-# Объявляем основной DAG
+def create_parser_subdag(parent_dag_id, subdag_id, start_date, schedule_interval, args, python_callable):
+    """
+    Создает SubDAG для заданного парсера.
+    """
+    subdag = DAG(
+        dag_id=f"{parent_dag_id}.{subdag_id}",
+        schedule_interval=schedule_interval,
+        start_date=start_date,
+        default_args=args,
+    )
+
+    with subdag:
+        task = PythonOperator(
+            task_id='task',
+            python_callable=python_callable,
+            provide_context=True,
+        )
+
+        start = DummyOperator(
+            task_id="start"
+        )
+
+        end = DummyOperator(
+            task_id="end"
+        )
+
+        start >> task >> end
+
+    return subdag
+
+
+################ Топ-уровневый DAG ################
+
+start_date = datetime(2023, 11, 8)
+
+updated_raw_dag_id = 'updated_raw_dag'
 updated_raw_dag = DAG(
-    'updated_raw_dag',
+    updated_raw_dag_id,
+    schedule_interval=None,
     default_args=default_args,
-    schedule_interval=timedelta(days=1),  # ежедневно
-    start_date=days_ago(1),
-    tags=['main_dag'],
+    start_date=start_date
 )
 
-# Начало основного DAG
-start_task = DummyOperator(
-    task_id='start_task',
-    dag=updated_raw_dag,
-)
-
-# Создаем subDAG для каждого парсера
 with updated_raw_dag:
-    with TaskGroup("parsers") as parsers:
-        parse_vkjobs = PythonOperator(
-            task_id='parse_vkjobs',
-            python_callable=run_vk_parser,
-            provide_context=True,
-            dag=updated_raw_dag
-        )
+    start_hello_task = DummyOperator(
+        task_id='start_hello_task'
+    )
 
-        parse_sber = PythonOperator(
-            task_id='parse_sber',
-            python_callable=run_sber_parser,
-            provide_context=True,
-            dag=updated_raw_dag
-        )
+    end_main_task = DummyOperator(
+        task_id='end_main_task'
+    )
 
-        parse_tink = PythonOperator(
-            task_id='parse_tink',
-            python_callable=run_tin_parser,
-            provide_context=True,
-            dag=updated_raw_dag
-        )
+    subdag_run_vk_parser = SubDagOperator(
+        task_id='run_vk_parser',
+        subdag=create_parser_subdag(updated_raw_dag_id, 'run_vk_parser', start_date, None, default_args,
+                                    run_vk_parser),
+        dag=updated_raw_dag,
+    )
 
-        parse_yand = PythonOperator(
-            task_id='parse_yand',
-            python_callable=run_yand_parser,
-            provide_context=True,
-            dag=updated_raw_dag
-        )
+    subdag_run_sber_parser = SubDagOperator(
+        task_id='run_sber_parser',
+        subdag=create_parser_subdag(updated_raw_dag_id, 'run_sber_parser', start_date, None, default_args,
+                                    run_sber_parser),
+        dag=updated_raw_dag,
+    )
 
-end_task = DummyOperator(
-    task_id="end_task",
-    dag=updated_raw_dag,
-)
+    subdag_run_tin_parser = SubDagOperator(
+        task_id='run_tin_parser',
+        subdag=create_parser_subdag(updated_raw_dag_id, 'run_tin_parser', start_date, None, default_args,
+                                    run_tin_parser),
+        dag=updated_raw_dag,
+    )
 
-# Создаем последовательность задач внутри основного dag
-start_task >> parsers >> end_task
+    subdag_run_yand_parser = SubDagOperator(
+        task_id='run_yand_parser',
+        subdag=create_parser_subdag(updated_raw_dag_id, 'run_yand_parser', start_date, None, default_args,
+                                    run_yand_parser),
+        dag=updated_raw_dag,
+    )
+
+    # Схема последовательного исполнения задач
+    start_hello_task >> subdag_run_vk_parser >> subdag_run_sber_parser >> subdag_run_tin_parser >> \
+    subdag_run_yand_parser >> end_main_task
+
 
 # hello_bash_task = BashOperator(
 #     task_id='hello_task',
