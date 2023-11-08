@@ -1431,68 +1431,87 @@ default_args = {
     'start_date': datetime(2023, 11, 8),
 }
 
-##################### Объявление dags для каждого парсера #####################
-
-# Parse VK Jobs DAG
-dag_vkjobs = DAG(
-    dag_id='parse_vkjobs',
-    default_args=default_args,
-    schedule_interval=None,
-)
-
-# Parse Sber Jobs DAG
-dag_sber = DAG(
-    dag_id='parse_sber',
-    default_args=default_args,
-    schedule_interval=None,
-)
-
-# Parse Tink Jobs DAG
-dag_tink = DAG(
-    dag_id='parse_tink',
-    default_args=default_args,
-    schedule_interval=None,
-)
-
-# Parse Yand Jobs DAG
-dag_yand = DAG(
-    dag_id='parse_yand',
-    default_args=default_args,
-    schedule_interval=None,
-)
-
-# Main DAG
 dag_main = DAG(
     'main_dag',
     default_args=default_args,
     schedule_interval=None,
 )
 
-##################### Определение задач для dag_main #####################
+dag_ids = ['parse_vkjobs', 'parse_sber', 'parse_tink', 'parse_yand']
+task_ids = ['trigger_vkjobs', 'trigger_sber', 'trigger_tink', 'trigger_yand']
 
-parse_vkjobs = TriggerDagRunOperator(
-    task_id='parse_vkjobs',
-    trigger_dag_id="parse_vkjobs",
-    dag=dag_main
-)
+tasks = {}
 
-parse_sber = TriggerDagRunOperator(
-    task_id='parse_sber',
-    trigger_dag_id="parse_sber",
-    dag=dag_main
-)
+for task_id, dag_id in zip(task_ids, dag_ids):
+    tasks[task_id] = TriggerDagRunOperator(
+        task_id=task_id,
+        trigger_dag_id=dag_id,
+        dag=dag_main
+    )
 
-parse_tink = TriggerDagRunOperator(
-    task_id='parse_tink',
-    trigger_dag_id="parse_tink",
-    dag=dag_main
-)
+#
+# ##################### Объявление dags для каждого парсера #####################
+#
+# # Parse VK Jobs DAG
+# dag_vkjobs = DAG(
+#     dag_id='parse_vkjobs',
+#     default_args=default_args,
+#     schedule_interval=None,
+# )
+#
+# # Parse Sber Jobs DAG
+# dag_sber = DAG(
+#     dag_id='parse_sber',
+#     default_args=default_args,
+#     schedule_interval=None,
+# )
+#
+# # Parse Tink Jobs DAG
+# dag_tink = DAG(
+#     dag_id='parse_tink',
+#     default_args=default_args,
+#     schedule_interval=None,
+# )
+#
+# # Parse Yand Jobs DAG
+# dag_yand = DAG(
+#     dag_id='parse_yand',
+#     default_args=default_args,
+#     schedule_interval=None,
+# )
+#
+# # Main DAG
+# dag_main = DAG(
+#     'main_dag',
+#     default_args=default_args,
+#     schedule_interval=None,
+# )
 
-parse_yand = TriggerDagRunOperator(
-    task_id='parse_yand',
-    trigger_dag_id="parse_yand",
-    dag=dag_main
-)
+# ##################### Определение задач для dag_main #####################
+#
+# parse_vkjobs = TriggerDagRunOperator(
+#     task_id='parse_vkjobs',
+#     trigger_dag_id="parse_vkjobs",
+#     dag=dag_main
+# )
+#
+# parse_sber = TriggerDagRunOperator(
+#     task_id='parse_sber',
+#     trigger_dag_id="parse_sber",
+#     dag=dag_main
+# )
+#
+# parse_tink = TriggerDagRunOperator(
+#     task_id='parse_tink',
+#     trigger_dag_id="parse_tink",
+#     dag=dag_main
+# )
+#
+# parse_yand = TriggerDagRunOperator(
+#     task_id='parse_yand',
+#     trigger_dag_id="parse_yand",
+#     dag=dag_main
+# )
 
 ##################### Определение отдельных задач #####################
 
@@ -1501,33 +1520,33 @@ hello_bash_task = BashOperator(
     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
 
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=dag_vkjobs
-)
-
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=dag_sber
-)
-
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=dag_tink
-)
-
-parse_yand = PythonOperator(
-    task_id='parse_yand',
-    python_callable=run_yand_parser,
-    provide_context=True,
-    dag=dag_yand
-)
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
+#     provide_context=True,
+#     dag=dag_vkjobs
+# )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=dag_sber
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=dag_tink
+# )
+#
+# parse_yand = PythonOperator(
+#     task_id='parse_yand',
+#     python_callable=run_yand_parser,
+#     provide_context=True,
+#     dag=dag_yand
+# )
 
 end_task = DummyOperator(
     task_id="end_task"
@@ -1535,7 +1554,12 @@ end_task = DummyOperator(
 
 ##################### Определение порядка запуска для dag_main #####################
 
-hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
+hello_bash_task >> \
+tasks['trigger_vkjobs'] >> \
+tasks['trigger_sber'] >> \
+tasks['trigger_tink'] >> \
+tasks['trigger_yand'] >> \
+end_task
 
 #
 # # hello_bash_task >> parse_tink >> end_task
