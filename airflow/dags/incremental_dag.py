@@ -5,12 +5,12 @@ import psycopg2
 from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
+from typing import Callable
+from airflow.utils.task_group import TaskGroup
 from airflow import settings
 from sqlalchemy import create_engine
 from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
-
-from airflow.operators.subdag import SubDagOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
@@ -28,8 +28,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options as ChromeOptions
-from airflow.utils.task_group import TaskGroup
-from airflow.utils.dates import days_ago
 import pandas as pd
 import numpy as np
 import os
@@ -95,12 +93,11 @@ log.addHandler(log_handler)
 # }
 #
 #
-# # Создаем DAG для автоматического запуска каждые 6 часов
+# # Создаем DAG для автоматического запуска
 # updated_raw_dag=DAG(dag_id='updated_raw_dag',
 #                 tags=['admin_1T'],
 #                 start_date=datetime(2023, 11, 5),
-#                 schedule_interval=None,
-#                 # schedule_interval='@daily',
+#                 schedule_interval='@daily',
 #                 default_args=default_args
 #                 )
 
@@ -386,7 +383,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -394,7 +391,7 @@ class VKJobParser(BaseJobParser):
                               f"{config['database']}.")
 
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
-                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
+                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
@@ -407,10 +404,10 @@ class VKJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.execute(query)
-                self.log.info(f"Количество строк удалено из core_fact_table: "
-                              f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-                              f"{config['database']}.")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
 
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
@@ -419,7 +416,7 @@ class VKJobParser(BaseJobParser):
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_insert)
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
@@ -428,7 +425,7 @@ class VKJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
+                query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, core_fact_data_tuples)
                 self.log.info(f"Количество строк вставлено в core_fact_table: "
@@ -715,10 +712,11 @@ class SberJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.execute(query)
-                self.log.info(f"Количество строк удалено из core_fact_table: "
-                              f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-                              f"{config['database']}.")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
+
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
@@ -1026,10 +1024,11 @@ class TinkoffJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.execute(query)  # Исправлено здесь
-                self.log.info(f"Количество строк удалено из core_fact_table: "
-                              f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-                              f"{config['database']}.")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
+
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
@@ -1318,10 +1317,11 @@ class YandJobParser(BaseJobParser):
                 for to_delete in data_to_delete_tuples:
                     query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
-                    self.cur.execute(query)  # Исправлено здесь
-                self.log.info(f"Количество строк удалено из core_fact_table: "
-                              f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
-                              f"{config['database']}.")
+                    self.cur.executemany(query, data_to_delete_tuples)
+                    self.log.info(f"Количество строк удалено из core_fact_table: "
+                                  f"{len(data_to_delete_tuples)}, обновлена таблица core_fact_table в БД "
+                                  f"{config['database']}.")
+
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
 
@@ -1424,66 +1424,98 @@ def run_yand_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
+start_date = datetime(2023, 11, 8)
 
-# Устанавливаем параметры
-default_args = {
-    'owner': 'admin_1T',
-    'retry_delay': timedelta(minutes=5),
-}
+# Функция для генерации парсер задачи
+def generate_parser_task(task_id: str, run_parser: Callable):
+    """
+    Функция для создания оператора Python для запуска парсера.
+    """
+    return PythonOperator(
+        task_id=task_id,
+        python_callable=run_parser,
+        provide_context=True
+    )
 
-# Объявляем основной DAG
-updated_raw_dag = DAG(
-    'updated_raw_dag',
-    default_args=default_args,
-    schedule_interval=timedelta(days=1),  # ежедневно
-    start_date=days_ago(1),
-    tags=['main_dag'],
+# Функция для создания DAG с задачей парсинга
+def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_date):
+    """
+    Функция для создания DAG с одной задачей парсинга
+    """
+    dag = DAG(
+        dag_id=dag_id,
+        default_args={
+            "owner": "admin_1T",
+            'retry_delay': timedelta(minutes=5),
+        },
+        start_date=start_date,
+        # schedule_interval='@daily',
+        schedule_interval=None,
+    )
+
+    with dag:
+        hello_bash_task = BashOperator(
+            task_id='hello_task',
+            bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"'
+        )
+
+        parsed_task = generate_parser_task(task_id=task_id, run_parser=run_parser)
+
+        end_task = DummyOperator(
+            task_id="end_task"
+        )
+
+        hello_bash_task >> parsed_task >> end_task
+
+    return dag
+
+# Создаем общий DAG
+common_dag_id = 'common_parsing_dag'
+common_dag = DAG(
+    dag_id=common_dag_id,
+    default_args={
+        "owner": "admin_1T",
+        'retry_delay': timedelta(minutes=5),
+    },
+    start_date=datetime(2023, 11, 8),
+    schedule_interval=None,
 )
 
-# Начало основного DAG
-start_task = DummyOperator(
-    task_id='start_task',
-    dag=updated_raw_dag,
-)
+# Создаем задачи парсинга с помощью TaskGroup
+with TaskGroup('parsers', dag=common_dag) as parsers:
+    tasks = [
+        generate_parser_task('parse_vkjobs', run_vk_parser),
+        generate_parser_task('parse_sber', run_sber_parser),
+        generate_parser_task('parse_tink', run_tin_parser),
+        generate_parser_task('parse_yand', run_yand_parser)
+    ]
 
-# Создаем subDAG для каждого парсера
-with updated_raw_dag:
-    with TaskGroup("parsers") as parsers:
-        parse_vkjobs = PythonOperator(
-            task_id='parse_vkjobs',
-            python_callable=run_vk_parser,
-            provide_context=True,
-            dag=parsers
-        )
+    hello_bash_task = BashOperator(
+        task_id='hello_task',
+        bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
+        dag=common_dag
+    )
 
-        parse_sber = PythonOperator(
-            task_id='parse_sber',
-            python_callable=run_sber_parser,
-            provide_context=True,
-            dag=parsers
-        )
+    end_task = DummyOperator(
+        task_id="end_task",
+        dag=common_dag
+    )
 
-        parse_tink = PythonOperator(
-            task_id='parse_tink',
-            python_callable=run_tin_parser,
-            provide_context=True,
-            dag=parsers
-        )
+    hello_bash_task >> tasks >> end_task
 
-        parse_yand = PythonOperator(
-            task_id='parse_yand',
-            python_callable=run_yand_parser,
-            provide_context=True,
-            dag=parsers
-        )
+# Создаем отдельные DAG для каждой задачи парсинга
+dag_vk = generate_parsing_dag('vk_parsing_dag', 'parse_vkjobs', run_vk_parser, start_date)
+dag_sber = generate_parsing_dag('sber_parsing_dag', 'parse_sber', run_sber_parser, start_date)
+dag_tink = generate_parsing_dag('tink_parsing_dag', 'parse_tink', run_tin_parser, start_date)
+dag_yand = generate_parsing_dag('yand_parsing_dag', 'parse_yand', run_yand_parser, start_date)
 
-end_task = DummyOperator(
-    task_id="end_task",
-    dag=updated_raw_dag,
-)
+# Делаем DAG's глобально доступными
+globals()[common_dag_id] = common_dag
+globals()[dag_vk.dag_id] = dag_vk
+globals()[dag_sber.dag_id] = dag_sber
+globals()[dag_tink.dag_id] = dag_tink
+globals()[dag_yand.dag_id] = dag_yand
 
-# Создаем последовательность задач внутри основного dag
-start_task >> parsers >> end_task
 
 # hello_bash_task = BashOperator(
 #     task_id='hello_task',
