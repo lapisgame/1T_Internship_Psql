@@ -1428,7 +1428,7 @@ def run_yand_parser(**context):
 default_args = {
     "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
-    'start_date': datetime(2023, 11, 7)
+    'start_date': datetime(2023, 11, 8),
 }
 
 dag_main = DAG(
@@ -1446,7 +1446,8 @@ for task_id, dag_id in zip(task_ids, dag_ids):
     tasks[task_id] = TriggerDagRunOperator(
         task_id=task_id,
         trigger_dag_id=dag_id,
-        dag=dag_main
+        dag=dag_main,
+        default_args=default_args
     )
 
 #
