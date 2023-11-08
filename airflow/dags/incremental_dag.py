@@ -1483,12 +1483,10 @@ common_dag = DAG(
 
 # Создаем задачи парсинга с помощью TaskGroup
 with TaskGroup('parsers', dag=common_dag) as parsers:
-    tasks = [
-        generate_parser_task('parse_vkjobs', run_vk_parser),
-        generate_parser_task('parse_sber', run_sber_parser),
-        generate_parser_task('parse_tink', run_tin_parser),
-        generate_parser_task('parse_yand', run_yand_parser)
-    ]
+    parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
+    parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
+    parse_tink_task = generate_parser_task('parse_tink', run_tin_parser)
+    parse_yand_task = generate_parser_task('parse_yand', run_yand_parser)
 
     hello_bash_task = BashOperator(
         task_id='hello_task',
@@ -1501,7 +1499,8 @@ with TaskGroup('parsers', dag=common_dag) as parsers:
         dag=common_dag
     )
 
-    hello_bash_task >> tasks >> end_task
+    hello_bash_task >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> end_task
+
 
 # Создаем отдельные DAG для каждой задачи парсинга
 dag_vk = generate_parsing_dag('vk_parsing_dag', 'parse_vkjobs', run_vk_parser, start_date)
