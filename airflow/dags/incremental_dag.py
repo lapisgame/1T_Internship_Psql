@@ -1433,7 +1433,7 @@ default_args = {
 start_date = datetime(2023, 11, 8)
 dag_kwargs = {'default_args': default_args, 'start_date': start_date}
 
-######################## КОД ДЛЯ КАЖДОГО ПАРСЕРА ########################
+#### КОД ДЛЯ КАЖДОГО ПАРСЕРА ####
 
 def create_individual_dag(dag_id, python_callable):
     dag = DAG(dag_id=dag_id, **dag_kwargs)
@@ -1453,8 +1453,14 @@ dag2 = create_individual_dag('sber_parser_dag', run_sber_parser)
 dag3 = create_individual_dag('tinkoff_parser_dag', run_tin_parser)
 dag4 = create_individual_dag('yandex_parser_dag', run_yand_parser)
 
-######################## Мастер DAG ########################
 
+def conditionally_trigger(context, dag_run_obj):
+    """ Проверяем успешное выполнение предыдущего парсера перед запуском нового """
+    if context['dag_run'].conf.get('continue_processing', False):
+        return dag_run_obj
+    return None
+
+###### Мастер DAG
 master_dag = DAG(dag_id='master_dag', **dag_kwargs)
 with master_dag:
     start = DummyOperator(task_id='start')
@@ -1463,21 +1469,25 @@ with master_dag:
     trigger_vk_parser = TriggerDagRunOperator(
         task_id="trigger_vk_parser",
         trigger_dag_id="vk_parser_dag",
+        python_callable=conditionally_trigger
     )
 
     trigger_sber_parser = TriggerDagRunOperator(
         task_id="trigger_sber_parser",
         trigger_dag_id="sber_parser_dag",
+        python_callable=conditionally_trigger
     )
 
     trigger_tinkoff_parser = TriggerDagRunOperator(
         task_id="trigger_tinkoff_parser",
         trigger_dag_id="tinkoff_parser_dag",
+        python_callable=conditionally_trigger
     )
 
     trigger_yandex_parser = TriggerDagRunOperator(
         task_id="trigger_yandex_parser",
         trigger_dag_id="yandex_parser_dag",
+        python_callable=conditionally_trigger
     )
 
     start >> trigger_vk_parser >> trigger_sber_parser >> trigger_tinkoff_parser >> \
