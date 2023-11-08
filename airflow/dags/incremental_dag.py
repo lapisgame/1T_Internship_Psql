@@ -11,7 +11,7 @@ from airflow import DAG
 from selenium.common.exceptions import NoSuchElementException
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.subdag import SubDagOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
@@ -1425,15 +1425,15 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
+
 default_args = {
     "owner": "admin_1T",
     'retry_delay': timedelta(minutes=5),
 }
 
 start_date = datetime(2023, 11, 8)
-dag_kwargs = {'default_args': default_args, 'start_date': start_date}
+dag_kwargs = {'default_args': default_args, 'start_date': start_date, 'schedule_interval': '@once'}
 
-#### КОД ДЛЯ КАЖДОГО ПАРСЕРА ####
 
 def create_individual_dag(dag_id, python_callable):
     dag = DAG(dag_id=dag_id, **dag_kwargs)
@@ -1453,14 +1453,11 @@ dag2 = create_individual_dag('sber_parser_dag', run_sber_parser)
 dag3 = create_individual_dag('tinkoff_parser_dag', run_tin_parser)
 dag4 = create_individual_dag('yandex_parser_dag', run_yand_parser)
 
-
-def conditionally_trigger(context, dag_run_obj):
-    """ Проверяем успешное выполнение предыдущего парсера перед запуском нового """
+def conditionally_trigger(context):
     if context['dag_run'].conf.get('continue_processing', False):
-        return dag_run_obj
-    return None
+        return True
+    return False
 
-###### Мастер DAG
 master_dag = DAG(dag_id='master_dag', **dag_kwargs)
 with master_dag:
     start = DummyOperator(task_id='start')
@@ -1469,37 +1466,54 @@ with master_dag:
     trigger_vk_parser = TriggerDagRunOperator(
         task_id="trigger_vk_parser",
         trigger_dag_id="vk_parser_dag",
+    )
+
+    conditionally_trigger_vk_parser = ShortCircuitOperator(
+        task_id="conditionally_trigger_vk_parser",
         python_callable=conditionally_trigger
     )
 
     trigger_sber_parser = TriggerDagRunOperator(
         task_id="trigger_sber_parser",
         trigger_dag_id="sber_parser_dag",
+    )
+
+    conditionally_trigger_sber_parser = ShortCircuitOperator(
+        task_id="conditionally_trigger_sber_parser",
         python_callable=conditionally_trigger
     )
 
     trigger_tinkoff_parser = TriggerDagRunOperator(
         task_id="trigger_tinkoff_parser",
         trigger_dag_id="tinkoff_parser_dag",
+
+    )
+
+    conditionally_trigger_tinkoff_parser = ShortCircuitOperator(
+        task_id="conditionally_trigger_tinkoff_parser",
         python_callable=conditionally_trigger
     )
 
     trigger_yandex_parser = TriggerDagRunOperator(
         task_id="trigger_yandex_parser",
         trigger_dag_id="yandex_parser_dag",
+    )
+
+    conditionally_trigger_yandex_parser = ShortCircuitOperator(
+        task_id="conditionally_trigger_yandex_parser",
         python_callable=conditionally_trigger
     )
 
-    start >> trigger_vk_parser >> trigger_sber_parser >> trigger_tinkoff_parser >> \
-    trigger_yandex_parser >> end
+    start >> conditionally_trigger_vk_parser >> trigger_vk_parser >> \
+    conditionally_trigger_sber_parser >> trigger_sber_parser >> \
+    conditionally_trigger_tinkoff_parser >> trigger_tinkoff_parser >> \
+    conditionally_trigger_yandex_parser >> trigger_yandex_parser >> end
 
-# Объявление глобальных переменных DAG
 globals()["vk_parser_dag"] = dag1
 globals()["sber_parser_dag"] = dag2
 globals()["tinkoff_parser_dag"] = dag3
 globals()["yandex_parser_dag"] = dag4
 globals()["master_dag"] = master_dag
-
 
 
 # hello_bash_task = BashOperator(
