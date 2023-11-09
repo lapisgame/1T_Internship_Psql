@@ -1469,7 +1469,7 @@ with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
         dag=updated_common_dag
     )
 
-    with TaskGroup('parsers_group') as upd_parsers_group:
+    with TaskGroup('upd_parsers_group') as upd_parsers_group:
         parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
         parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
         parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
