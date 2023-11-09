@@ -410,12 +410,12 @@ class VKJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) VALUES %s"""
-                self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
-                self.log.info(f"Количество строк вставлено в core_fact_table: "
-                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-                              f"в БД {config['database']}.")
+                query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
+                                    ON CONFLICT (link) DO UPDATE
+                                    SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
+                self.log.info(f"Запрос вставки данных: {query_insert}")
+                self.cur.executemany(query_insert, core_fact_data_tuples)
+                self.log.info(f"Успешно обновлено/добавлено {len(core_fact_data_tuples)} строк в core_fact_table.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
 
@@ -666,7 +666,7 @@ class SberJobParser(BaseJobParser):
 
     def update_database_queries(self):
         """
-        Метод для выполнения запросов к базе данных.
+        Метод для выполнения запросов к базе данных Sber.
         """
         self.cur = self.conn.cursor()
 
@@ -717,15 +717,14 @@ class SberJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
-                self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
-                self.log.info(f"Количество строк вставлено в core_fact_table: "
-                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-                              f"в БД {config['database']}.")
+                query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
+                                ON CONFLICT (link) DO UPDATE
+                                SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
+                self.log.info(f"Запрос вставки данных: {query_insert}")
+                self.cur.executemany(query_insert, core_fact_data_tuples)
+                self.log.info(f"Успешно обновлено/добавлено {len(core_fact_data_tuples)} строк в core_fact_table.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
-
 
             self.conn.commit()
             self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
@@ -1020,12 +1019,12 @@ class TinkoffJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
-                self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
-                self.log.info(f"Количество строк вставлено в core_fact_table: "
-                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-                              f"в БД {config['database']}.")
+                query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 12)})
+                                        ON CONFLICT (link) DO UPDATE
+                                        SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
+                self.log.info(f"Запрос вставки данных: {query_insert}")
+                self.cur.executemany(query_insert, core_fact_data_tuples)
+                self.log.info(f"Успешно обновлено/добавлено {len(core_fact_data_tuples)} строк в core_fact_table.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
 
@@ -1312,12 +1311,12 @@ class YandJobParser(BaseJobParser):
 
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
-                query = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
-                self.log.info(f"Запрос вставки данных: {query}")
-                self.cur.executemany(query, core_fact_data_tuples)
-                self.log.info(f"Количество строк вставлено в core_fact_table: "
-                              f"{len(core_fact_data_tuples)}, обновлена таблица core_fact_table "
-                              f"в БД {config['database']}.")
+                query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
+                                    ON CONFLICT (link) DO UPDATE
+                                    SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
+                self.log.info(f"Запрос вставки данных: {query_insert}")
+                self.cur.executemany(query_insert, core_fact_data_tuples)
+                self.log.info(f"Успешно обновлено/добавлено {len(core_fact_data_tuples)} строк в core_fact_table.")
             else:
                 self.log.info(f"dataframe_to_update пуст.")
 
