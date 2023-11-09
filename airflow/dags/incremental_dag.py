@@ -1475,7 +1475,10 @@ with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
         parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
         parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
 
-    hello_bash_task >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> end_task
+        # Определение порядка выполнения задач внутри группы задач
+        parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task
+
+    hello_bash_task >> upd_parsers_group >> end_task
 
 
 # Создаем отдельные DAG для каждой задачи парсинга
