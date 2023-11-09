@@ -85,20 +85,20 @@ log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
-# Параметры по умолчанию
-default_args = {
-    "owner": "admin_1T",
-    # 'start_date': days_ago(1),
-    'retry_delay': timedelta(minutes=5),
-}
-
-# Создаем DAG ручного запуска (инициализирующий режим).
-initial_dag = DAG(dag_id='initial_dag',
-                tags=['admin_1T'],
-                start_date=datetime(2023, 10, 29),
-                schedule_interval=None,
-                default_args=default_args
-                )
+# # Параметры по умолчанию
+# default_args = {
+#     "owner": "admin_1T",
+#     # 'start_date': days_ago(1),
+#     'retry_delay': timedelta(minutes=5),
+# }
+#
+# # Создаем DAG ручного запуска (инициализирующий режим).
+# initial_dag = DAG(dag_id='initial_dag',
+#                 tags=['admin_1T'],
+#                 start_date=datetime(2023, 10, 29),
+#                 schedule_interval=None,
+#                 default_args=default_args
+#                 )
 
 class DatabaseManager:
     def __init__(self, conn):
