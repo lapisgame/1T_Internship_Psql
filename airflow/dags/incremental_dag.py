@@ -368,7 +368,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -376,7 +376,7 @@ class VKJobParser(BaseJobParser):
                               f"{config['database']}.")
 
                 self.log.info(f'Вставляем строки удаленных вакансий в таблицу del_vacancy_core.')
-                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES %s"""
+                query = f"""INSERT INTO del_vacancy_core ({cols}) VALUES ({", ".join(["%s"] * 12)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
                 self.log.info(f"Количество строк вставлено в del_vacancy_core: "
@@ -401,7 +401,7 @@ class VKJobParser(BaseJobParser):
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
                 self.log.info(f'Обновляем таблицу {self.table_name}.')
-                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES (%s)"""
+                query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 11)})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_insert)
                 self.log.info(f"Количество строк вставлено в {self.table_name}: "
@@ -411,8 +411,8 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
-                                    ON CONFLICT (link) DO UPDATE
-                                    SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
+                                ON CONFLICT (link) DO UPDATE
+                                SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
                 self.log.info(f"Запрос вставки данных: {query_insert}")
                 self.cur.executemany(query_insert, core_fact_data_tuples)
                 self.log.info(f"Успешно обновлено/добавлено {len(core_fact_data_tuples)} строк в core_fact_table.")
@@ -426,6 +426,7 @@ class VKJobParser(BaseJobParser):
             self.log.error(f"Произошла ошибка: {str(e)}")
         finally:
             self.cur.close()
+
 
 class SberJobParser(BaseJobParser):
     """
