@@ -1444,9 +1444,9 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
     return dag
 
 # Создаем общий DAG
-common_dag_id = 'common_parsing_dag'
-common_dag = DAG(
-    dag_id=common_dag_id,
+updated_common_dag_id = 'updated_common_parsing_dag'
+updated_common_dag = DAG(
+    dag_id=updated_common_dag_id,
     default_args={
         "owner": "admin_1T",
         'retry_delay': timedelta(minutes=5),
@@ -1456,7 +1456,7 @@ common_dag = DAG(
 )
 
 # Создаем задачи парсинга с помощью TaskGroup
-with TaskGroup('parsers', dag=common_dag) as parsers:
+with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
 
     parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
     parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
@@ -1466,26 +1466,26 @@ with TaskGroup('parsers', dag=common_dag) as parsers:
     hello_bash_task = BashOperator(
         task_id='hello_task',
         bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
-        dag=common_dag
+        dag=updated_common_dag
     )
 
     end_task = DummyOperator(
         task_id="end_task",
-        dag=common_dag
+        dag=updated_common_dag
     )
 
     hello_bash_task >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> end_task
 
 
 # Создаем отдельные DAG для каждой задачи парсинга
-dag_vk = generate_parsing_dag('vk_parsing_dag', 'parse_vkjobs', run_vk_parser, start_date)
-dag_sber = generate_parsing_dag('sber_parsing_dag', 'parse_sber', run_sber_parser, start_date)
-dag_tink = generate_parsing_dag('tink_parsing_dag', 'parse_tink', run_tin_parser, start_date)
-dag_yand = generate_parsing_dag('yand_parsing_dag', 'parse_yand', run_yand_parser, start_date)
+updated_dag_vk = generate_parsing_dag('updated_vk_parsing_dag', 'updated_parse_vkjobs', run_vk_parser, start_date)
+updated_dag_sber = generate_parsing_dag('updated_sber_parsing_dag', 'updated_parse_sber', run_sber_parser, start_date)
+updated_dag_tink = generate_parsing_dag('updated_tink_parsing_dag', 'updated_parse_tink', run_tin_parser, start_date)
+updated_dag_yand = generate_parsing_dag('updated_yand_parsing_dag', 'updated_parse_yand', run_yand_parser, start_date)
 
 # Делаем DAG's глобально доступными
-globals()[common_dag_id] = common_dag
-globals()[dag_vk.dag_id] = dag_vk
-globals()[dag_sber.dag_id] = dag_sber
-globals()[dag_tink.dag_id] = dag_tink
-globals()[dag_yand.dag_id] = dag_yand
+globals()[updated_common_dag_id] = updated_common_dag
+globals()[updated_dag_vk.dag_id] = updated_dag_vk
+globals()[updated_dag_sber.dag_id] = updated_dag_sber
+globals()[updated_dag_tink.dag_id] = updated_dag_tink
+globals()[updated_dag_yand.dag_id] = updated_dag_yand
