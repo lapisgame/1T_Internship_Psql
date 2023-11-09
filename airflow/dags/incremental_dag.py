@@ -1329,7 +1329,7 @@ class YandJobParser(BaseJobParser):
         finally:
             self.cur.close()
 
-def run_vk_parser(**context):
+def upd_run_vk_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий VK
     """
@@ -1346,7 +1346,7 @@ def run_vk_parser(**context):
     except Exception as e_outer:
         log.error(f'Исключение в функции run_vk_parser: {e_outer}')
 
-def run_sber_parser(**context):
+def upd_run_sber_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Sber
     """
@@ -1363,7 +1363,7 @@ def run_sber_parser(**context):
     except Exception as e_outer:
         log.error(f'Исключение в функции run_sber_parser: {e_outer}')
 
-def run_tin_parser(**context):
+def upd_run_tin_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Tinkoff
     """
@@ -1381,7 +1381,7 @@ def run_tin_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
-def run_yand_parser(**context):
+def upd_run_yand_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Yandex
     """
@@ -1458,10 +1458,10 @@ updated_common_dag = DAG(
 # Создаем задачи парсинга с помощью TaskGroup
 with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
 
-    parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
-    parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
-    parse_tink_task = generate_parser_task('parse_tink', run_tin_parser)
-    parse_yand_task = generate_parser_task('parse_yand', run_yand_parser)
+    parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
+    parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
+    parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
+    parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
 
     hello_bash_task = BashOperator(
         task_id='hello_task',
@@ -1478,10 +1478,14 @@ with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
 
 
 # Создаем отдельные DAG для каждой задачи парсинга
-updated_dag_vk = generate_parsing_dag('updated_vk_parsing_dag', 'updated_parse_vkjobs', run_vk_parser, start_date)
-updated_dag_sber = generate_parsing_dag('updated_sber_parsing_dag', 'updated_parse_sber', run_sber_parser, start_date)
-updated_dag_tink = generate_parsing_dag('updated_tink_parsing_dag', 'updated_parse_tink', run_tin_parser, start_date)
-updated_dag_yand = generate_parsing_dag('updated_yand_parsing_dag', 'updated_parse_yand', run_yand_parser, start_date)
+updated_dag_vk = generate_parsing_dag('updated_vk_parsing_dag', 'updated_parse_vkjobs',
+                                      upd_run_vk_parser, start_date)
+updated_dag_sber = generate_parsing_dag('updated_sber_parsing_dag', 'updated_parse_sber',
+                                        upd_run_sber_parser, start_date)
+updated_dag_tink = generate_parsing_dag('updated_tink_parsing_dag', 'updated_parse_tink',
+                                        upd_run_tin_parser, start_date)
+updated_dag_yand = generate_parsing_dag('updated_yand_parsing_dag', 'updated_parse_yand',
+                                        upd_run_yand_parser, start_date)
 
 # Делаем DAG's глобально доступными
 globals()[updated_common_dag_id] = updated_common_dag

@@ -732,7 +732,7 @@ class YandJobParser(BaseJobParser):
 
 db_manager = DatabaseManager(conn=conn)
 
-def run_vk_parser(**context):
+def init_run_vk_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий VK
     """
@@ -748,7 +748,7 @@ def run_vk_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера ВК: {e}')
 
-def run_sber_parser(**context):
+def init_run_sber_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Sber
     """
@@ -764,7 +764,7 @@ def run_sber_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Сбербанка: {e}')
 
-def run_tin_parser(**context):
+def init_run_tin_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Tinkoff
     """
@@ -782,7 +782,7 @@ def run_tin_parser(**context):
         log.error(f'Ошибка во время работы парсера Тинькофф: {e}')
 
 
-def run_yand_parser(**context):
+def init_run_yand_parser(**context):
     """
     Основной вид задачи для запуска парсера для вакансий Yandex
     """
@@ -878,18 +878,22 @@ with TaskGroup('initial_parsers', dag=initial_common_dag) as parsers:
         provide_context=True,
     )
 
-    parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
-    parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
-    parse_tink_task = generate_parser_task('parse_tink', run_tin_parser)
-    parse_yand_task = generate_parser_task('parse_yand', run_yand_parser)
+    parse_vkjobs_task = generate_parser_task('parse_vkjobs', init_run_vk_parser)
+    parse_sber_task = generate_parser_task('parse_sber', init_run_sber_parser)
+    parse_tink_task = generate_parser_task('parse_tink', init_run_tin_parser)
+    parse_yand_task = generate_parser_task('parse_yand', init_run_yand_parser)
 
     hello_bash_task >> create_raw_tables >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> create_core_fact_table >> end_task
 
 # Создаем отдельные DAG для каждой задачи парсинга
-initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs', run_vk_parser, start_date)
-initial_dag_sber = generate_parsing_dag('initial_sber_parsing_dag', 'initial_parse_sber', run_sber_parser, start_date)
-initial_dag_tink = generate_parsing_dag('initial_tink_parsing_dag', 'initial_parse_tink', run_tin_parser, start_date)
-initial_dag_yand = generate_parsing_dag('initial_yand_parsing_dag', 'initial_parse_yand', run_yand_parser, start_date)
+initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs',
+                                      init_run_vk_parser, start_date)
+initial_dag_sber = generate_parsing_dag('initial_sber_parsing_dag', 'initial_parse_sber',
+                                        init_run_sber_parser, start_date)
+initial_dag_tink = generate_parsing_dag('initial_tink_parsing_dag', 'initial_parse_tink',
+                                        init_run_tin_parser, start_date)
+initial_dag_yand = generate_parsing_dag('initial_yand_parsing_dag', 'initial_parse_yand',
+                                        init_run_yand_parser, start_date)
 
 # Делаем DAG's глобально доступными
 globals()[initial_common_dag_id] = initial_common_dag
