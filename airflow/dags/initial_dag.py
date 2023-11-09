@@ -13,6 +13,8 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
+from typing import Callable
+from airflow.utils.task_group import TaskGroup
 import logging
 from logging import handlers
 from airflow import models
@@ -797,56 +799,149 @@ def run_yand_parser(**context):
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
 
-hello_bash_task = BashOperator(
-    task_id='hello_task',
-    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+start_date = datetime(2023, 11, 8)
 
-# Определение задачи
-create_raw_tables = PythonOperator(
-    task_id='create_raw_tables',
-    python_callable=db_manager.create_raw_tables,
-    provide_context=True,
-    dag=initial_dag
+# Функция для генерации парсер задачи
+def generate_parser_task(task_id: str, run_parser: Callable):
+    """
+    Функция для создания оператора Python для запуска парсера.
+    """
+    return PythonOperator(
+        task_id=task_id,
+        python_callable=run_parser,
+        provide_context=True
+    )
+
+# Функция для создания DAG с задачей парсинга
+def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_date):
+    """
+    Функция для создания DAG с одной задачей парсинга
+    """
+    dag = DAG(
+        dag_id=dag_id,
+        default_args={
+            "owner": "admin_1T",
+            'retry_delay': timedelta(minutes=5),
+        },
+        start_date=start_date,
+        # schedule_interval='@daily',
+        schedule_interval=None,
+    )
+
+    with dag:
+        hello_bash_task = BashOperator(
+            task_id='hello_task',
+            bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"'
+        )
+
+        parsed_task = generate_parser_task(task_id=task_id, run_parser=run_parser)
+
+        end_task = DummyOperator(
+            task_id="end_task"
+        )
+
+        hello_bash_task >> parsed_task >> end_task
+
+    return dag
+
+# Создаем общий DAG
+initial_common_dag_id = 'initial_common_parsing_dag'
+initial_common_dag = DAG(
+    dag_id=initial_common_dag_id,
+    default_args={
+        "owner": "admin_1T",
+        'retry_delay': timedelta(minutes=5),
+    },
+    start_date=datetime(2023, 11, 8),
+    schedule_interval=None,
 )
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=run_vk_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+# Создаем задачи парсинга с помощью TaskGroup
+with TaskGroup('initial_parsers', dag=initial_common_dag) as parsers:
 
-parse_sber = PythonOperator(
-    task_id='parse_sber',
-    python_callable=run_sber_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+    parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
+    parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
+    parse_tink_task = generate_parser_task('parse_tink', run_tin_parser)
+    parse_yand_task = generate_parser_task('parse_yand', run_yand_parser)
 
-parse_tink = PythonOperator(
-    task_id='parse_tink',
-    python_callable=run_tin_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+    hello_bash_task = BashOperator(
+        task_id='hello_task',
+        bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
+        dag=initial_common_dag
+    )
 
-parse_yand = PythonOperator(
-    task_id='parse_yand',
-    python_callable=run_yand_parser,
-    provide_context=True,
-    dag=initial_dag
-)
+    end_task = DummyOperator(
+        task_id="end_task",
+        dag=initial_common_dag
+    )
 
-create_core_fact_table = PythonOperator(
-    task_id='create_core_fact_table',
-    python_callable=db_manager.create_core_fact_table,
-    provide_context=True,
-    dag=initial_dag
-)
+    hello_bash_task >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> end_task
 
-end_task = DummyOperator(
-    task_id="end_task"
-)
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
-create_core_fact_table >> end_task
+# Создаем отдельные DAG для каждой задачи парсинга
+initial_dag_vk = generate_parsing_dag('vk_parsing_dag', 'parse_vkjobs', run_vk_parser, start_date)
+initial_dag_sber = generate_parsing_dag('sber_parsing_dag', 'parse_sber', run_sber_parser, start_date)
+initial_dag_tink = generate_parsing_dag('tink_parsing_dag', 'parse_tink', run_tin_parser, start_date)
+initial_dag_yand = generate_parsing_dag('yand_parsing_dag', 'parse_yand', run_yand_parser, start_date)
+
+# Делаем DAG's глобально доступными
+globals()[initial_common_dag_id] = initial_common_dag
+globals()[initial_dag_vk.dag_id] = initial_dag_vk
+globals()[initial_dag_sber.dag_id] = initial_dag_sber
+globals()[initial_dag_tink.dag_id] = initial_dag_tink
+globals()[initial_dag_yand.dag_id] = initial_dag_yand
+
+
+# hello_bash_task = BashOperator(
+#     task_id='hello_task',
+#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+#
+# # Определение задачи
+# create_raw_tables = PythonOperator(
+#     task_id='create_raw_tables',
+#     python_callable=db_manager.create_raw_tables,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_vkjobs = PythonOperator(
+#     task_id='parse_vkjobs',
+#     python_callable=run_vk_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_sber = PythonOperator(
+#     task_id='parse_sber',
+#     python_callable=run_sber_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_tink = PythonOperator(
+#     task_id='parse_tink',
+#     python_callable=run_tin_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# parse_yand = PythonOperator(
+#     task_id='parse_yand',
+#     python_callable=run_yand_parser,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# create_core_fact_table = PythonOperator(
+#     task_id='create_core_fact_table',
+#     python_callable=db_manager.create_core_fact_table,
+#     provide_context=True,
+#     dag=initial_dag
+# )
+#
+# end_task = DummyOperator(
+#     task_id="end_task"
+# )
+#
+# hello_bash_task >> create_raw_tables >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> \
+# create_core_fact_table >> end_task

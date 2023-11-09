@@ -359,7 +359,7 @@ class VKJobParser(BaseJobParser):
 
     def update_database_queries(self):
         """
-        Метод для выполнения запросов к базе данных.
+        Метод для выполнения запросов к базе данных (VK).
         """
         self.cur = self.conn.cursor()
 
@@ -981,7 +981,7 @@ class TinkoffJobParser(BaseJobParser):
                 cols = ",".join(self.dataframe_to_closed.columns)
                 query = f"""INSERT INTO {self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 13)})"""
                 self.cur.executemany(query, data_tuples_to_closed)
-                self.log.info(f"Количество строк удалено из core_fact_table: "
+                self.log.info(f"Количество строк добавлено: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.table_name} в БД "
                               f"{config['database']}.")
 
