@@ -1452,7 +1452,7 @@ common_dag = DAG(
         'retry_delay': timedelta(minutes=5),
     },
     start_date=datetime(2023, 11, 8),
-    schedule_interval=None,
+    schedule_interval='@daily',
 )
 
 # Создаем задачи парсинга с помощью TaskGroup
