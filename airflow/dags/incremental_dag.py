@@ -31,6 +31,8 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 import pandas as pd
 import numpy as np
 import os
+
+
 # Connections settings
 # Загружаем данные подключений из JSON файла
 with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
@@ -84,22 +86,6 @@ log_handler.setLevel(logging.DEBUG)
 log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
-
-# # Параметры по умолчанию
-# default_args = {
-#     "owner": "admin_1T",
-#     # 'start_date': days_ago(1),
-#     'retry_delay': timedelta(minutes=5),
-# }
-#
-#
-# # Создаем DAG для автоматического запуска
-# updated_raw_dag=DAG(dag_id='updated_raw_dag',
-#                 tags=['admin_1T'],
-#                 start_date=datetime(2023, 11, 5),
-#                 schedule_interval='@daily',
-#                 default_args=default_args
-#                 )
 
 class BaseJobParser:
     def __init__(self, url, profs, log, conn):
@@ -775,15 +761,6 @@ class TinkoffJobParser(BaseJobParser):
         self.log.info("Создан DataFrame для записи вакансий")
 
         try:
-            # vac_index = 0
-            # while True:
-            #     try:
-            #         vac = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')[vac_index]
-            #     except IndexError:
-            #         break  # Закончили обработку всех элементов
-
-            #     self.log.info(f"Обработка вакансии номер {vac_index + 1}")
-
             self.browser.implicitly_wait(3)
             vacs = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')
             for vac in vacs:
@@ -1483,6 +1460,7 @@ common_dag = DAG(
 
 # Создаем задачи парсинга с помощью TaskGroup
 with TaskGroup('parsers', dag=common_dag) as parsers:
+
     parse_vkjobs_task = generate_parser_task('parse_vkjobs', run_vk_parser)
     parse_sber_task = generate_parser_task('parse_sber', run_sber_parser)
     parse_tink_task = generate_parser_task('parse_tink', run_tin_parser)
@@ -1514,44 +1492,3 @@ globals()[dag_vk.dag_id] = dag_vk
 globals()[dag_sber.dag_id] = dag_sber
 globals()[dag_tink.dag_id] = dag_tink
 globals()[dag_yand.dag_id] = dag_yand
-
-
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
-#
-#
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_sber = PythonOperator(
-#     task_id='parse_sber',
-#     python_callable=run_sber_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_tink = PythonOperator(
-#     task_id='parse_tink',
-#     python_callable=run_tin_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# parse_yand = PythonOperator(
-#     task_id='parse_yand',
-#     python_callable=run_yand_parser,
-#     provide_context=True,
-#     dag=updated_raw_dag
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task"
-# )
-#
-# # hello_bash_task >> parse_tink >> end_task
-# hello_bash_task >> parse_vkjobs >> parse_sber >> parse_tink >> parse_yand >> end_task
