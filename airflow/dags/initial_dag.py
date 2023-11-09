@@ -885,7 +885,8 @@ with DAG(
             parse_tink_task = generate_parser_task('parse_tink', init_run_tin_parser)
             parse_yand_task = generate_parser_task('parse_yand', init_run_yand_parser)
 
-        hello_bash_task >> create_raw_tables >> parsers_group >> create_core_fact_table >> end_task
+        hello_bash_task >> create_raw_tables >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task \
+        >> parse_yand_task >> create_core_fact_table >> end_task
 
 # Создаем отдельные DAG для каждой задачи парсинга
 initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs',
