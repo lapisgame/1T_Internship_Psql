@@ -879,10 +879,10 @@ with TaskGroup('initial_parsers', dag=initial_common_dag) as parsers:
 
 
 # Создаем отдельные DAG для каждой задачи парсинга
-initial_dag_vk = generate_parsing_dag('vk_parsing_dag', 'parse_vkjobs', run_vk_parser, start_date)
-initial_dag_sber = generate_parsing_dag('sber_parsing_dag', 'parse_sber', run_sber_parser, start_date)
-initial_dag_tink = generate_parsing_dag('tink_parsing_dag', 'parse_tink', run_tin_parser, start_date)
-initial_dag_yand = generate_parsing_dag('yand_parsing_dag', 'parse_yand', run_yand_parser, start_date)
+initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs', run_vk_parser, start_date)
+initial_dag_sber = generate_parsing_dag('initial_sber_parsing_dag', 'initial_parse_sber', run_sber_parser, start_date)
+initial_dag_tink = generate_parsing_dag('initial_tink_parsing_dag', 'initial_parse_tink', run_tin_parser, start_date)
+initial_dag_yand = generate_parsing_dag('initial_yand_parsing_dag', 'initial_parse_yand', run_yand_parser, start_date)
 
 # Делаем DAG's глобально доступными
 globals()[initial_common_dag_id] = initial_common_dag
