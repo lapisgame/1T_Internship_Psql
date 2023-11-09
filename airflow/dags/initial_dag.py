@@ -845,7 +845,8 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
 db_manager = DatabaseManager(conn=conn)
 
 initial_common_dag_id = 'initial_common_parsing_dag'
-initial_common_dag = DAG(
+
+with DAG(
     dag_id=initial_common_dag_id,
     default_args={
         "owner": "admin_1T",
@@ -853,37 +854,38 @@ initial_common_dag = DAG(
     },
     start_date=start_date,
     schedule_interval=None,
-)
+) as initial_common_dag:
 
-with TaskGroup('initial_parsers', dag=initial_common_dag) as parsers:
+    with TaskGroup('initial_parsers') as parsers:
 
-    hello_bash_task = BashOperator(
-        task_id='hello_task',
-        bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
-    )
+        hello_bash_task = BashOperator(
+            task_id='hello_task',
+            bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
+        )
 
-    end_task = DummyOperator(
-        task_id="end_task",
-    )
+        end_task = DummyOperator(
+            task_id="end_task",
+        )
 
-    create_raw_tables = PythonOperator(
-        task_id='create_raw_tables',
-        python_callable=db_manager.create_raw_tables,
-        provide_context=True,
-    )
+        create_raw_tables = PythonOperator(
+            task_id='create_raw_tables',
+            python_callable=db_manager.create_raw_tables,
+            provide_context=True,
+        )
 
-    create_core_fact_table = PythonOperator(
-        task_id='create_core_fact_table',
-        python_callable=db_manager.create_core_fact_table,
-        provide_context=True,
-    )
+        create_core_fact_table = PythonOperator(
+            task_id='create_core_fact_table',
+            python_callable=db_manager.create_core_fact_table,
+            provide_context=True,
+        )
 
-    parse_vkjobs_task = generate_parser_task('parse_vkjobs', init_run_vk_parser)
-    parse_sber_task = generate_parser_task('parse_sber', init_run_sber_parser)
-    parse_tink_task = generate_parser_task('parse_tink', init_run_tin_parser)
-    parse_yand_task = generate_parser_task('parse_yand', init_run_yand_parser)
+        parse_vkjobs_task = generate_parser_task('parse_vkjobs', init_run_vk_parser)
+        parse_sber_task = generate_parser_task('parse_sber', init_run_sber_parser)
+        parse_tink_task = generate_parser_task('parse_tink', init_run_tin_parser)
+        parse_yand_task = generate_parser_task('parse_yand', init_run_yand_parser)
 
-    hello_bash_task >> create_raw_tables >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> create_core_fact_table >> end_task
+        hello_bash_task >> create_raw_tables >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> \
+        parse_yand_task >> create_core_fact_table >> end_task
 
 # Создаем отдельные DAG для каждой задачи парсинга
 initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs',
