@@ -1398,7 +1398,7 @@ def upd_run_yand_parser(**context):
     except Exception as e:
         log.error(f'Ошибка во время работы парсера Yandex: {e}')
 
-start_date = datetime(2023, 11, 8)
+start_date = datetime(2023, 11, 9)
 
 # Функция для генерации парсер задачи
 def generate_parser_task(task_id: str, run_parser: Callable):
@@ -1458,11 +1458,6 @@ updated_common_dag = DAG(
 # Создаем задачи парсинга с помощью TaskGroup
 with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
 
-    parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
-    parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
-    parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
-    parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
-
     hello_bash_task = BashOperator(
         task_id='hello_task',
         bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
@@ -1473,6 +1468,12 @@ with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
         task_id="end_task",
         dag=updated_common_dag
     )
+
+    with TaskGroup('parsers_group') as parsers_group:
+        parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
+        parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
+        parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
+        parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
 
     hello_bash_task >> parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task >> end_task
 
