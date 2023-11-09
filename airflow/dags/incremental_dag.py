@@ -1445,7 +1445,7 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
 
 # Создаем общий DAG
 updated_common_dag_id = 'updated_common_parsing_dag'
-updated_common_dag = DAG(
+with DAG(
     dag_id=updated_common_dag_id,
     default_args={
         "owner": "admin_1T",
@@ -1453,32 +1453,32 @@ updated_common_dag = DAG(
     },
     start_date=datetime(2023, 11, 8),
     schedule_interval='@daily',
-)
+    ) as updated_common_dag:
 
-# Создаем задачи парсинга с помощью TaskGroup
-with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
+    # Создаем задачи парсинга с помощью TaskGroup
+    with TaskGroup('updated_parsers', dag=updated_common_dag) as parsers:
 
-    hello_bash_task = BashOperator(
-        task_id='hello_task',
-        bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
-        dag=updated_common_dag
-    )
+        hello_bash_task = BashOperator(
+            task_id='hello_task',
+            bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"',
+            dag=updated_common_dag
+        )
 
-    end_task = DummyOperator(
-        task_id="end_task",
-        dag=updated_common_dag
-    )
+        end_task = DummyOperator(
+            task_id="end_task",
+            dag=updated_common_dag
+        )
 
-    with TaskGroup('upd_parsers_group') as upd_parsers_group:
-        parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
-        parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
-        parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
-        parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
+        with TaskGroup('upd_parsers_group') as upd_parsers_group:
+            parse_vkjobs_task = generate_parser_task('parse_vkjobs', upd_run_vk_parser)
+            parse_sber_task = generate_parser_task('parse_sber', upd_run_sber_parser)
+            parse_tink_task = generate_parser_task('parse_tink', upd_run_tin_parser)
+            parse_yand_task = generate_parser_task('parse_yand', upd_run_yand_parser)
 
-        # Определение порядка выполнения задач внутри группы задач
-        parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task
+            # Определение порядка выполнения задач внутри группы задач
+            parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task
 
-    hello_bash_task >> upd_parsers_group >> end_task
+        hello_bash_task >> upd_parsers_group >> end_task
 
 
 # Создаем отдельные DAG для каждой задачи парсинга

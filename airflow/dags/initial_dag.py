@@ -854,7 +854,7 @@ with DAG(
     },
     start_date=start_date,
     schedule_interval=None,
-) as initial_common_dag:
+    ) as initial_common_dag:
 
     with TaskGroup('initial_parsers') as parsers:
 
