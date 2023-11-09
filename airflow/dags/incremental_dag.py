@@ -315,8 +315,7 @@ class VKJobParser(BaseJobParser):
                                 )
                             elif old_status == 'existing':
                                 if old_record[1] == record[1] and old_record[2] == record[2] and \
-                                    old_record[3] == record[3] and old_record[4] == record[4] and \
-                                    old_record[5] == record[5] and old_record[6] == record[6]:
+                                    old_record[3] == record[3] and old_record[4] == record[4]:
                                     pass
 
                                 else:
@@ -624,8 +623,7 @@ class SberJobParser(BaseJobParser):
                                 )
                             elif old_status == 'existing':
                                 if old_record[1] == record[1] and old_record[2] == record[2] and \
-                                        old_record[3] == record[3] and old_record[4] == record[4] and \
-                                        old_record[5] == record[5] and old_record[6] == record[6]:
+                                        old_record[3] == record[3] and old_record[4] == record[4]:
                                     pass
                                 else:
                                     data_new_vac = {
@@ -926,7 +924,7 @@ class TinkoffJobParser(BaseJobParser):
                             elif old_status == 'existing':
                                 if old_record[1] == record[1] and old_record[2] == record[2] and \
                                     old_record[3] == record[3] and old_record[4] == record[4] and \
-                                    old_record[5] == record[5] and old_record[6] == record[6]:
+                                    old_record[5] == record[5]:
                                     pass
 
                                 else:
@@ -1223,8 +1221,7 @@ class YandJobParser(BaseJobParser):
                                 )
                             elif old_status == 'existing':
                                 if old_record[1] == record[1] and old_record[2] == record[2] and \
-                                    old_record[3] == record[3] and old_record[4] == record[4] and \
-                                    old_record[5] == record[5] and old_record[6] == record[6]:
+                                    old_record[3] == record[3] and old_record[4] == record[4]:
                                     pass
                                 else:
                                     data_new_vac = {
