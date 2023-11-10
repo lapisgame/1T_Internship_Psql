@@ -155,51 +155,54 @@ class DatabaseManager:
             self.log.info(f'Удалена таблица {table_name}')
             create_core_fact_table = f"""
             CREATE TABLE {table_name} (
-               vacancy_id VARCHAR(2083) NOT NULL,
-               vacancy_name VARCHAR(255),
-               towns VARCHAR(255),
-               level VARCHAR(255),
-               company VARCHAR(255),
-               salary_from BIGINT,
-               salary_to BIGINT,
-               exp_from SMALLINT,
-               exp_to SMALLINT,
-               description TEXT,
-               job_type VARCHAR(255),
-               job_format VARCHAR(255),
-               languages VARCHAR(255),
-               skills VARCHAR(511),
-               source_vac VARCHAR(255),
-               date_created DATE,
-               date_of_download DATE NOT NULL, 
-               status VARCHAR(32),
-               date_closed DATE,
-               version_vac INTEGER NOT NULL,
-               actual SMALLINT,
-               PRIMARY KEY(vacancy_id, version_vac)
-                );
-            AS
-            (SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
-                   description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
-                   status, date_closed, version_vac, actual
-            FROM raw_vk
-            UNION ALL
-            SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
-                   description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
-                   status, date_closed, version_vac, actual
-            FROM raw_sber
-            UNION ALL
-            SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
-                   description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
-                   status, date_closed, version_vac, actual
-            FROM raw_tinkoff
-            UNION ALL
-            SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
-                   description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
-                   status, date_closed, version_vac, actual
-            FROM raw_yandex);
-            """
+                vacancy_id VARCHAR(2083) NOT NULL,
+                vacancy_name VARCHAR(255),
+                towns VARCHAR(255),
+                level VARCHAR(255),
+                company VARCHAR(255),
+                salary_from BIGINT,
+                salary_to BIGINT,
+                exp_from SMALLINT,
+                exp_to SMALLINT,
+                description TEXT,
+                job_type VARCHAR(255),
+                job_format VARCHAR(255),
+                languages VARCHAR(255),
+                skills VARCHAR(511),
+                source_vac VARCHAR(255),
+                date_created DATE,
+                date_of_download DATE NOT NULL, 
+                status VARCHAR(32),
+                date_closed DATE,
+                version_vac INTEGER NOT NULL,
+                actual SMALLINT,
+                PRIMARY KEY(vacancy_id, version_vac)
+            );"""
             self.cur.execute(create_core_fact_table)
+
+            insert_query = f"""
+            INSERT INTO {table_name}
+                (SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                    description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
+                    status, date_closed, version_vac, actual
+                FROM raw_vk
+                UNION ALL
+                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                    description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
+                    status, date_closed, version_vac, actual
+                FROM raw_sber
+                UNION ALL
+                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                    description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
+                    status, date_closed, version_vac, actual
+                FROM raw_tinkoff
+                UNION ALL
+                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                    description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
+                    status, date_closed, version_vac, actual
+                FROM raw_yandex);
+            """
+            self.cur.execute(insert_query)
             self.conn.commit()
             # закрываем курсор и соединение с базой данных
             self.cur.close()
@@ -866,7 +869,7 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
 
     return dag
 
-db_manager = DatabaseManager(conn=conn)
+# db_manager = DatabaseManager(conn=conn)
 
 initial_common_dag_id = 'initial_common_parsing_dag'
 
