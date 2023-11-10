@@ -411,7 +411,7 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
-                                ON CONFLICT (link) DO UPDATE
+                                ON CONFLICT (vacancy_id) DO UPDATE
                                 SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
                 self.log.info(f"Запрос вставки данных: {query_insert}")
                 self.cur.executemany(query_insert, core_fact_data_tuples)
@@ -719,7 +719,7 @@ class SberJobParser(BaseJobParser):
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
-                                ON CONFLICT (link) DO UPDATE
+                                ON CONFLICT (vacancy_id) DO UPDATE
                                 SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
                 self.log.info(f"Запрос вставки данных: {query_insert}")
                 self.cur.executemany(query_insert, core_fact_data_tuples)
@@ -1021,7 +1021,7 @@ class TinkoffJobParser(BaseJobParser):
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 12)})
-                                        ON CONFLICT (link) DO UPDATE
+                                        ON CONFLICT (vacancy_id) DO UPDATE
                                         SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
                 self.log.info(f"Запрос вставки данных: {query_insert}")
                 self.cur.executemany(query_insert, core_fact_data_tuples)
@@ -1313,7 +1313,7 @@ class YandJobParser(BaseJobParser):
                 self.log.info(f'Обновляем таблицу core_fact_table.')
                 core_fact_data_tuples = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 query_insert = f"""INSERT INTO core_fact_table ({cols}) VALUES ({", ".join(["%s"] * 11)})
-                                    ON CONFLICT (link) DO UPDATE
+                                    ON CONFLICT (vacancy_id) DO UPDATE
                                     SET ({cols}) = ({", ".join(["EXCLUDED." + x for x in cols.split(",")])});"""
                 self.log.info(f"Запрос вставки данных: {query_insert}")
                 self.cur.executemany(query_insert, core_fact_data_tuples)
