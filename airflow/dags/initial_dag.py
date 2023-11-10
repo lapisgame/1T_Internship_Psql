@@ -85,20 +85,6 @@ log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(me
 log_handler.setFormatter(log_formatter)
 log.addHandler(log_handler)
 
-# # Параметры по умолчанию
-# default_args = {
-#     "owner": "admin_1T",
-#     # 'start_date': days_ago(1),
-#     'retry_delay': timedelta(minutes=5),
-# }
-#
-# # Создаем DAG ручного запуска (инициализирующий режим).
-# initial_dag = DAG(dag_id='initial_dag',
-#                 tags=['admin_1T'],
-#                 start_date=datetime(2023, 10, 29),
-#                 schedule_interval=None,
-#                 default_args=default_args
-#                 )
 
 class DatabaseManager:
     def __init__(self, conn):
@@ -137,7 +123,7 @@ class DatabaseManager:
                    date_closed DATE,
                    version_vac INTEGER NOT NULL,
                    actual SMALLINT,
-                   PRIMARY KEY(vacancy_id)
+                   PRIMARY KEY(vacancy_id, version_vac)
                 );
                 """
                 self.cur.execute(create_table_query)
@@ -176,7 +162,7 @@ class DatabaseManager:
                 date_closed DATE,
                 version_vac INTEGER NOT NULL,
                 actual SMALLINT,
-                PRIMARY KEY(vacancy_id, version_vac)
+                PRIMARY KEY(vacancy_id)
             );"""
             self.cur.execute(create_core_fact_table)
 
@@ -755,6 +741,9 @@ class YandJobParser(BaseJobParser):
             # закрываем курсор и соединение с базой данных
             self.cur.close()
             self.conn.close()
+
+
+
 
 
 db_manager = DatabaseManager(conn=conn)
