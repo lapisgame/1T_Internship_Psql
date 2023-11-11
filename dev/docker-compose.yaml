@@ -48,25 +48,6 @@ services:
       retries: 5
     restart: always
 
-  postgresql_db:
-    image: postgres:latest
-    container_name: postgresql_db
-    ports:
-      - 10121:5432
-    volumes:
-      - ./sql_scripts/:/docker-entrypoint-initdb.d/
-      - postgres_db_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "vacancy" ]
-      interval: 5s
-      retries: 5
-    depends_on:
-      - postgres
-
   postgresql_db_dev:
     image: postgres:latest
     container_name: postgresql_db_dev
@@ -86,44 +67,6 @@ services:
     depends_on:
       - postgres
 
-#  postgresql_db_predprod:
-#    image: postgres:latest
-#    container_name: postgresql_db_predprod
-#    ports:
-#      - 10181:5432
-#    volumes:
-#      - ./sql_scripts_predprod/:/docker-entrypoint-initdb.d/predprod
-#      - postgres_db_data_predprod:/var/lib/postgresql/data
-#    environment:
-#      POSTGRES_DB: ${POSTGRES_DB_PREDPROD}
-#      POSTGRES_USER: ${POSTGRES_USER_PREDPROD}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_PREDPROD}
-#    healthcheck:
-#      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "vacancy" ]
-#      interval: 5s
-#      retries: 5
-#    depends_on:
-#      - postgres
-
-  postgresql_db_prod:
-    image: postgres:latest
-    container_name: postgresql_db_prod
-    ports:
-      - 10191:5432
-    volumes:
-      - ./sql_scripts_prod/:/docker-entrypoint-initdb.d/prod
-      - postgres_db_data_prod:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB_PROD}
-      POSTGRES_USER: ${POSTGRES_USER_PROD}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_PROD}
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "vacancy" ]
-      interval: 5s
-      retries: 5
-    depends_on:
-      - postgres
-
   redis:
     image: redis:latest
     expose:
@@ -135,23 +78,23 @@ services:
       retries: 50
     restart: always
 
-  grafana:
-    build:
-      context: ./grafana
-    environment:
-      GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: password
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/datasources/:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
-    depends_on:
-      - postgresql_db
-    ports:
-      - 10124:3000
-    restart: unless-stopped
-#    env_file: grafana/.gfenv
+#  grafana:
+#    build:
+#      context: ./grafana
+#    environment:
+#      GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
+#      GF_SECURITY_ADMIN_USER: admin
+#      GF_SECURITY_ADMIN_PASSWORD: password
+#    volumes:
+#      - grafana_data:/var/lib/grafana
+#      - ./grafana/datasources/:/etc/grafana/provisioning/datasources
+#      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
+#    depends_on:
+#      - postgresql_db
+#    ports:
+#      - 10124:3000
+#    restart: unless-stopped
+##    env_file: grafana/.gfenv
 
 #  prometheus:
 #    image: prom/prometheus
@@ -463,10 +406,7 @@ services:
 
 volumes:
   postgres-db-volume:
-  postgres_db_data:
   postgres_db_data_dev:
-#  postgres_db_data_predprod:
-  postgres_db_data_prod:
-  grafana_data:
+#  grafana_data:
 #  prom_data:
 

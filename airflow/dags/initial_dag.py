@@ -743,9 +743,6 @@ class YandJobParser(BaseJobParser):
             self.conn.close()
 
 
-
-
-
 db_manager = DatabaseManager(conn=conn)
 
 def init_run_vk_parser(**context):

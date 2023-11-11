@@ -970,7 +970,7 @@ class TinkoffJobParser(BaseJobParser):
 
     def update_database_queries(self):
         """
-        Метод для выполнения запросов к базе данных.
+        Метод для выполнения запросов к базе данных (Tinkoff).
         """
         self.cur = self.conn.cursor()
 
