@@ -108,7 +108,7 @@ class DatabaseManager:
         self.log = LoggingMixin().log
 
     def create_raw_tables(self):
-        table_name = 'your_table_name'
+        table_name = 'raw_vk'
         try:
             drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
             self.cur.execute(drop_table_query)
@@ -190,164 +190,164 @@ class BaseJobParser:
         raise NotImplementedError("Вы должны определить метод save_df")
 
 
-# class VKJobParser(BaseJobParser):
-#     """
-#     Парсер вакансий с сайта VK, наследованный от BaseJobParser
-#     """
-#     def find_vacancies(self):
-#         """
-#         Метод для нахождения вакансий с VK
-#         """
-#         self.cur = self.conn.cursor()
-#         self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
-#                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
-#         self.log.info("Создан DataFrame для записи вакансий")
-#         self.browser.implicitly_wait(3)
-#         # Поиск и запись вакансий на поисковой странице
-#         for prof in self.profs:
-#             input_button = self.browser.find_element(By.XPATH,
-#                                                      '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
-#             input_button.send_keys(prof['fullName'])
-#             click_button = self.browser.find_element(By.XPATH,
-#                                                      '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/button')
-#             click_button.click()
-#             time.sleep(5)
-#
-#             # Прокрутка вниз до конца страницы
-#             self.scroll_down_page()
-#
-#             try:
-#                 vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
-#                 vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
-#                 vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
-#                 self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
-#                 self.log.info(f"Количество: " + str(len(vacs)) + "\n")
-#
-#                 for vac in vacs:
-#                     vac_info = {}
-#                     vac_info['vacancy_id'] = str(vac.get_attribute('href'))
-#                     vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
-#                     vac_info['towns'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
-#                     vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
-#                     self.df.loc[len(self.df)] = vac_info
-#
-#             except Exception as e:
-#                 self.log.error(f"Произошла ошибка: {e}")
-#                 input_button.clear()
-#
-#         self.df = self.df.drop_duplicates()
-#         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
-#         self.df['date_created'] = datetime.now().date()
-#         self.df['date_of_download'] = datetime.now().date()
-#         self.df['source_vac'] = url_vk
-#         self.df['status'] = 'existing'
-#         self.df['version_vac'] = 1
-#         self.df['actual'] = 1
-#
-#     def find_vacancies_description(self):
-#         """
-#         Метод для парсинга описаний вакансий для VKJobParser.
-#         """
-#         self.log.info('Старт парсинга описаний вакансий')
-#         if not self.df.empty:
-#             for descr in self.df.index:
-#                 try:
-#                     vacancy_id = self.df.loc[descr, 'vacancy_id']
-#                     self.browser.get(vacancy_id)
-#                     self.browser.delete_all_cookies()
-#                     time.sleep(3)
-#                     desc = self.browser.find_element(By.CLASS_NAME, 'section').text
-#                     desc = desc.replace(';', '')
-#                     self.df.loc[descr, 'description'] = str(desc)
-#
-#                 except Exception as e:
-#                     self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
-#                     pass
-#         else:
-#             self.log.info(f"Нет вакансий для парсинга")
-#
-#     def save_df(self):
-#         """
-#         Метод для сохранения данных в базу данных vk
-#         """
-#         self.cur = self.conn.cursor()
-#
-#         def addapt_numpy_float64(numpy_float64):
-#             return AsIs(numpy_float64)
-#
-#         def addapt_numpy_int64(numpy_int64):
-#             return AsIs(numpy_int64)
-#
-#         register_adapter(np.float64, addapt_numpy_float64)
-#         register_adapter(np.int64, addapt_numpy_int64)
-#
-#         try:
-#             if not self.df.empty:
-#                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-#                 table_name = raw_tables[0]
-#                 # данные, которые вставляются в таблицу PosqtgreSQL
-#                 data = [tuple(x) for x in self.df.to_records(index=False)]
-#                 # формируем строку запроса с плейсхолдерами для значений
-#                 query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, company, source_vac, " \
-#                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
-#                 # исполняем запрос с использованием execute_values
-#                 self.log.info(f"Запрос вставки данных: {query}")
-#                 execute_values(self.cur, query, data)
-#
-#                 self.conn.commit()
-#                 # логируем количество обработанных вакансий
-#                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
-#
-#         except Exception as e:
-#             self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
-#             raise
-#
-#         finally:
-#             # закрываем курсор и соединение с базой данных
-#             self.cur.close()
-#             self.conn.close()
+class VKJobParser(BaseJobParser):
+    """
+    Парсер вакансий с сайта VK, наследованный от BaseJobParser
+    """
+    def find_vacancies(self):
+        """
+        Метод для нахождения вакансий с VK
+        """
+        self.cur = self.conn.cursor()
+        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
+                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
+        self.log.info("Создан DataFrame для записи вакансий")
+        self.browser.implicitly_wait(3)
+        # Поиск и запись вакансий на поисковой странице
+        for prof in self.profs:
+            input_button = self.browser.find_element(By.XPATH,
+                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
+            input_button.send_keys(prof['fullName'])
+            click_button = self.browser.find_element(By.XPATH,
+                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/button')
+            click_button.click()
+            time.sleep(5)
+
+            # Прокрутка вниз до конца страницы
+            self.scroll_down_page()
+
+            try:
+                vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
+                vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
+                vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
+                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
+                self.log.info(f"Количество: " + str(len(vacs)) + "\n")
+
+                for vac in vacs:
+                    vac_info = {}
+                    vac_info['vacancy_id'] = str(vac.get_attribute('href'))
+                    vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
+                    vac_info['towns'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
+                    vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
+                    self.df.loc[len(self.df)] = vac_info
+
+            except Exception as e:
+                self.log.error(f"Произошла ошибка: {e}")
+                input_button.clear()
+
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+        self.df['date_created'] = datetime.now().date()
+        self.df['date_of_download'] = datetime.now().date()
+        self.df['source_vac'] = url_vk
+        self.df['status'] = 'existing'
+        self.df['version_vac'] = 1
+        self.df['actual'] = 1
+
+    def find_vacancies_description(self):
+        """
+        Метод для парсинга описаний вакансий для VKJobParser.
+        """
+        self.log.info('Старт парсинга описаний вакансий')
+        if not self.df.empty:
+            for descr in self.df.index:
+                try:
+                    vacancy_id = self.df.loc[descr, 'vacancy_id']
+                    self.browser.get(vacancy_id)
+                    self.browser.delete_all_cookies()
+                    time.sleep(3)
+                    desc = self.browser.find_element(By.CLASS_NAME, 'section').text
+                    desc = desc.replace(';', '')
+                    self.df.loc[descr, 'description'] = str(desc)
+
+                except Exception as e:
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    pass
+        else:
+            self.log.info(f"Нет вакансий для парсинга")
+
+    def save_df(self):
+        """
+        Метод для сохранения данных в базу данных vk
+        """
+        self.cur = self.conn.cursor()
+
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
+        try:
+            if not self.df.empty:
+                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                table_name = raw_tables[0]
+                # данные, которые вставляются в таблицу PosqtgreSQL
+                data = [tuple(x) for x in self.df.to_records(index=False)]
+                # формируем строку запроса с плейсхолдерами для значений
+                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, company, source_vac, " \
+                        f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
+                # исполняем запрос с использованием execute_values
+                self.log.info(f"Запрос вставки данных: {query}")
+                execute_values(self.cur, query, data)
+
+                self.conn.commit()
+                # логируем количество обработанных вакансий
+                self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
+
+        except Exception as e:
+            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
+            raise
+
+        finally:
+            # закрываем курсор и соединение с базой данных
+            self.cur.close()
+            self.conn.close()
 
 
 db_manager = DatabaseManager(conn=conn)
 
-# def init_run_vk_parser(**context):
-#     """
-#     Основной вид задачи для запуска парсера для вакансий VK
-#     """
-#     log = context['ti'].log
-#     log.info('Запуск парсера ВК')
-#     try:
-#         parser = VKJobParser(url_vk, profs, log, conn)
-#         parser.find_vacancies()
-#         parser.find_vacancies_description()
-#         parser.save_df()
-#         parser.stop()
-#         log.info('Парсер ВК успешно провел работу')
-#     except Exception as e:
-#         log.error(f'Ошибка во время работы парсера ВК: {e}')
+def init_run_vk_parser(**context):
+    """
+    Основной вид задачи для запуска парсера для вакансий VK
+    """
+    log = context['ti'].log
+    log.info('Запуск парсера ВК')
+    try:
+        parser = VKJobParser(url_vk, profs, log, conn)
+        parser.find_vacancies()
+        parser.find_vacancies_description()
+        parser.save_df()
+        parser.stop()
+        log.info('Парсер ВК успешно провел работу')
+    except Exception as e:
+        log.error(f'Ошибка во время работы парсера ВК: {e}')
 
 
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
-#
-# # Определение задачи
-# create_raw_tables = PythonOperator(
-#     task_id='create_raw_tables',
-#     python_callable=db_manager.create_raw_tables,
-#     provide_context=True,
-#     dag=initial_dag
-# )
-#
-# parse_vkjobs = PythonOperator(
-#     task_id='parse_vkjobs',
-#     python_callable=run_vk_parser,
-#     provide_context=True,
-#     dag=initial_dag
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task"
-# )
-#
-# hello_bash_task >> create_raw_tables >> parse_vkjobs >> end_task
+hello_bash_task = BashOperator(
+    task_id='hello_task',
+    bash_command='echo "Желаю удачного парсинга! Да прибудет с нами безотказный интернет!"')
+
+# Определение задачи
+create_raw_tables = PythonOperator(
+    task_id='create_raw_tables',
+    python_callable=db_manager.create_raw_tables,
+    provide_context=True,
+    dag=initial_dag
+)
+
+parse_vkjobs = PythonOperator(
+    task_id='parse_vkjobs',
+    python_callable=init_run_vk_parser,
+    provide_context=True,
+    dag=initial_dag
+)
+
+end_task = DummyOperator(
+    task_id="end_task"
+)
+
+hello_bash_task >> create_raw_tables >> parse_vkjobs >> end_task

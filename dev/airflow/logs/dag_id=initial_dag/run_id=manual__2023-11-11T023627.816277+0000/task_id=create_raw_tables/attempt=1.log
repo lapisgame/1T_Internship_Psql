@@ -1,0 +1,20 @@
+[2023-11-11T02:36:32.363+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=initial_dag/run_id=manual__2023-11-11T02:36:27.816277+00:00/task_id=create_raw_tables permission to 509
+[2023-11-11T02:36:32.405+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=initial_dag/run_id=manual__2023-11-11T02:36:27.816277+00:00/task_id=create_raw_tables permission to 509
+[2023-11-11T02:36:32.436+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: initial_dag.create_raw_tables manual__2023-11-11T02:36:27.816277+00:00 [queued]>
+[2023-11-11T02:36:32.443+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: initial_dag.create_raw_tables manual__2023-11-11T02:36:27.816277+00:00 [queued]>
+[2023-11-11T02:36:32.445+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 1
+[2023-11-11T02:36:32.455+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): create_raw_tables> on 2023-11-11 02:36:27.816277+00:00
+[2023-11-11T02:36:32.459+0000] {standard_task_runner.py:57} INFO - Started process 199 to run task
+[2023-11-11T02:36:32.462+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'initial_dag', 'create_raw_tables', 'manual__2023-11-11T02:36:27.816277+00:00', '--job-id', '4', '--raw', '--subdir', 'DAGS_FOLDER/initial_dag.py', '--cfg-path', '/tmp/tmpxbpr6t_1']
+[2023-11-11T02:36:32.464+0000] {standard_task_runner.py:85} INFO - Job 4: Subtask create_raw_tables
+[2023-11-11T02:36:32.474+0000] {warnings.py:109} WARNING - /home/***/.local/lib/python3.8/site-packages/***/settings.py:195: DeprecationWarning: The sql_alchemy_conn option in [core] has been moved to the sql_alchemy_conn option in [database] - the old setting has been used, but please update your config.
+  SQL_ALCHEMY_CONN = conf.get("database", "SQL_ALCHEMY_CONN")
+
+[2023-11-11T02:36:32.516+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=initial_dag/run_id=manual__2023-11-11T02:36:27.816277+00:00/task_id=create_raw_tables permission to 509
+[2023-11-11T02:36:32.533+0000] {task_command.py:415} INFO - Running <TaskInstance: initial_dag.create_raw_tables manual__2023-11-11T02:36:27.816277+00:00 [running]> on host b74c78789b9f
+[2023-11-11T02:36:32.655+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='admin_1T' AIRFLOW_CTX_DAG_ID='initial_dag' AIRFLOW_CTX_TASK_ID='create_raw_tables' AIRFLOW_CTX_EXECUTION_DATE='2023-11-11T02:36:27.816277+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2023-11-11T02:36:27.816277+00:00'
+[2023-11-11T02:36:32.676+0000] {initial_dag.py:115} INFO - Удалена таблица your_table_name
+[2023-11-11T02:36:32.702+0000] {initial_dag.py:145} INFO - Таблица your_table_name создана в базе данных.
+[2023-11-11T02:36:32.704+0000] {python.py:194} INFO - Done. Returned value was: None
+[2023-11-11T02:36:32.713+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=initial_dag, task_id=create_raw_tables, execution_date=20231111T023627, start_date=20231111T023632, end_date=20231111T023632
+[2023-11-11T02:36:32.755+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0
