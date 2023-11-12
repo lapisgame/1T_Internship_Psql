@@ -5,7 +5,6 @@ import psycopg2
 from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
-from psycopg2 import sql
 from typing import Callable
 from airflow.utils.task_group import TaskGroup
 from airflow import settings
@@ -99,7 +98,6 @@ class BaseJobParser:
         self.profs = profs
         self.log = log
         self.conn = conn
-        self.cur = self.conn.cursor()
 
     def scroll_down_page(self, page_height=0):
         """
@@ -228,42 +226,14 @@ class VKJobParser(BaseJobParser):
 
         try:
             if not self.df.empty:
+                self.cur = self.conn.cursor()
                 self.table_name = raw_tables[0]
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
                 self.log.info('Собираем вакансии для сравнения')
-                # Создаём индекс (если он ещё не существует) для ускорения запросов
-                try:
-                    table_name = sql.Identifier(self.table_name)
-                    with self.conn:
-                        with self.cur() as curs:
-                            curs.execute(sql.SQL("""
-                                SELECT to_regclass('public.idx_version_vac')
-                            """))
-                            exists = curs.fetchone()[0]
-                            if not exists:
-                                curs.execute(sql.SQL("""
-                                    CREATE INDEX idx_version_vac ON {} (version_vac DESC)
-                                """).format(table_name))
-
-                            curs.execute(sql.SQL("""
-                                SELECT to_regclass('public.idx_vacancy_id')
-                            """))
-                            exists = curs.fetchone()[0]
-                            if not exists:
-                                curs.execute(sql.SQL("""
-                                    CREATE INDEX idx_vacancy_id ON {} (vacancy_id)
-                                """).format(table_name))
-                except Exception as e:
-                    self.log.error(f"Ошибка при создании индексов: {e}")
-                    raise
-
-                self.conn.commit()
-
                 query = f"""SELECT vacancy_id FROM {self.table_name}
-                                    WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
-                                    ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
-
+                            WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
+                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
                 self.cur.execute(query)
                 links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
