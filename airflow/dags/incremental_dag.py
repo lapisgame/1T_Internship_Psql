@@ -231,9 +231,43 @@ class VKJobParser(BaseJobParser):
                 self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
 
                 self.log.info('Собираем вакансии для сравнения')
+                # Создаём индекс (если он ещё не существует) для ускорения запросов
+                self.cur.execute(f"""
+                                    DO $
+                                    BEGIN
+                                        IF NOT EXISTS (
+                                            SELECT FROM pg_catalog.pg_class c
+                                            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                                            WHERE n.nspname = 'public'
+                                            AND c.relname = 'idx_version_vac'
+                                            AND c.relkind = 'i'
+                                        ) THEN
+                                            CREATE INDEX idx_version_vac ON {self.table_name} (version_vac DESC);
+                                        END IF;
+                                    END
+                                    $""")
+
+                self.cur.execute(f"""
+                                    DO $
+                                    BEGIN
+                                        IF NOT EXISTS (
+                                            SELECT FROM pg_catalog.pg_class c
+                                            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                                            WHERE n.nspname = 'public'
+                                            AND c.relname = 'idx_vacancy_id'
+                                            AND c.relkind = 'i'
+                                        ) THEN
+                                            CREATE INDEX idx_vacancy_id ON {self.table_name} (vacancy_id);
+                                        END IF;
+                                    END
+                                    $""")
+
+                self.conn.commit()
+
                 query = f"""SELECT vacancy_id FROM {self.table_name}
-                            WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
-                            ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
+                                    WHERE version_vac = (SELECT max(version_vac) FROM {self.table_name})
+                                    ORDER BY date_of_download DESC, version_vac DESC LIMIT 1"""
+
                 self.cur.execute(query)
                 links_in_db = self.cur.fetchall()
                 links_in_db_set = set(vacancy_id for vacancy_id, in links_in_db)
