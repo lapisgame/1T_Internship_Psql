@@ -5,6 +5,7 @@ import psycopg2
 from airflow import settings
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
+from psycopg2 import sql
 from typing import Callable
 from airflow.utils.task_group import TaskGroup
 from airflow import settings
@@ -215,6 +216,7 @@ class VKJobParser(BaseJobParser):
         """
         Метод для сохранения данных в базу данных vk
         """
+
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
 
