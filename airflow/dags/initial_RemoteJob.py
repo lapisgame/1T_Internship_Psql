@@ -102,9 +102,6 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# ua = UserAgent().chrome
-# headers = {'User-Agent': ua}
-
 # Создаем DAG ручного запуска (инициализирующий режим).
 initial_dag = DAG(dag_id='initial_dag',
                 tags=['admin_1T'],
