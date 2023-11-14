@@ -754,7 +754,7 @@ def init_run_remote_job_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера remote-job')
     try:
-        parser = RemoteJobParser(url_remote, profs, log, conn)
+        parser = RemoteJobParser('https://remote-job.ru/search?search%5Bquery%5D=&search%5BsearchType%5D=vacancy', profs, log, conn)
         parser.find_vacancies()
         parser.save_df()
         parser.stop()
