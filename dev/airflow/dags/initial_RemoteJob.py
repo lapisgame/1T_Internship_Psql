@@ -31,6 +31,13 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 import pandas as pd
 import numpy as np
 import os
+from fake_useragent import UserAgent
+from bs4 import BeautifulSoup
+import requests
+import warnings
+
+warnings.filterwarnings('ignore')
+
 
 # Connections settings
 # Загружаем данные подключений из JSON файла
@@ -66,8 +73,9 @@ url_sber = dag_variables.get('base_sber')
 url_yand = dag_variables.get('base_yand')
 url_vk = dag_variables.get('base_vk')
 url_tin = dag_variables.get('base_tin')
+url_remote =dag_variables.get('base_remote')
 
-raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex', 'del_vacancy_core']
+raw_tables = ['raw_remote']
 
 options = ChromeOptions()
 
@@ -95,7 +103,7 @@ default_args = {
 # Создаем DAG ручного запуска (инициализирующий режим).
 initial_dag = DAG(dag_id='initial_dag',
                 tags=['admin_1T'],
-                start_date=datetime(2023, 10, 29),
+                start_date=datetime(2023, 11, 12),
                 schedule_interval=None,
                 default_args=default_args
                 )
@@ -108,7 +116,7 @@ class DatabaseManager:
         self.log = LoggingMixin().log
 
     def create_raw_tables(self):
-        table_name = 'raw_vk'
+        table_name = 'raw_remote'
         try:
             drop_table_query = f"DROP TABLE IF EXISTS {table_name};"
             self.cur.execute(drop_table_query)
@@ -137,7 +145,7 @@ class DatabaseManager:
                date_closed DATE,
                version_vac INTEGER NOT NULL,
                actual SMALLINT,
-               PRIMARY KEY(vacancy_id)
+               PRIMARY KEY(vacancy_id, version_vac)
             );
             """
             self.cur.execute(create_table_query)
@@ -190,87 +198,147 @@ class BaseJobParser:
         raise NotImplementedError("Вы должны определить метод save_df")
 
 
-class VKJobParser(BaseJobParser):
+class RemoteJobParser(BaseJobParser):
     """
-    Парсер вакансий с сайта VK, наследованный от BaseJobParser
+    Парсер вакансий с сайта Remote_Job, наследованный от BaseJobParser
     """
-    def find_vacancies(self):
-        """
-        Метод для нахождения вакансий с VK
-        """
-        self.cur = self.conn.cursor()
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
-                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
-        self.log.info("Создан DataFrame для записи вакансий")
-        self.browser.implicitly_wait(3)
-        # Поиск и запись вакансий на поисковой странице
-        for prof in self.profs:
-            input_button = self.browser.find_element(By.XPATH,
-                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
-            input_button.send_keys(prof['fullName'])
-            click_button = self.browser.find_element(By.XPATH,
-                                                     '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/button')
-            click_button.click()
-            time.sleep(5)
+    def main_page(self, url):
+        self.log.info(f'Анализируется главная страница {url}')
+        self.browser.get(url)
+        time.sleep(3)
+        divs = self.browser.find_elements(By.CSS_SELECTOR, '.col-xs-10')
 
-            # Прокрутка вниз до конца страницы
-            self.scroll_down_page()
+        for div in divs:
+            vacancy_data = {}
 
-            try:
-                vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
-                vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
-                vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
-                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
-                self.log.info(f"Количество: " + str(len(vacs)) + "\n")
+            salary_info = div.find_element(By.TAG_NAME, 'h3').text
+            if salary_info == "з.п. не указана":
+                salary_from = None
+                salary_to = None
+            else:
+                try:
+                    cleaned_salary_info = salary_info.replace(' ', '').replace('руб.', '')
+                    if 'от' in cleaned_salary_info and 'до' in cleaned_salary_info:
+                        salary_parts = list(map(int, cleaned_salary_info.split('от')[1].split('до')))
+                        salary_from = salary_parts[0]
+                        salary_to = salary_parts[1]
+                    elif 'от' in cleaned_salary_info:
+                        salary_from = int(cleaned_salary_info.split('от')[-1])
+                        salary_to = None
+                    elif 'до' in cleaned_salary_info:
+                        salary_from = None
+                        salary_to = int(cleaned_salary_info.split('до')[-1])
+                    else:
+                        salary_from = None
+                        salary_to = None
+                except Exception as e:
+                    self.log.error(f"Ошибка при обработке информации о зарплате: {e}")
+                    salary_from = None
+                    salary_to = None
 
-                for vac in vacs:
-                    vac_info = {}
-                    vac_info['vacancy_id'] = str(vac.get_attribute('href'))
-                    vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
-                    vac_info['towns'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
-                    vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
-                    self.df.loc[len(self.df)] = vac_info
+            vacancy_link = div.find_element(By.TAG_NAME, 'a').get_attribute('href')
+            vacancy_name = div.find_element(By.CSS_SELECTOR, '.navbar li, a, button').text
+            company = div.find_elements(By.TAG_NAME, 'small')[1].text.strip()
 
-            except Exception as e:
-                self.log.error(f"Произошла ошибка: {e}")
-                input_button.clear()
+            vacancy_data['vacancy_link'] = vacancy_link
+            vacancy_data['vacancy_name'] = vacancy_name
+            vacancy_data['company'] = company
+            vacancy_data['salary_from'] = salary_from
+            vacancy_data['salary_to'] = salary_to
 
-        self.df = self.df.drop_duplicates()
-        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
-        self.df['date_created'] = datetime.now().date()
-        self.df['date_of_download'] = datetime.now().date()
-        self.df['source_vac'] = url_vk
-        self.df['status'] = 'existing'
-        self.df['version_vac'] = 1
-        self.df['actual'] = 1
+            self.url_l.append(vacancy_data)
 
     def find_vacancies_description(self):
-        """
-        Метод для парсинга описаний вакансий для VKJobParser.
-        """
-        self.log.info('Старт парсинга описаний вакансий')
-        if not self.df.empty:
-            for descr in self.df.index:
-                try:
-                    vacancy_id = self.df.loc[descr, 'vacancy_id']
-                    self.browser.get(vacancy_id)
-                    self.browser.delete_all_cookies()
-                    time.sleep(3)
-                    desc = self.browser.find_element(By.CLASS_NAME, 'section').text
-                    desc = desc.replace(';', '')
-                    self.df.loc[descr, 'description'] = str(desc)
+        # инициализация главного словаря с данными
+        for vacancy in self.url_l:
+            self.log.info(f'URL {vacancy["vacancy_link"]}')
+            self.browser.get(vacancy["vacancy_link"])
+            time.sleep(3)
+            try:
+                date_created = dateparser.parse(self.browser.find_element(By.XPATH, "//*[@class='text-left']")
+                                                .text.strip(), languages=['ru']).date()
+            except:
+                date_created = datetime.now().date()
 
-                except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
-                    pass
-        else:
-            self.log.info(f"Нет вакансий для парсинга")
+            text_tag = self.browser.find_element(By.XPATH, '//*[@class="row p-y-3"]')
+            text = "\n".join((text_tag.text.strip().split("\n")[2:])).replace('\r', '')
+            description = text[:text.find('Откликнуться на вакансию')].strip().replace(
+                'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой '
+                'отклик на эту вакансию.', '')
+
+            self.df['vacancy_id'].append(vacancy["vacancy_link"])
+            self.df['vacancy_name'].append(vacancy["vacancy_name"])
+            self.df['company'].append(vacancy["company"])
+            self.df['salary_from'].append(vacancy["salary_from"])
+            self.df['salary_to'].append(vacancy["salary_to"])
+            self.df['description'].append(description)
+            self.df['job_format'].append('Удаленная работа')
+            self.df['source_vac'].append('https://remote-job.ru/')
+            self.df['date_created'].append(date_created)
+            self.df['date_of_download'].append(datetime.now().date())
+            self.df['status'].append('existing')
+            self.df['version_vac'].append(1)
+            self.df['actual'].append(1)
+            time.sleep(3)
+
+    def find_vacancies(self):
+        self.url_l = []
+        self.df = {'vacancy_id' : [], 'vacancy_name' : [], 'company' : [], 'salary_from' : [], 'salary_to' : [],
+                   'description' : [], 'job_format' : [], 'source_vac' : [], 'date_created' : [],
+                   'date_of_download' : [], 'status' : [], 'version_vac' : [], 'actual' : []
+                   }
+        options.add_argument('--headless')
+        ua = UserAgent().chrome
+        self.headers = {'User-Agent': ua}
+        options.add_argument(f'--user-agent={ua}')
+
+        self.log.info('Старт парсинга вакансий Remote-Job ...')
+
+        for prof in self.profs:
+            prof_name = prof['fullName']
+            self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
+            self.browser.get(self.url)
+            time.sleep(3)
+            search = self.browser.find_element(By.XPATH, '//*[@id="search_query"]')
+            search.send_keys(prof_name)
+            search.send_keys(Keys.ENTER)
+
+            if self.browser.find_element(By.CSS_SELECTOR, '.h2, h2').text == 'Vacancies not found':
+                continue
+            try:
+                last_page = int(self.browser.find_element(By.CLASS_NAME, 'pagination').text.split('\n')[-2])
+            except NoSuchElementException:
+                last_page = 2
+
+            vacancy_url = self.browser.current_url
+
+            self.log.info(f'Страниц для обработки: {last_page}')
+
+            for i in range(1, last_page + 1):
+                self.log.info(f'Обрабатывается страница {i}.')
+                vacancy_url_for_page = f'{vacancy_url}&page={i}'
+                self.main_page(vacancy_url_for_page)
+                self.find_vacancies_description()
+                self.url_l = []
+                self.log.info(f'Страница {i} обработана!')
 
     def save_df(self):
-        """
-        Метод для сохранения данных в базу данных vk
-        """
+        self.df = pd.DataFrame(self.df)
+        self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+        # self.df.reset_index(drop=True, inplace=True)
+        self.df = self.df.drop_duplicates()
+        self.log.info(
+            "Всего найдено вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+
+        self.log.info("Сохранение результатов в Базу Данных...")
         self.cur = self.conn.cursor()
+
+        # self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
+        # self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
+
+        self.df['salary_from'] = self.df['salary_from'].fillna(0).astype(np.int64)
+        self.df['salary_to'] = self.df['salary_to'].fillna(0).astype(np.int64)
+
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
@@ -283,48 +351,40 @@ class VKJobParser(BaseJobParser):
 
         try:
             if not self.df.empty:
-                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
-                table_name = raw_tables[0]
-                # данные, которые вставляются в таблицу PosqtgreSQL
+                table_name = 'raw_remote'
                 data = [tuple(x) for x in self.df.to_records(index=False)]
-                # формируем строку запроса с плейсхолдерами для значений
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, company, source_vac, " \
-                        f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
-                # исполняем запрос с использованием execute_values
+                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, salary_from, salary_to, " \
+                        f"description, job_format, source_vac, date_created, date_of_download, status, version_vac, " \
+                        f"actual) VALUES %s"
                 self.log.info(f"Запрос вставки данных: {query}")
+                print(self.df.head())
+                self.log.info(self.df.head())
                 execute_values(self.cur, query, data)
-
                 self.conn.commit()
-                # логируем количество обработанных вакансий
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
 
         except Exception as e:
-            self.log.error(f"Ошибка при сохранении данных в функции 'save_df': {e}")
+            self.log.error(f"Произошла ошибка при сохранении данных в функции 'save_df': {e}")
             raise
 
         finally:
-            # закрываем курсор и соединение с базой данных
             self.cur.close()
             self.conn.close()
 
-
 db_manager = DatabaseManager(conn=conn)
 
-def init_run_vk_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий VK
-    """
+def init_run_remote_job_parser(**context):
     log = context['ti'].log
-    log.info('Запуск парсера ВК')
+    log.info('Remote-job parser is starting')
     try:
-        parser = VKJobParser(url_vk, profs, log, conn)
+        parser = RemoteJobParser('https://remote-job.ru/search?search%5Bquery%5D=&search%5BsearchType%5D=vacancy',
+        profs, log, conn)
         parser.find_vacancies()
-        parser.find_vacancies_description()
         parser.save_df()
         parser.stop()
-        log.info('Парсер ВК успешно провел работу')
+        log.info('Parser remote-job has finished the job successfully')
     except Exception as e:
-        log.error(f'Ошибка во время работы парсера ВК: {e}')
+        log.error(f'An error occurred during the operation of the remote-job parser: {e}')
 
 
 hello_bash_task = BashOperator(
@@ -339,9 +399,10 @@ create_raw_tables = PythonOperator(
     dag=initial_dag
 )
 
-parse_vkjobs = PythonOperator(
-    task_id='parse_vkjobs',
-    python_callable=init_run_vk_parser,
+
+parse_remote_jobs = PythonOperator(
+    task_id='parse_remote_jobs',
+    python_callable=init_run_remote_job_parser,
     provide_context=True,
     dag=initial_dag
 )
@@ -350,4 +411,4 @@ end_task = DummyOperator(
     task_id="end_task"
 )
 
-hello_bash_task >> create_raw_tables >> parse_vkjobs >> end_task
+hello_bash_task >> create_raw_tables >> parse_remote_jobs >> end_task
