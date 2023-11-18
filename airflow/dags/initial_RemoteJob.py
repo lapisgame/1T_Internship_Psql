@@ -270,7 +270,7 @@ class RemoteJobParser(BaseJobParser):
                     'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой отклик на эту вакансию.',
                     '')
             except TimeoutException:
-                # Если исключение вызвано, пропустите текущую итерацию и перейдите к следующей вакансии.
+                # Если исключение вызвано, пропустить текущую итерацию и перейти к следующей вакансии.
                 self.log.error(
                     f"Не удалось найти текстовый элемент на странице {vacancy['vacancy_link']}. Страница будет пропущена.")
                 continue
@@ -293,9 +293,9 @@ class RemoteJobParser(BaseJobParser):
     def find_vacancies(self):
         self.wait = WebDriverWait(self.browser, 10)
         self.url_l = []
-        self.df = {'vacancy_id' : [], 'vacancy_name' : [], 'company' : [], 'salary_from' : [], 'salary_to' : [],
-                   'description' : [], 'job_format' : [], 'source_vac' : [], 'date_created' : [],
-                   'date_of_download' : [], 'status' : [], 'version_vac' : [], 'actual' : []
+        self.df = {'vacancy_id': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
+                   'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
+                   'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
                    }
         options.add_argument('--headless')
         ua = UserAgent().chrome
@@ -340,6 +340,10 @@ class RemoteJobParser(BaseJobParser):
                 self.find_vacancies_description()
                 self.url_l = []
                 self.log.info(f'Страница {i} обработана!')
+
+            # Добавляем обновление браузера для каждой новой вакансии
+            self.browser.refresh()
+            time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
 
     def save_df(self):
         self.df = pd.DataFrame(self.df)
