@@ -252,7 +252,6 @@ class RemoteJobParser(BaseJobParser):
             self.url_l.append(vacancy_data)
 
     def find_vacancies_description(self):
-        self.wait = WebDriverWait(self.browser, 10)
         # инициализация главного словаря с данными
         for vacancy in self.url_l:
             # self.log.info(f'URL {vacancy["vacancy_link"]}')
@@ -292,6 +291,7 @@ class RemoteJobParser(BaseJobParser):
             time.sleep(3)
 
     def find_vacancies(self):
+        self.wait = WebDriverWait(self.browser, 10)
         self.url_l = []
         self.df = {'vacancy_id' : [], 'vacancy_name' : [], 'company' : [], 'salary_from' : [], 'salary_to' : [],
                    'description' : [], 'job_format' : [], 'source_vac' : [], 'date_created' : [],
@@ -311,7 +311,6 @@ class RemoteJobParser(BaseJobParser):
             time.sleep(3)
             try:
                 search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
-                # search = self.browser.find_element(By.XPATH, '//*[@id="search_query"]')
                 search.send_keys(prof_name)
                 search.send_keys(Keys.ENTER)
             except NoSuchElementException:
