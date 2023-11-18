@@ -134,8 +134,8 @@ class DatabaseManager:
                company VARCHAR(255),
                salary_from DECIMAL(10, 2),
                salary_to DECIMAL(10, 2),
-               exp_from DECIMAL(2, 1),
-               exp_to DECIMAL(2, 1),
+               exp_from SMALLINT,
+               exp_to SMALLINT,
                description TEXT,
                job_type VARCHAR(255),
                job_format VARCHAR(255),
@@ -252,20 +252,20 @@ class RemoteJobParser(BaseJobParser):
             self.url_l.append(vacancy_data)
 
     def find_vacancies_description(self):
-        wait = WebDriverWait(self.browser, 10)
+        self.wait = WebDriverWait(self.browser, 10)
         # инициализация главного словаря с данными
         for vacancy in self.url_l:
             # self.log.info(f'URL {vacancy["vacancy_link"]}')
             self.browser.get(vacancy["vacancy_link"])
             try:
                 date_created = dateparser.parse(
-                    wait.until(EC.presence_of_element_located((By.XPATH, "//*[@class='text-left']"))).text.strip(),
+                    self.wait.until(EC.presence_of_element_located((By.XPATH, "//*[@class='text-left']"))).text.strip(),
                     languages=['ru']).date()
             except:
                 date_created = datetime.now().date()
 
             try:
-                text_tag = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="row p-y-3"]')))
+                text_tag = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="row p-y-3"]')))
                 text = "\n".join((text_tag.text.strip().split("\n")[2:])).replace('\r', '')
                 description = text[:text.find('Откликнуться на вакансию')].strip().replace(
                     'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой отклик на эту вакансию.',
@@ -309,9 +309,14 @@ class RemoteJobParser(BaseJobParser):
             self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
             self.browser.get(self.url)
             time.sleep(3)
-            search = self.browser.find_element(By.XPATH, '//*[@id="search_query"]')
-            search.send_keys(prof_name)
-            search.send_keys(Keys.ENTER)
+            try:
+                search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
+                # search = self.browser.find_element(By.XPATH, '//*[@id="search_query"]')
+                search.send_keys(prof_name)
+                search.send_keys(Keys.ENTER)
+            except NoSuchElementException:
+                self.log.error(f"No such element: Unable to locate element: for profession {prof_name}")
+                continue
 
             if self.browser.find_element(By.CSS_SELECTOR, '.h2, h2').text == 'Vacancies not found':
                 continue
@@ -342,9 +347,6 @@ class RemoteJobParser(BaseJobParser):
 
         self.log.info("Сохранение результатов в Базу Данных...")
         self.cur = self.conn.cursor()
-
-        # self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
-        # self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
