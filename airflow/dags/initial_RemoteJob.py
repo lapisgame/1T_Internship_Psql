@@ -134,8 +134,8 @@ class DatabaseManager:
                company VARCHAR(255),
                salary_from DECIMAL(10, 2),
                salary_to DECIMAL(10, 2),
-               exp_from SMALLINT,
-               exp_to SMALLINT,
+               exp_from DECIMAL(2, 1),
+               exp_to DECIMAL(2, 1),
                description TEXT,
                job_type VARCHAR(255),
                job_format VARCHAR(255),
@@ -343,8 +343,8 @@ class RemoteJobParser(BaseJobParser):
         self.log.info("Сохранение результатов в Базу Данных...")
         self.cur = self.conn.cursor()
 
-        self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
-        self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
+        # self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
+        # self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)

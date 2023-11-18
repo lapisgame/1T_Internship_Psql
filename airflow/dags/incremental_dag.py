@@ -389,7 +389,7 @@ class VKJobParser(BaseJobParser):
                 data_to_delete_tuples = [tuple(x) for x in
                                          self.dataframe_to_closed[['link']].to_records(index=False)]
                 for to_delete in data_to_delete_tuples:
-                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    query = f"""DELETE FROM core_fact_table WHERE vacancy_id = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
                     self.cur.executemany(query, data_to_delete_tuples)
                     self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -697,7 +697,7 @@ class SberJobParser(BaseJobParser):
                 data_to_delete_tuples = [tuple(x) for x in
                                          self.dataframe_to_closed[['link']].to_records(index=False)]
                 for to_delete in data_to_delete_tuples:
-                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    query = f"""DELETE FROM core_fact_table WHERE vacancy_id = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
                     self.cur.executemany(query, data_to_delete_tuples)
                     self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -999,7 +999,7 @@ class TinkoffJobParser(BaseJobParser):
                 data_to_delete_tuples = [tuple(x) for x in
                                          self.dataframe_to_closed[['link']].to_records(index=False)]
                 for to_delete in data_to_delete_tuples:
-                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    query = f"""DELETE FROM core_fact_table WHERE vacancy_id = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
                     self.cur.executemany(query, data_to_delete_tuples)
                     self.log.info(f"Количество строк удалено из core_fact_table: "
@@ -1263,7 +1263,7 @@ class YandJobParser(BaseJobParser):
 
     def update_database_queries(self):
         """
-        Метод для выполнения запросов к базе данных.
+        Метод для выполнения запросов к базе данных (Yandex).
         """
         self.cur = self.conn.cursor()
 
@@ -1291,7 +1291,7 @@ class YandJobParser(BaseJobParser):
                 data_to_delete_tuples = [tuple(x) for x in
                                          self.dataframe_to_closed[['link']].to_records(index=False)]
                 for to_delete in data_to_delete_tuples:
-                    query = f"""DELETE FROM core_fact_table WHERE link = '{to_delete[0]}'"""
+                    query = f"""DELETE FROM core_fact_table WHERE vacancy_id = '{to_delete[0]}'"""
                     self.log.info(f"Запрос вставки данных: {query}")
                     self.cur.executemany(query, data_to_delete_tuples)
                     self.log.info(f"Количество строк удалено из core_fact_table: "

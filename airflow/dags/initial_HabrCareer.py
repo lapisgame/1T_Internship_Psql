@@ -43,8 +43,8 @@ config = {
     'database': conn_config['database'],
     'user': conn_config['user'],
     'password': conn_config['password'],
-    'host': "host.docker.internal", 
-    'port': 5430, 
+    'host': conn_config['host'],
+    'port': conn_config['port']
 }
 
 conn = psycopg2.connect(**config)
@@ -91,10 +91,10 @@ class DatabaseManager:
                towns VARCHAR(255),
                level VARCHAR(255),
                company VARCHAR(255),
-               salary_from BIGINT,
-               salary_to BIGINT,
-               exp_from SMALLINT,
-               exp_to SMALLINT,
+               salary_from DECIMAL(10, 2),
+               salary_to DECIMAL(10, 2),
+               exp_from DECIMAL(2, 1),
+               exp_to DECIMAL(2, 1),
                description TEXT,
                job_type VARCHAR(255),
                job_format VARCHAR(255),
@@ -178,6 +178,7 @@ class HabrJobParser(BaseJobParser):
         
         # Для разных комбинаций грейда и специализации ищутся страницы, вакансии и данные вакансии
         for qid in qid_values:
+            
           for s_value in s_values:
            url = f"{BASE_URL}?qid={qid}&s[]={s_value}&type=all"
            r = requests.get(url, headers=HEADERS)
@@ -195,6 +196,7 @@ class HabrJobParser(BaseJobParser):
             else:
                 total_pages = 1
             print(f"Found {total_pages} pages for qid={qid}, s[]={s_value}")
+            
             for page in range(1, total_pages + 1):
                 url = f"{BASE_URL}?qid={qid}&s[]={s_value}&type=all&page={page}"
                 r = requests.get(url, headers=HEADERS)
@@ -202,117 +204,121 @@ class HabrJobParser(BaseJobParser):
                 if html:
                     soup = BeautifulSoup(html, "html.parser")
                     vacancy_cards = soup.find_all("div", class_="vacancy-card")
+                    
                     for card in vacancy_cards:
                        # На хабр.карьере в зарплате передается строка "от N до N валюта", которую нужно распарсить            
-                       salary_find = card.find("div", class_="basic-salary").text.strip()
-                       if '₽' in salary_find:
-                          # Используем регулярное выражение для поиска чисел в строке
-                          salary_values = re.findall(r'\d+', salary_find)
+                        salary_find = card.find("div", class_="basic-salary").text.strip()
+                        salary_from = salary_to = None  # Инициализация переменных
 
-                          # Преобразуем числа в тип данных int
-                          salary_values = [int(value) for value in salary_values]
+                        if '₽' in salary_find:
+                            # Используем регулярное выражение для поиска чисел в строке
+                            salary_find = salary_find.replace(' ', '')  # Удаление пробелов
+                            if 'от' in salary_find and 'до' in salary_find:
+                                match = re.search(r'от(\d+)до(\d+)', salary_find)
+                                if match:
+                                    salary_from = int(match.group(1))
+                                    salary_to = int(match.group(2))
 
-                          # Извлекаем значения salaryfrom и salaryto
-                          if len(salary_values) == 1:
-                              salary_from = salary_values[0]
-                              salary_to = None
-                          elif len(salary_values) == 2:
-                              salary_from, salary_to = salary_values
-                              salary_to = None if salary_to == 0 else salary_to
-                          else:
-                              salary_from = None
-                              salary_to = None 
+                            elif 'от' in salary_find:
+                                match = re.search(r'от(\d+)', salary_find)
+                                if match:
+                                    salary_from = int(match.group(1))
+
+                            elif 'до' in salary_find:
+                                match = re.search(r'до(\d+)', salary_find)
+                                if match:
+                                    salary_to = int(match.group(1))
                               
                        # Парсим описание вакансии    
-                       description_url = "https://career.habr.com" + card.find("a", class_="vacancy-card__title-link").get("href")
-                       description_html = requests.get(description_url, headers=HEADERS).text
-                       description_soup = BeautifulSoup(description_html, 'lxml')
-                       description_text = description_soup.find("div", class_="vacancy-description__text")
-                       description = ' '.join(description_text.stripped_strings) if description_text else ""
-                       date_created=datetime.now().date()
-                       date_of_download=datetime.now().date()
-                       status ='existing'
-                       version_vac=1
-                       actual=1
+                        description_url = "https://career.habr.com" + card.find("a", class_="vacancy-card__title-link").get("href")
+                        description_html = requests.get(description_url, headers=HEADERS).text
+                        description_soup = BeautifulSoup(description_html, 'lxml')
+                        description_text = description_soup.find("div", class_="vacancy-description__text")
+                        description = ' '.join(description_text.stripped_strings) if description_text else ""
+                        date_created=datetime.now().date()
+                        date_of_download=datetime.now().date()
+                        status ='existing'
+                        version_vac=1
+                        actual=1
                        # Значения грейдов
-                       if qid==1:
-                           level='Intern'
-                       elif qid==3:
-                           level='Junior'
-                       elif qid==4:
-                           level='Middle'    
-                       elif qid==5:
-                           level='Senior'    
-                       else:
-                           level='Lead'
+                        if qid==1:
+                            level='Intern'
+                        elif qid==3:
+                            level='Junior'
+                        elif qid==4:
+                            level='Middle'    
+                        elif qid==5:
+                            level='Senior'    
+                        else:
+                            level='Lead'
                        # Создаем список со спаршенными данными по каждой вакансии     
-                       item = {
-                       "company": card.find("div", class_="vacancy-card__company-title").get_text(strip=True),
-                       "vacancy_name": card.find("a", class_="vacancy-card__title-link").get_text(strip=False),
-                       "skills": card.find("div", class_="vacancy-card__skills").get_text(strip=False),
-                       "towns": card.find("div", class_="vacancy-card__meta").get_text(strip=False),
-                       "vacancy_id": "https://career.habr.com/" + card.find("a", class_="vacancy-card__title-link").get("href"),
-                       "description": description,
-                       "date_created": date_created,
-                       "date_of_download": date_of_download,
-                       "source_vac": BASE_URL,
-                       "status": status,
-                       "version_vac": version_vac,
-                       "actual": actual,
-                       "level": level,
-                       "salary_from": salary_from,
-                       "salary_to": salary_to
-    }            
-                       print(f"Adding item: {item}")
-                       self.items.append(item)
+                        item = {
+                            "company": card.find("div", class_="vacancy-card__company-title").get_text(strip=True),
+                            "vacancy_name": card.find("a", class_="vacancy-card__title-link").get_text(strip=False),
+                            "skills": card.find("div", class_="vacancy-card__skills").get_text(strip=False),
+                            "towns": card.find("div", class_="vacancy-card__meta").get_text(strip=False),
+                            "vacancy_id": "https://career.habr.com/" + card.find("a", class_="vacancy-card__title-link").get("href"),
+                            "description": description,
+                            "date_created": date_created,
+                            "date_of_download": date_of_download,
+                            "source_vac": BASE_URL,
+                            "status": status,
+                            "version_vac": version_vac,
+                            "actual": actual,
+                            "level": level,
+                            "salary_from": salary_from,
+                            "salary_to": salary_to}            
+                        print(f"Adding item: {item}")
+                        self.items.append(item)
         self.log.info("В список добавлены данные")
         return self.items
         pass
 
 
     def save_df(self, cursor, connection):
-     self.log.info(f"Запрос вставки данных")
-     try:
-        for item in self.items:
-            company = item["company"]
-            vacancy_title = item["vacancy_name"]
-            skills = item["skills"]
-            meta = item["towns"]
-            link_vacancy = item["vacancy_id"]
-            date_created=item["date_created"]
-            date_of_download=item["date_of_download"]
-            description=item["description"]
-            source_vac=item["source_vac"]
-            status=item["status"]
-            version_vac=item["version_vac"]
-            actual=item["actual"]
-            level=item["level"]
-            salary_from=item["salary_from"]
-            salary_to=item["salary_to"]
+        self.log.info(f"Запрос вставки данных")
+        try:
+            for item in self.items:
+                company = item["company"]
+                vacancy_title = item["vacancy_name"]
+                skills = item["skills"]
+                meta = item["towns"]
+                link_vacancy = item["vacancy_id"]
+                date_created=item["date_created"]
+                date_of_download=item["date_of_download"]
+                description=item["description"]
+                source_vac=item["source_vac"]
+                status=item["status"]
+                version_vac=item["version_vac"]
+                actual=item["actual"]
+                level=item["level"]
+                salary_from=item["salary_from"]
+                salary_to=item["salary_to"]
 
             # SQL-запрос для вставки данных
-            sql = """INSERT INTO public.raw_habr (vacancy_id, company, vacancy_name,
-                               skills, towns, description, date_created, date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
+                sql = """INSERT INTO public.raw_habr (vacancy_id, company, vacancy_name, skills, towns, description, date_created,
+                                                 date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
-            values = (link_vacancy, company, vacancy_title, skills, meta, description, date_created, date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
-            cursor.execute(sql, values)
+                values = (link_vacancy, company, vacancy_title, skills, meta, description, date_created, 
+                      date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
+                cursor.execute(sql, values)
 
-        connection.commit()
-        cursor.close()
-        connection.close()
-        print("Data successfully inserted into the database.")
-        self.log.info(f"Данные успешно добавлены")
-        print(f"Inserted data: {self.items}")
+            connection.commit()
+            cursor.close()
+            connection.close()
+            print("Data successfully inserted into the database.")
+            self.log.info(f"Данные успешно добавлены")
+            print(f"Inserted data: {self.items}")
         
         # Clear the items list after successful insertion
-        self.items = []
+            self.items = []
 
-     except Exception as e:
-        print(f"Error during data insertion: {e}")
-        self.log.info(f"Ошибка добавления данных")
-        connection.rollback()
-        cursor.close()
-        connection.close()
+        except Exception as e:
+            print(f"Error during data insertion: {e}")
+            self.log.info(f"Ошибка добавления данных")
+            connection.rollback()
+            cursor.close()
+            connection.close()
 
 # Создаем объект DatabaseManager
 db_manager = DatabaseManager(conn=conn)
@@ -328,20 +334,20 @@ def init_run_habr_parser(**context):
     parser.save_df(cursor=conn.cursor(), connection=conn)
 
 
-with DAG(dag_id = "parse_habrjobs", schedule_interval = None,
+with DAG(dag_id = "parse_habrjobs", schedule_interval = '@daily', tags=['admin_1T'],
     default_args = default_args, catchup = False) as dag:
 
 
 # Определение задачи
-      create_raw_tables = PythonOperator(
-       task_id='create_raw_tables',
-       python_callable=db_manager.create_raw_tables,
-       provide_context=True
+        create_raw_tables = PythonOperator(
+            task_id='create_raw_tables',
+            python_callable=db_manager.create_raw_tables,
+            provide_context=True
 )
 
-      parse_habrjobs = PythonOperator(
-       task_id='parse_habrjobs',
-       python_callable=init_run_habr_parser,
-       provide_context=True)
+        parse_habrjobs = PythonOperator(
+            task_id='parse_habrjobs',
+            python_callable=init_run_habr_parser,
+             provide_context=True)
 
 create_raw_tables >> parse_habrjobs
