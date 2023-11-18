@@ -307,8 +307,13 @@ class RemoteJobParser(BaseJobParser):
         for prof in self.profs:
             prof_name = prof['fullName']
             self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
-            self.browser.get(self.url)
-            time.sleep(3)
+            try:
+                self.browser.get(self.url)
+                time.sleep(10)
+                # операции поиска и обработки вакансий
+            except Exception as e:
+                self.log.error(f"Ошибка при обработке вакансии {prof_name}: {e}")
+                continue
             try:
                 search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
                 search.send_keys(prof_name)
