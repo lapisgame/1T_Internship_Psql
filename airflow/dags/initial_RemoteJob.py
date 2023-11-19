@@ -134,8 +134,8 @@ class DatabaseManager:
                company VARCHAR(255),
                salary_from DECIMAL(10, 2),
                salary_to DECIMAL(10, 2),
-               exp_from SMALLINT,
-               exp_to SMALLINT,
+               exp_from DECIMAL(2, 1),
+               exp_to DECIMAL(2, 1),
                description TEXT,
                job_type VARCHAR(255),
                job_format VARCHAR(255),
@@ -227,17 +227,17 @@ class RemoteJobParser(BaseJobParser):
                         salary_to = salary_parts[1]
                     elif 'от' in cleaned_salary_info:
                         salary_from = int(cleaned_salary_info.split('от')[-1])
-                        salary_to = None
+                        salary_to = np.nan
                     elif 'до' in cleaned_salary_info:
-                        salary_from = None
+                        salary_from = np.nan
                         salary_to = int(cleaned_salary_info.split('до')[-1])
                     else:
-                        salary_from = None
-                        salary_to = None
+                        salary_from = np.nan
+                        salary_to = np.nan
                 except Exception as e:
                     self.log.error(f"Ошибка при обработке информации о зарплате: {e}")
-                    salary_from = None
-                    salary_to = None
+                    salary_from = np.nan
+                    salary_to = np.nan
 
             vacancy_link = div.find_element(By.TAG_NAME, 'a').get_attribute('href')
             vacancy_name = div.find_element(By.CSS_SELECTOR, '.navbar li, a, button').text
