@@ -344,13 +344,14 @@ class RemoteJobParser(BaseJobParser):
             # Добавляем обновление браузера для каждой новой вакансии
             self.browser.refresh()
             time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
+        self.df = self.df.drop_duplicates()
 
     def save_df(self):
         self.df = pd.DataFrame(self.df)
         self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
         # self.df.reset_index(drop=True, inplace=True)
-        self.df = self.df.drop_duplicates()
         self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
+        self.df = self.df.drop_duplicates()
         self.log.info(
             "Всего найдено вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
