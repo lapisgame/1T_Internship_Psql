@@ -350,6 +350,7 @@ class RemoteJobParser(BaseJobParser):
         self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
         # self.df.reset_index(drop=True, inplace=True)
         self.df = self.df.drop_duplicates()
+        self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
         self.log.info(
             "Всего найдено вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 

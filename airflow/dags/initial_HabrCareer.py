@@ -334,7 +334,7 @@ def init_run_habr_parser(**context):
     parser.save_df(cursor=conn.cursor(), connection=conn)
 
 
-with DAG(dag_id = "parse_habrjobs", schedule_interval = '@daily', tags=['admin_1T'],
+with DAG(dag_id = "parse_habrjobs", schedule_interval = None, tags=['admin_1T'],
     default_args = default_args, catchup = False) as dag:
 
 
