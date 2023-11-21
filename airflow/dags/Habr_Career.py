@@ -235,9 +235,22 @@ class HabrJobParser(BaseJobParser):
                         description_soup = BeautifulSoup(description_html, 'lxml')
                         description_text = description_soup.find("div", class_="vacancy-description__text")
                         description = ' '.join(description_text.stripped_strings) if description_text else ""
-                        date_created=datetime.now().date()
                         date_of_download=datetime.now().date()
-                        status ='existing'
+                        date_string = card.find("time", class_="basic-date").text.strip()
+
+# Маппинг месяцев для русского языка
+                        months_mapping = {
+                                            'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4, 'мая': 5, 'июня': 6,
+                                            'июля': 7, 'августа': 8, 'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
+                                            }
+
+# Разбираем строку и получаем объект datetime
+                        date_parts = date_string.split()
+                        day = int(date_parts[0])
+                        month = months_mapping[date_parts[1].lower()]
+                        current_year = datetime.now().year  # Получаем текущий год
+                        date_created = datetime(current_year, month, day)
+                        status ='existing'  
                         version_vac=1
                         actual=1
                        # Значения грейдов
@@ -270,6 +283,8 @@ class HabrJobParser(BaseJobParser):
                             "salary_to": salary_to}            
                         print(f"Adding item: {item}")
                         self.items.append(item)
+                        time.sleep(3)
+                        
         self.log.info("В список добавлены данные")
         return self.items
         pass
@@ -334,7 +349,7 @@ def init_run_habr_parser(**context):
     parser.save_df(cursor=conn.cursor(), connection=conn)
 
 
-with DAG(dag_id = "parse_habrjobs", schedule_interval = None, tags=['admin_1T'],
+with DAG(dag_id = "parse_habrjobs", schedule_interval = '@daily', tags=['admin_1T'],
     default_args = default_args, catchup = False) as dag:
 
 

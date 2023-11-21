@@ -104,7 +104,7 @@ default_args = {
 }
 
 # Создаем DAG ручного запуска (инициализирующий режим).
-initial_dag = DAG(dag_id='initial_dag',
+initial_remotejob_dag = DAG(dag_id='initial_remotejob_dag',
                 tags=['admin_1T'],
                 start_date=datetime(2023, 11, 12),
                 schedule_interval=None,
@@ -344,7 +344,6 @@ class RemoteJobParser(BaseJobParser):
             # Добавляем обновление браузера для каждой новой вакансии
             self.browser.refresh()
             time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
-        self.df = self.df.drop_duplicates()
 
     def save_df(self):
         self.df = pd.DataFrame(self.df)
@@ -371,9 +370,24 @@ class RemoteJobParser(BaseJobParser):
             if not self.df.empty:
                 table_name = 'raw_remote'
                 data = [tuple(x) for x in self.df.to_records(index=False)]
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, salary_from, salary_to, " \
-                        f"description, job_format, source_vac, date_created, date_of_download, status, version_vac, " \
-                        f"actual) VALUES %s"
+                query = f"""
+                INSERT INTO {table_name} 
+                (vacancy_id, vacancy_name, company, salary_from, salary_to, description, job_format, source_vac, 
+                date_created, date_of_download, status, version_vac, actual) 
+                VALUES %s 
+                ON CONFLICT (vacancy_id) DO UPDATE SET 
+                vacancy_name = EXCLUDED.vacancy_name, 
+                company = EXCLUDED.company,
+                salary_from = EXCLUDED.salary_from, 
+                salary_to = EXCLUDED.salary_to, 
+                description = EXCLUDED.description, 
+                job_format = EXCLUDED.job_format, 
+                source_vac = EXCLUDED.source_vac, 
+                date_created = EXCLUDED.date_created, 
+                date_of_download = EXCLUDED.date_of_download, 
+                status = EXCLUDED.status, 
+                version_vac = EXCLUDED.version_vac, 
+                actual = EXCLUDED.actual;"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 print(self.df.head())
                 self.log.info(self.df.head())
@@ -414,7 +428,7 @@ create_raw_tables = PythonOperator(
     task_id='create_raw_tables',
     python_callable=db_manager.create_raw_tables,
     provide_context=True,
-    dag=initial_dag
+    dag=initial_remotejob_dag
 )
 
 
@@ -422,7 +436,7 @@ parse_remote_jobs = PythonOperator(
     task_id='parse_remote_jobs',
     python_callable=init_run_remote_job_parser,
     provide_context=True,
-    dag=initial_dag
+    dag=initial_remotejob_dag
 )
 
 end_task = DummyOperator(
