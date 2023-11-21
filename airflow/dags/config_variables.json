@@ -8,7 +8,22 @@
   "base_remote": "https://remote-job.ru/search?search%5Bquery%5D=&search%5BsearchType%5D=vacancy",
   "psql_raw_path": "/docker-entrypoint-initdb.d/raw_data/",
   "professions": [
-    {"fullName": "Data engineer"}
+    {"fullName": "Data engineer"},
+    {"fullName": "Data analyst"},
+    {"fullName": "Data scientist"},
+    {"fullName": "System analyst"},
+    {"fullName": "Business analyst"},
+    {"fullName": "Project manager"},
+    {"fullName": "Product manager"},
+    {"fullName": "Backend developer"},
+    {"fullName": "Frontend developer"},
+    {"fullName": "Fullstack developer"},
+    {"fullName": "digital marketing specialist"},
+    {"fullName": "Web designer"},
+    {"fullName": "UI/UX"},
+    {"fullName": "UX/UI"},
+    {"fullName": "QA engineer"},
+    {"fullName": "DevOps"}
   ]
 }
 
