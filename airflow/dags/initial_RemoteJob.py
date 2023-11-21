@@ -371,30 +371,31 @@ class RemoteJobParser(BaseJobParser):
                 table_name = 'raw_remote'
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 query = f"""
-                INSERT INTO {table_name} 
-                (vacancy_id, vacancy_name, company, salary_from, salary_to, description, job_format, source_vac, 
-                date_created, date_of_download, status, version_vac, actual) 
-                VALUES %s 
-                ON CONFLICT (vacancy_id) DO UPDATE SET 
-                vacancy_name = EXCLUDED.vacancy_name, 
-                company = EXCLUDED.company,
-                salary_from = EXCLUDED.salary_from, 
-                salary_to = EXCLUDED.salary_to, 
-                description = EXCLUDED.description, 
-                job_format = EXCLUDED.job_format, 
-                source_vac = EXCLUDED.source_vac, 
-                date_created = EXCLUDED.date_created, 
-                date_of_download = EXCLUDED.date_of_download, 
-                status = EXCLUDED.status, 
-                version_vac = EXCLUDED.version_vac, 
-                actual = EXCLUDED.actual;"""
+                    INSERT INTO {table_name} 
+                    (vacancy_id, vacancy_name, company, salary_from, salary_to, description, job_format, source_vac, 
+                    date_created, date_of_download, status, version_vac, actual) 
+                    VALUES %s 
+                    ON CONFLICT (vacancy_id, version_vac) DO UPDATE SET 
+                    vacancy_name = EXCLUDED.vacancy_name, 
+                    company = EXCLUDED.company,
+                    salary_from = EXCLUDED.salary_from, 
+                    salary_to = EXCLUDED.salary_to, 
+                    description = EXCLUDED.description, 
+                    job_format = EXCLUDED.job_format, 
+                    source_vac = EXCLUDED.source_vac, 
+                    date_created = EXCLUDED.date_created, 
+                    date_of_download = EXCLUDED.date_of_download, 
+                    status = EXCLUDED.status, 
+                    version_vac = EXCLUDED.version_vac, 
+                    actual = EXCLUDED.actual;"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 print(self.df.head())
                 self.log.info(self.df.head())
                 execute_values(self.cur, query, data)
                 self.conn.commit()
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
-
+        except Exception as e:
+            self.log.error(str(e))
         except Exception as e:
             self.log.error(f"Произошла ошибка при сохранении данных в функции 'save_df': {e}")
             raise
