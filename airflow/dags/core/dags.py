@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from airflow.utils.log.logging_mixin import LoggingMixin
 import os
 from sqlalchemy import create_engine
-from ddl_core import DatabaseManager
-from dml_core import DataManager
+from core.ddl_core import DatabaseManager
+from core.dml_core import DataManager
 import pandas as pd
 import sys
 import os
