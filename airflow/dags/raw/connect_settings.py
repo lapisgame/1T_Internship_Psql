@@ -7,6 +7,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 # Connections settings
 # Загружаем данные подключений из JSON файла
 with open('/opt/airflow/dags/raw/config_connections.json', 'r') as conn_file:
