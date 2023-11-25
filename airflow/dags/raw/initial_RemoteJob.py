@@ -104,7 +104,7 @@ default_args = {
 }
 
 # Создаем DAG ручного запуска (инициализирующий режим).
-initial_dag = DAG(dag_id='initial_dag',
+initial_remotejob_dag = DAG(dag_id='initial_remotejob_dag',
                 tags=['admin_1T'],
                 start_date=datetime(2023, 11, 12),
                 schedule_interval=None,
@@ -134,8 +134,8 @@ class DatabaseManager:
                company VARCHAR(255),
                salary_from DECIMAL(10, 2),
                salary_to DECIMAL(10, 2),
-               exp_from SMALLINT,
-               exp_to SMALLINT,
+               exp_from DECIMAL(2, 1),
+               exp_to DECIMAL(2, 1),
                description TEXT,
                job_type VARCHAR(255),
                job_format VARCHAR(255),
@@ -227,17 +227,17 @@ class RemoteJobParser(BaseJobParser):
                         salary_to = salary_parts[1]
                     elif 'от' in cleaned_salary_info:
                         salary_from = int(cleaned_salary_info.split('от')[-1])
-                        salary_to = None
+                        salary_to = np.nan
                     elif 'до' in cleaned_salary_info:
-                        salary_from = None
+                        salary_from = np.nan
                         salary_to = int(cleaned_salary_info.split('до')[-1])
                     else:
-                        salary_from = None
-                        salary_to = None
+                        salary_from = np.nan
+                        salary_to = np.nan
                 except Exception as e:
                     self.log.error(f"Ошибка при обработке информации о зарплате: {e}")
-                    salary_from = None
-                    salary_to = None
+                    salary_from = np.nan
+                    salary_to = np.nan
 
             vacancy_link = div.find_element(By.TAG_NAME, 'a').get_attribute('href')
             vacancy_name = div.find_element(By.CSS_SELECTOR, '.navbar li, a, button').text
@@ -270,7 +270,7 @@ class RemoteJobParser(BaseJobParser):
                     'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой отклик на эту вакансию.',
                     '')
             except TimeoutException:
-                # Если исключение вызвано, пропустите текущую итерацию и перейдите к следующей вакансии.
+                # Если исключение вызвано, пропустить текущую итерацию и перейти к следующей вакансии.
                 self.log.error(
                     f"Не удалось найти текстовый элемент на странице {vacancy['vacancy_link']}. Страница будет пропущена.")
                 continue
@@ -293,9 +293,9 @@ class RemoteJobParser(BaseJobParser):
     def find_vacancies(self):
         self.wait = WebDriverWait(self.browser, 10)
         self.url_l = []
-        self.df = {'vacancy_id' : [], 'vacancy_name' : [], 'company' : [], 'salary_from' : [], 'salary_to' : [],
-                   'description' : [], 'job_format' : [], 'source_vac' : [], 'date_created' : [],
-                   'date_of_download' : [], 'status' : [], 'version_vac' : [], 'actual' : []
+        self.df = {'vacancy_id': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
+                   'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
+                   'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
                    }
         options.add_argument('--headless')
         ua = UserAgent().chrome
@@ -307,8 +307,13 @@ class RemoteJobParser(BaseJobParser):
         for prof in self.profs:
             prof_name = prof['fullName']
             self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
-            self.browser.get(self.url)
-            time.sleep(3)
+            try:
+                self.browser.get(self.url)
+                time.sleep(10)
+                # операции поиска и обработки вакансий
+            except Exception as e:
+                self.log.error(f"Ошибка при обработке вакансии {prof_name}: {e}")
+                continue
             try:
                 search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
                 search.send_keys(prof_name)
@@ -336,10 +341,15 @@ class RemoteJobParser(BaseJobParser):
                 self.url_l = []
                 self.log.info(f'Страница {i} обработана!')
 
+            # Добавляем обновление браузера для каждой новой вакансии
+            self.browser.refresh()
+            time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
+
     def save_df(self):
         self.df = pd.DataFrame(self.df)
         self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
         # self.df.reset_index(drop=True, inplace=True)
+        self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
         self.df = self.df.drop_duplicates()
         self.log.info(
             "Всего найдено вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
@@ -360,16 +370,30 @@ class RemoteJobParser(BaseJobParser):
             if not self.df.empty:
                 table_name = 'raw_remote'
                 data = [tuple(x) for x in self.df.to_records(index=False)]
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, salary_from, salary_to, " \
-                        f"description, job_format, source_vac, date_created, date_of_download, status, version_vac, " \
-                        f"actual) VALUES %s"
+                query = f"""
+                    INSERT INTO {table_name} 
+                    (vacancy_id, vacancy_name, company, salary_from, salary_to, description, job_format, source_vac, 
+                    date_created, date_of_download, status, version_vac, actual) 
+                    VALUES %s 
+                    ON CONFLICT (vacancy_id, version_vac) DO UPDATE SET 
+                    vacancy_name = EXCLUDED.vacancy_name, 
+                    company = EXCLUDED.company,
+                    salary_from = EXCLUDED.salary_from, 
+                    salary_to = EXCLUDED.salary_to, 
+                    description = EXCLUDED.description, 
+                    job_format = EXCLUDED.job_format, 
+                    source_vac = EXCLUDED.source_vac, 
+                    date_created = EXCLUDED.date_created, 
+                    date_of_download = EXCLUDED.date_of_download, 
+                    status = EXCLUDED.status, 
+                    version_vac = EXCLUDED.version_vac, 
+                    actual = EXCLUDED.actual;"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 print(self.df.head())
                 self.log.info(self.df.head())
                 execute_values(self.cur, query, data)
                 self.conn.commit()
                 self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
-
         except Exception as e:
             self.log.error(f"Произошла ошибка при сохранении данных в функции 'save_df': {e}")
             raise
@@ -403,7 +427,7 @@ create_raw_tables = PythonOperator(
     task_id='create_raw_tables',
     python_callable=db_manager.create_raw_tables,
     provide_context=True,
-    dag=initial_dag
+    dag=initial_remotejob_dag
 )
 
 
@@ -411,7 +435,7 @@ parse_remote_jobs = PythonOperator(
     task_id='parse_remote_jobs',
     python_callable=init_run_remote_job_parser,
     provide_context=True,
-    dag=initial_dag
+    dag=initial_remotejob_dag
 )
 
 end_task = DummyOperator(

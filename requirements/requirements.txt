@@ -1,0 +1,13 @@
+pandas
+numpy
+regex
+spacy
+selenium
+dateparser
+psycopg2-binary
+SQLAlchemy
+beautifulsoup4
+fake-useragent
+requests
+webdriver-manager
+docker

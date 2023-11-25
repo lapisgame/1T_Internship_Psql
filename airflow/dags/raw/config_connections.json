@@ -2,10 +2,10 @@
   "psql_connect": {
     "conn_id": "psql_connect",
     "conn_type": "Postgres",
-    "host": "host.docker.internal",
+    "host": "postgresql_db_dev",
     "database": "vacancy",
     "user": "admin",
     "password": "password",
-    "port": 10111
+    "port": 5432
   }
 }

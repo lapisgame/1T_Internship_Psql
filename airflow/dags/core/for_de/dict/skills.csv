@@ -1,0 +1,173 @@
+id,title
+1,1с
+2,a b тест
+3,adobe illustrator
+4,adobe indesign
+5,agile
+6,airflow
+7,apache
+8,api
+9,bash
+10,bi
+11,big data
+12,bootstrap
+13,bpmn
+14,business intelligence systems
+15,cassandra
+16,charles
+17,ci cd
+18,cjm
+19,clickhouse
+20,computer vision
+21,confluence
+22,crm
+23,cucumber
+24,custdev
+25,deep learning
+26,devtools
+27,docker
+28,dwh
+29,e commerce
+30,elasticsearch
+31,elt
+32,email маркетинг
+33,etl
+34,excel
+35,fiddler
+36,figma
+37,fullstack
+38,git
+39,google docs
+40,grafana
+41,graphql
+42,greenplum
+43,hadoop
+44,hdfs
+45,highload
+46,hive
+47,http
+48,idef
+49,java
+50,javascript
+51,jenkins
+52,jira
+53,jquery
+54,json
+55,jtbd
+56,kafka
+57,kanban
+58,keras
+59,kibana
+60,kubernetes
+61,landing page
+62,laravel
+63,linux
+64,machine learning
+65,material design
+66,matplotlib
+67,miro
+68,mlflow
+69,mongodb
+70,ms project
+71,ms sql
+72,ms visio
+73,mysql
+74,nifi
+75,nlp
+76,nosql
+77,notion
+78,numpy
+79,opencv
+80,oracle
+81,pandas
+82,photoshop
+83,php
+84,pmbok
+85,postgresql
+86,postman
+87,power bi
+88,power query
+89,powerbi
+90,powershell
+91,product marketing
+92,prometheus
+93,pyspark
+94,python
+95,pytorch
+96,rabbitmq
+97,redis
+98,rest
+99,rest api
+100,scala
+101,scipy
+102,scrum
+103,seaborn
+104,selenium
+105,seo
+106,sklearn
+107,soap
+108,spark
+109,sql
+110,superset
+111,swagger
+112,tableau
+113,tensorflow
+114,teradata
+115,testrail
+116,tilda
+117,trello
+118,typescript
+119,ui
+120,uml
+121,unit экономика
+122,usability
+123,user story
+124,ux
+125,vertica
+126,vue
+127,xml
+128,xsd
+129,zabbix
+130,автоматизация процессов
+131,автоматизация тестирования
+132,аналитика
+133,аналитическое мышление
+134,база данных
+135,бизнес процесс
+136,верстка
+137,визуализация данные
+138,деловая коммуникация
+139,дизайн
+140,интеграционное тестирование
+141,креативность
+142,маркетинг
+143,математическая статистика и анализ
+144,микросервисная архитектура
+145,многозадачность
+146,мониторинг
+147,нагрузочное тестирование
+148,обучение и развитие
+149,организаторский навык
+150,ответственность
+151,планирование
+152,подготовка презентации
+153,постановка задачи разработчику
+154,написание тз
+155,проведение презентации
+156,прогнозирование
+157,проектирование пользовательского интерфейса
+158,работа в команде
+159,работа с большим объемом информации
+160,регрессионное тестирование
+161,ручное тестирование
+162,системный анализ
+163,статистика
+164,статистический анализ
+165,субд
+166,теория вероятности
+167,тестирование
+168,тестирование мобильного приложения
+169,техническая документация
+170,умение работать в команде
+171,финансовый анализ
+172,функциональное тестирование

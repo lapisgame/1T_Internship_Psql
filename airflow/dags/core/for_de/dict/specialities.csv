@@ -1,0 +1,17 @@
+id,title,tag
+1,Системный аналитик (System analyst),SA
+2,Бизнес-аналитик (Business analyst),BA
+3,Менеджер проектов (Project manager),ProjM
+4,Менеджер продуктов (Product manager),ProdM
+5,Фронт-разработчик (Front-end developer),Front
+6,Бэк-разработчик (Back-end developer),Back
+7,Цифровой маркетолог (digital marketing specialist),DMS
+8,Веб дизайнер (Web designer),WD
+9,UI/UX специалист (UI/UX specialist),UXUI
+10,Инженер по тестированию (QA engineer),QA
+11,Data инженер (data engineer),DE
+12,Data аналитик (data analyst),DA
+13,Data scientist,DS
+14,DevOps инженер,DEV
+15,Full stack разработчик (Fullstack developer),Full
+16,Прочее,NEEDED

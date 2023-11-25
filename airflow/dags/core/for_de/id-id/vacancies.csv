@@ -1,0 +1,241 @@
+id,version,url,title,salary_from,salary_to,experience_from,experience_to,description,company_id,source_id,publicated_at
+1,1,https://rabota.sber.ru/search/4219605,Data engineer,,,,,,1,1,2023-10-24
+2,1,https://rabota.sber.ru/search/4221748,Data Engineer (кластер Аналитики производственного процесса),,,,,,1,1,2023-10-24
+3,1,https://rabota.sber.ru/search/4175298,data engineer (scala),,,,,,1,1,2023-10-19
+4,1,https://rabota.sber.ru/search/4226277,Senior Data Scientist (HR Платформа),,,,,,1,1,2023-11-02
+5,1,https://rabota.sber.ru/search/4218904,Data Engineer,,,,,,1,1,2023-10-12
+6,1,https://rabota.sber.ru/search/4202157,Senior Data Engineer (SberDevices),,,,,,1,1,2023-10-26
+7,1,https://rabota.sber.ru/search/4191350,Middle Data Scientist,,,,,,1,1,2023-10-20
+8,6,https://rabota.sber.ru/search/4218630,Senior UX/UI designer,,,,,,1,1,2023-10-12
+9,1,https://rabota.sber.ru/search/4203255,Senior Data Engineer (SberDevices),,,,,,1,1,2023-10-25
+10,1,https://rabota.sber.ru/search/4179704,Team Lead Data Engineer (SberDevices),,,,,,1,1,2023-10-26
+11,1,https://rabota.sber.ru/search/4224199,Data Engineer (SQL Разработчик),,,,,,1,1,2023-10-31
+12,1,https://rabota.sber.ru/search/4189112,Data Engineer,,,,,,1,1,2023-10-11
+13,1,https://rabota.sber.ru/search/4215913,Data Engineer,,,,,,1,1,2023-10-11
+14,1,https://rabota.sber.ru/search/4187195,Data Engineer,,,,,,1,1,2023-11-07
+15,1,https://rabota.sber.ru/search/4222107,Product Owner (Data),,,,,,1,1,2023-10-24
+16,1,https://rabota.sber.ru/search/4192165,DS NLP Senior,,,,,,1,1,2023-10-24
+17,1,https://rabota.sber.ru/search/4223995,SQL разработчик /Data Engineer,,,,,,1,1,2023-11-02
+18,1,https://rabota.sber.ru/search/4193101,Data engineer (Рекламная платформа/Управление данными),,,,,,1,1,2023-10-17
+19,1,https://rabota.sber.ru/search/4225762,Data Scientist (NLP),,,,,,1,1,2023-11-02
+20,1,https://rabota.sber.ru/search/4220337,Data Analyst,,,,,,1,1,2023-10-17
+21,1,https://rabota.sber.ru/search/4206884,Data Analyst,,,,,,1,1,2023-10-11
+22,1,https://rabota.sber.ru/search/4227444,Data Engineer (Scala),,,,,,1,1,2023-11-08
+23,1,https://rabota.sber.ru/search/4186204,Middle Data Scientist,,,,,,1,1,2023-10-18
+24,1,https://rabota.sber.ru/search/4176493,Data Engineer (Рекламная платформа),,,,,,1,1,2023-10-17
+25,1,https://rabota.sber.ru/search/4203824,Data Engineer (Гео и Графы),,,,,,1,1,2023-10-13
+26,1,https://rabota.sber.ru/search/4205045,Senior Data Engineer,,,,,,1,1,2023-10-13
+27,1,https://rabota.sber.ru/search/4209380,Data engineer (Управление валидации),,,,,,1,1,2023-10-30
+28,1,https://rabota.sber.ru/search/4224638,Project Manager LLM / GigaChat,,,,,,1,1,2023-10-31
+29,1,https://rabota.sber.ru/search/4216489,Эксперт по цифровым технологиям аудита,,,,,,1,1,2023-11-07
+30,1,https://rabota.sber.ru/search/4221486,"Senior Data Analyst (Кластер ""Клиентский опыт"" )",,,,,,1,1,2023-10-20
+31,1,https://rabota.sber.ru/search/4191724,Data Scientist (Middle\Senior),,,,,,1,1,2023-11-08
+32,1,https://rabota.sber.ru/search/4202758,Team Lead MLOps/Product Owner (Feature Store),,,,,,1,1,2023-10-17
+33,1,https://rabota.sber.ru/search/4206153,Senior \ Lead MLops (ИСУ),,,,,,1,1,2023-10-27
+34,1,https://rabota.sber.ru/search/4211281,Исследователь данных,,,,,,1,1,2023-10-23
+35,1,https://rabota.sber.ru/search/4192605,QA Automation Engineer,,,,,,1,1,2023-10-30
+36,1,https://rabota.sber.ru/search/4216373,Аналитик данных / Системный аналитик DWH,,,,,,1,1,2023-10-17
+37,1,https://rabota.sber.ru/search/4224640,Senior/Middle NLP Data Analyst GigaChat,,,,,,1,1,2023-10-31
+38,1,https://rabota.sber.ru/search/4111390,Senior Data Scientist,,,,,,1,1,2023-01-16
+39,1,https://rabota.sber.ru/search/4223068,Team Lead MLOps/Product Owner (Feature Store),,,,,,1,1,2023-10-24
+40,1,https://rabota.sber.ru/search/4208829,Senior Java (ведущий эксперт по технологиям),,,,,,1,1,2023-10-31
+41,1,https://rabota.sber.ru/search/4225058,Data Scientist в Блок Финансы,,,,,,1,1,2023-11-02
+42,1,https://rabota.sber.ru/search/4215995,Главный эксперт по цифровым технологиям аудита,,,,,,1,1,2023-10-24
+43,1,https://rabota.sber.ru/search/4206470,ML-engineer (внутренняя безопасность),,,,,,1,1,2023-10-18
+44,1,https://rabota.sber.ru/search/4107077,Middle ML Engineer,,,,,,1,1,2023-01-16
+45,1,https://rabota.sber.ru/search/4076689,SQL/PostgreSQL/Python-разработчик (Junior/Middle/Senior),,,,,,1,1,2023-10-20
+46,1,https://rabota.sber.ru/search/4202769,Senior\Middle+ Data Scientist,,,,,,1,1,2023-10-30
+47,1,https://rabota.sber.ru/search/4222669,Junior Data Scientist (SberStart),,,,,,1,1,2023-10-30
+48,1,https://rabota.sber.ru/search/4215771,Data Scientist,,,,,,1,1,2023-10-24
+49,1,https://rabota.sber.ru/search/4221761,Архитектор (автоматизация каналов продаж),,,,,,1,1,2023-10-26
+50,1,https://rabota.sber.ru/search/4206145,Data scientist,,,,,,1,1,2023-10-20
+51,1,https://rabota.sber.ru/search/4099400,стажер Data Science Новосибирск,,,,,,1,1,2023-11-03
+52,1,https://rabota.sber.ru/search/4207650,ML разработчик (команда СберСпасибо),,,,,,1,1,2023-10-16
+53,1,https://rabota.sber.ru/search/4224858,E-Com Data Product Analyst,,,,,,1,1,2023-11-03
+54,1,https://rabota.sber.ru/search/4226429,Senior Data Scientist LLM,,,,,,1,1,2023-11-07
+55,1,https://rabota.sber.ru/search/4227068,Java разработчик на 3ю линию (Batch),,,,,,1,1,2023-11-07
+56,1,https://rabota.sber.ru/search/4227357,Java Engineer,,,,,,1,1,2023-11-09
+57,1,https://rabota.sber.ru/search/4213647,QA engineer (Hadoop),,,,,,1,1,2023-10-12
+58,1,https://rabota.sber.ru/search/4211524,Project Manager Sber AI Lab,,,,,,1,1,2023-10-23
+59,1,https://rabota.sber.ru/search/4227591,Разработчик приложения корпоративной аналитической платформы,,,,,,1,1,2023-11-09
+60,1,https://rabota.sber.ru/search/4183789,Продуктовый аналитик,,,,,,1,1,2023-11-02
+61,1,https://rabota.sber.ru/search/4222170,Руководитель направления по стратегии и бенчмаркингу,,,,,,1,1,2023-10-25
+62,1,https://rabota.sber.ru/search/4184091,Senior Data Scientist,,,,,,1,1,2023-10-19
+63,1,https://rabota.sber.ru/search/4224484,Java Developer,,,,,,1,1,2023-11-02
+64,1,https://rabota.sber.ru/search/4225013,Java разработчик на 3-я линия,,,,,,1,1,2023-11-02
+65,1,https://rabota.sber.ru/search/4220872,Data Scientist (Middle\Middle+),,,,,,1,1,2023-11-08
+66,1,https://rabota.sber.ru/search/4225165,Java разработчик (воронка),,,,,,1,1,2023-11-08
+67,1,https://rabota.sber.ru/search/4226472,Java developer,,,,,,1,1,2023-11-09
+68,1,https://rabota.sber.ru/search/4215841,Lead IOS разработчик (ИСУ),,,,,,1,1,2023-10-27
+69,1,https://rabota.sber.ru/search/4217642,Data Scientist,,,,,,1,1,2023-10-23
+70,1,https://rabota.sber.ru/search/4211366,QA Load Test (SberTeamID),,,,,,1,1,2023-10-20
+71,1,https://rabota.sber.ru/search/4207339,"Tech Lead (команды ""Данные DWH"" и ""Развитие DWH"")",,,,,,1,1,2023-10-17
+72,1,https://rabota.sber.ru/search/4222810,QA Engineer,,,,,,1,1,2023-10-30
+73,1,https://rabota.sber.ru/search/4207463,Главный инженер по разработке,,,,,,1,1,2023-10-26
+74,1,https://rabota.sber.ru/search/4204394,QA-engineer,,,,,,1,1,2023-10-24
+75,1,https://rabota.sber.ru/search/4223456,Middle+ Java Developer,,,,,,1,1,2023-10-26
+76,1,https://rabota.sber.ru/search/4203469,Главный инженер,,,,,,1,1,2023-10-24
+77,1,https://rabota.sber.ru/search/4218906,Customer Journey Expert СберПрайм,,,,,,1,1,2023-10-12
+78,1,https://rabota.sber.ru/search/4221741,Junior Data Scientist (LLM),,,,,,1,1,2023-10-19
+79,1,https://rabota.sber.ru/search/4224572,Middle Java разработчик,,,,,,1,1,2023-11-01
+80,1,https://rabota.sber.ru/search/4221739,Middle/Senior Data Scientist (LLM),,,,,,1,1,2023-10-19
+81,1,https://rabota.sber.ru/search/4226428,Дата аналитик GigaChat,,,,,,1,1,2023-11-08
+82,1,https://rabota.sber.ru/search/4218955,Data Scientist NLP (Global markets),,,,,,1,1,2023-10-13
+83,1,https://rabota.sber.ru/search/4223958,Backend Java developer,,,,,,1,1,2023-10-26
+84,1,https://rabota.sber.ru/search/4225406,Senior NLP Data Scientist / GigaChat,,,,,,1,1,2023-11-02
+85,1,https://rabota.sber.ru/search/4206603,Team Lead/Senior Java разработчик (кредитование),,,,,,1,1,2023-10-24
+86,1,https://rabota.sber.ru/search/4221789,Разработчик-Java,,,,,,1,1,2023-10-19
+87,1,https://rabota.sber.ru/search/4225425,Java разработчик,,,,,,1,1,2023-11-03
+88,1,https://rabota.sber.ru/search/4225718,Senior Data scientist (модельные риски КИБ),,,,,,1,1,2023-11-01
+89,1,https://rabota.sber.ru/search/4216327,Senior NLP Data Scientist в Центр AI Маркетинга,,,,,,1,1,2023-10-23
+90,1,https://rabota.sber.ru/search/4188142,Data Analyst,,,,,,1,1,2023-11-08
+91,1,https://rabota.sber.ru/search/4208950,Разработчик ETL,,,,,,1,1,2023-11-07
+92,1,https://rabota.sber.ru/search/4199441,Middle/Senior Data scientist,,,,,,1,1,2023-11-02
+93,1,https://rabota.sber.ru/search/4220307,Middle+/Senior Data Scientist,,,,,,1,1,2023-10-23
+94,1,https://rabota.sber.ru/search/4226015,Архитектор направления Маркетинга и Коммуникаций,,,,,,1,1,2023-11-07
+95,1,https://rabota.sber.ru/search/4225976,Разработчик баз данных,,,,,,1,1,2023-11-02
+96,1,https://rabota.sber.ru/search/4200681,Lead Java разработчик,,,,,,1,1,2023-10-19
+97,1,https://rabota.sber.ru/search/4210829,Руководитель направления «Синергия B2B2C»,,,,,,1,1,2023-10-23
+98,1,https://rabota.sber.ru/search/4226017,Разработчик Java,,,,,,1,1,2023-11-02
+99,1,https://rabota.sber.ru/search/4227778,Инженер по автоматизированному тестированию (Auto QA),,,,,,1,1,2023-11-09
+100,1,https://rabota.sber.ru/search/4198593,Senior/TeamLead Java developer,,,,,,1,1,2023-11-09
+101,1,https://rabota.sber.ru/search/4208567,Системный аналитик DWH/Hadoop,,,,,,1,1,2023-10-18
+102,1,https://rabota.sber.ru/search/4212717,Главный специалист аналитического управления (Data Analyst),,,,,,1,1,2023-11-03
+103,1,https://rabota.sber.ru/search/4191687,Фронт-разработчик (МОС),,,,,,1,1,2023-11-03
+104,1,https://rabota.sber.ru/search/4223059,Team Lead/Senior java developer (NRT решения),,,,,,1,1,2023-10-24
+105,1,https://rabota.sber.ru/search/4196745,Руководитель направления кампаний продаж в digital-каналах,,,,,,1,1,2023-10-31
+106,1,https://rabota.sber.ru/search/4219489,Team Lead Java Developer (BlockChain),,,,,,1,1,2023-11-02
+107,1,https://rabota.sber.ru/search/4218479,Middle Data Analyst,,,,,,1,1,2023-10-12
+108,1,https://rabota.sber.ru/search/4227315,Data аналитик,,,,,,1,1,2023-11-08
+109,1,https://rabota.sber.ru/search/4199311,Senior Python developer / Team Lead,,,,,,1,1,2023-10-12
+110,1,https://rabota.sber.ru/search/4198841,Backend developer (java/scala),,,,,,1,1,2023-10-25
+111,1,https://rabota.sber.ru/search/4227310,QA Инженер,,,,,,1,1,2023-11-08
+112,1,https://rabota.sber.ru/search/4214278,Системный аналитик (SmartPay),,,,,,1,1,2023-10-23
+113,1,https://rabota.sber.ru/search/4196973,Middle Python Developer,,,,,,1,1,2023-10-25
+114,1,https://rabota.sber.ru/search/4224637,Middle NLP Data Scientist / GigaChat,,,,,,1,1,2023-10-31
+115,1,https://rabota.sber.ru/search/4207300,Java разработчик (разработка АБС для Филиала в Индии),,,,,,1,1,2023-10-18
+116,1,https://rabota.sber.ru/search/4203229,Владелец Продукта,,,,,,1,1,2023-10-20
+117,1,https://rabota.sber.ru/search/4208656,Data Scientist (LLM),,,,,,1,1,2023-10-31
+118,1,https://rabota.sber.ru/search/4207952,Стажер на направление Data Scienсe,,,,,,1,1,2023-10-24
+119,1,https://rabota.sber.ru/search/4210706,Product owner DMP (Рекламная платформа),,,,,,1,1,2023-10-26
+120,1,https://rabota.sber.ru/search/4175204,Team Lead ETL,,,,,,1,1,2023-10-20
+121,1,https://rabota.sber.ru/search/4191306,Senior Data Analyst (Департамент по работе с проблемными активами),,,,,,1,1,2023-11-02
+122,1,https://rabota.sber.ru/search/4220251,Аналитик данных в Департамент по работе с проблемными активами,,,,,,1,1,2023-10-25
+123,1,https://rabota.sber.ru/search/4226433,Data-аналитик,,,,,,1,1,2023-11-08
+124,1,https://rabota.sber.ru/search/4223080,Разработчик СУБД (Feature Store),,,,,,1,1,2023-10-24
+125,1,https://rabota.sber.ru/search/4209793,Бизнес-аналитик\ Аналитик данных,,,,,,1,1,2023-10-13
+126,1,https://rabota.sber.ru/search/4224445,IOS developer OTP,,,,,,1,1,2023-10-30
+127,1,https://rabota.sber.ru/search/4201569,Senior Data Scientist в Блок B2C,,,,,,1,1,2023-11-01
+128,1,https://rabota.sber.ru/search/4222444,Инженер направления Big Data,,,,,,1,1,2023-10-23
+129,1,https://rabota.sber.ru/search/4205462,Senior Android разработчик (ИСУ),,,,,,1,1,2023-10-27
+130,1,https://rabota.sber.ru/search/4141493,Java-разработчик (SberMomentum),,,,,,1,1,2023-10-12
+131,1,https://rabota.sber.ru/search/4206385,"DevOps Engineer, Middle / Senior",,,,,,1,1,2023-10-20
+132,1,https://rabota.sber.ru/search/4225927,Java-разработчик (Аудит),,,,,,1,1,2023-11-02
+133,1,https://rabota.sber.ru/search/4193599,Team Lead Data Science,,,,,,1,1,2023-10-24
+134,1,https://rabota.sber.ru/search/4152723,Senior/middle Системный аналитик (разработка АБС для Филиала в Индии),,,,,,1,1,2023-11-01
+135,1,https://rabota.sber.ru/search/4227458,Support Engineer - Ignite SE (L3),,,,,,1,1,2023-11-09
+136,1,https://rabota.sber.ru/search/4087816,Data Scientist в рекомендательные системы,,,,,,1,1,2023-11-09
+137,1,https://rabota.sber.ru/search/4207656,Middle Java-разработчик на SmartBridge,,,,,,1,1,2023-11-08
+138,1,https://rabota.sber.ru/search/4197608,Java-разработчик,,,,,,1,1,2023-11-01
+139,1,https://rabota.sber.ru/search/4224559,Data Scientist (RecSys),,,,,,1,1,2023-11-08
+140,1,https://rabota.sber.ru/search/4221941,Старший аналитик данных,,,,,,1,1,2023-10-23
+141,1,https://rabota.sber.ru/search/4214783,Менеджер по продажам,,,,,,1,1,2023-10-24
+142,1,https://rabota.sber.ru/search/4182350,Менеджер по развитию технобренда/Менеджер по внешним коммуникациям/DevRel Manager,,,,,,1,1,2023-11-02
+143,1,https://rabota.sber.ru/search/4220565,Product Owner (Идентификация в СберБизнес),,,,,,1,1,2023-10-28
+144,1,https://rabota.sber.ru/search/4223084,Специалист технической поддержки сотрудников банка (первая линия),,,,,,1,1,2023-10-24
+145,1,https://rabota.sber.ru/search/4223553,Инженер второй линии поддержки,,,,,,1,1,2023-10-25
+146,1,https://rabota.sber.ru/search/4224868,Devops инженер (кластер Метрики производственного процесса),,,,,,1,1,2023-10-31
+147,1,https://rabota.sber.ru/search/4222102,ИТ-инженер по сопровождению,,,,,,1,1,2023-10-20
+148,1,https://rabota.sber.ru/search/4221707,Ведущий инженер по сопровождению,,,,,,1,1,2023-10-19
+149,1,https://rabota.sber.ru/search/4225407,Android-инженер для приложения СберИнвестор,,,,,,1,1,2023-11-01
+150,1,https://rabota.sber.ru/search/4198993,Middle / Senior Системный аналитик (КФЮЛ),,,,,,1,1,2023-10-26
+151,1,https://rabota.sber.ru/search/4201233,PR Менеджер,,,,,,1,1,2023-10-24
+152,1,https://rabota.sber.ru/search/4218186,Инженер по сопровождению,,,,,,1,1,2023-10-12
+153,1,https://rabota.sber.ru/search/4226249,Product Owner (SberbusinessAPI),,,,,,1,1,2023-11-09
+154,1,https://rabota.sber.ru/search/4201741,Инженер по сопровождению (Забота о клиентах),,,,,,1,1,2023-10-17
+155,1,https://rabota.sber.ru/search/4215160,Delivery manager (SberBrowser),,,,,,1,1,2023-10-27
+156,1,https://rabota.sber.ru/search/4218760,Product owner (транзакционный бизнес),,,,,,1,1,2023-10-26
+157,1,https://rabota.sber.ru/search/4218531,Старший инженер по сопровождению,,,,,,1,1,2023-10-17
+158,1,https://rabota.sber.ru/search/4221559,Android разработчик (СберСпасибо),,,,,,1,1,2023-10-23
+159,1,https://rabota.sber.ru/search/4186199,Product Owner на платформу smart-контрактов (BlockChain),,,,,,1,1,2023-11-02
+160,1,https://rabota.sber.ru/search/4218481,Координатор ИТ-поддержки,,,,,,1,1,2023-10-12
+161,1,https://rabota.sber.ru/search/4190184,Ведущий эксперт сетевой инфраструктуры ЦОД,,,,,,1,1,2023-10-19
+162,1,https://rabota.sber.ru/search/4156570,Инженер по сопровождению,,,,,,1,1,2023-10-25
+163,1,https://rabota.sber.ru/search/4222368,Руководитель проектов (Платформа для Multi Family Office в Private Banking),,,,,,1,1,2023-10-28
+164,1,https://rabota.sber.ru/search/4227207,Product Owner (Платформа для управления внутренними коммуникациями Банка),,,,,,1,1,2023-11-09
+165,2,https://rabota.sber.ru/search/4218630,Senior UX/UI designer,,,,,,1,1,2023-10-12
+166,1,https://rabota.sber.ru/search/4213237,Инженер по сопровождению АС,,,,,,1,1,2023-10-17
+167,1,https://rabota.sber.ru/search/4222410,Ведущий инженер по сопровождению (SRE),,,,,,1,1,2023-10-30
+168,1,https://rabota.sber.ru/search/4224614,Главный инженер по сопровождению,,,,,,1,1,2023-10-31
+169,1,https://rabota.sber.ru/search/4197291,Product Owner сервисы Платёжного счёта,,,,,,1,1,2023-10-30
+170,1,https://rabota.sber.ru/search/4222812,Java Developer,,,,,,1,1,2023-10-30
+171,1,https://rabota.sber.ru/search/4226308,Java разработчик (Platform V Corax),,,,,,1,1,2023-11-07
+172,1,https://rabota.sber.ru/search/4196710,Senior Java Developer,,,,,,1,1,2023-10-26
+173,1,https://rabota.sber.ru/search/4197544,Главный инженер по ИТ сопровождению,,,,,,1,1,2023-11-01
+174,1,https://rabota.sber.ru/search/4226119,Системный аналитик OPS (Рекламная платформа),,,,,,1,1,2023-11-02
+175,1,https://rabota.sber.ru/search/4218097,Аналитик схемотехник,,,,,,1,1,2023-10-17
+176,1,https://rabota.sber.ru/search/4225271,UI/UX Дизайнер,,,,,,1,1,2023-11-09
+177,3,https://rabota.sber.ru/search/4218630,Senior UX/UI designer,,,,,,1,1,2023-10-12
+178,1,https://rabota.sber.ru/search/4217733,Стажёр UX-исследователь в Сбер911,,,,,,1,1,2023-10-26
+179,1,https://rabota.sber.ru/search/4070281,UX/UI дизайнер,,,,,,1,1,2023-10-11
+180,1,https://rabota.sber.ru/search/4190426,Customer Journey Expert (CJE менеджер),,,,,,1,1,2023-11-02
+181,1,https://rabota.sber.ru/search/4204789,Бизнес аналитик Private Banking,,,,,,1,1,2023-10-26
+182,1,https://rabota.sber.ru/search/4216102,Дизайнер UX/UI,,,,,,1,1,2023-10-26
+183,1,https://rabota.sber.ru/search/4211402,Middle Системный аналитик,,,,,,1,1,2023-10-23
+184,4,https://rabota.sber.ru/search/4218630,Senior UX/UI designer,,,,,,1,1,2023-10-12
+185,1,https://rabota.sber.ru/search/4224373,Менеджер по клиентскому опыту,,,,,,1,1,2023-11-01
+186,1,https://rabota.sber.ru/search/4223272,Системный аналитик,,,,,,1,1,2023-10-24
+187,1,https://rabota.sber.ru/search/4225052,Дизайнер интерфейсов продуктов Автоиндустрии,,,,,,1,1,2023-11-01
+188,1,https://rabota.sber.ru/search/4219178,Бизнес-аналитик_У,,,,,,1,1,2023-10-18
+189,1,https://rabota.sber.ru/search/4209509,Product дизайнер (Главный инженер,,,,,,1,1,2023-10-16
+190,1,https://rabota.sber.ru/search/4209493,Product designer,,,,,,1,1,2023-10-17
+191,1,https://rabota.sber.ru/search/4223748,Senior Frontend Developer,,,,,,1,1,2023-10-25
+192,1,https://rabota.sber.ru/search/4222850,Руководитель мобильной разработки (VoIP приложение),,,,,,1,1,2023-10-27
+193,1,https://rabota.sber.ru/search/4223066,Руководитель разработки Desktop,,,,,,1,1,2023-10-27
+194,1,https://rabota.sber.ru/search/4225412,Системный аналитик,,,,,,1,1,2023-10-31
+195,1,https://rabota.sber.ru/search/4222584,Java developer,,,,,,1,1,2023-10-23
+196,1,https://rabota.sber.ru/search/4222446,CJE продуктов Автоиндустрии,,,,,,1,1,2023-10-30
+197,1,https://rabota.sber.ru/search/4194338,Senior Frontend разработчик Сберконтакт,,,,,,1,1,2023-10-25
+198,1,https://rabota.sber.ru/search/4222067,Системный аналитик (Confirmation platform),,,,,,1,1,2023-10-25
+199,1,https://rabota.sber.ru/search/4168219,Frontend Developer vue.js,,,,,,1,1,2023-10-25
+200,1,https://rabota.sber.ru/search/4219456,System Analytic (Identity),,,,,,1,1,2023-10-23
+201,1,https://rabota.sber.ru/search/4222185,Бизнес-аналитик сервисов антифрода,,,,,,1,1,2023-10-20
+202,1,https://rabota.sber.ru/search/4218630,Lead UX/UI дизайнер,,,,,,1,1,2023-10-12
+203,1,https://rabota.sber.ru/search/4201204,Middle Frontend developer,,,,,,1,1,2023-10-13
+204,1,https://rabota.sber.ru/search/4209709,Fullstack developer,,,,,,1,1,2023-10-26
+205,1,https://rabota.sber.ru/search/4227196,Системный аналитик (Бизнес-почта),,,,,,1,1,2023-11-07
+206,1,https://rabota.sber.ru/search/4200405,Frontend senior,,,,,,1,1,2023-10-11
+207,1,https://rabota.sber.ru/search/4224192,Продуктовый дизайнер UX/UI СберКидс,,,,,,1,1,2023-10-27
+208,1,https://rabota.sber.ru/search/4201203,Middle Java developer,,,,,,1,1,2023-11-03
+209,1,https://rabota.sber.ru/search/4213616,Senior Frontend developer (Platform),,,,,,1,1,2023-11-02
+210,1,https://rabota.sber.ru/search/4226889,Бизнес-аналитик на интеграцию банковских продуктов с системой фрод-мониторинга,,,,,,1,1,2023-11-07
+211,1,https://rabota.sber.ru/search/4223396,Lead/Senior QA automation,,,,,,1,1,2023-10-25
+212,1,https://rabota.sber.ru/search/4204799,Системный аналитик (малый и микро бизнес),,,,,,1,1,2023-10-30
+213,1,https://rabota.sber.ru/search/4211198,Системный аналитик,,,,,,1,1,2023-10-27
+214,1,https://rabota.sber.ru/search/4221184,UI/UX дизайнер,,,,,,1,1,2023-10-18
+215,1,https://rabota.sber.ru/search/4226385,QA engineer (java),,,,,,1,1,2023-11-03
+216,1,https://rabota.sber.ru/search/4192754,Системный аналитик (СберИнвестор),,,,,,1,1,2023-10-30
+217,1,https://rabota.sber.ru/search/4201246,Системный аналитик (СберИнвестор),,,,,,1,1,2023-10-17
+218,1,https://rabota.sber.ru/search/4214445,Middle/Senior Manual QA engineer (SberCIB Terminal),,,,,,1,1,2023-10-24
+219,1,https://rabota.sber.ru/search/4223584,QA engineer (Java),,,,,,1,1,2023-10-25
+220,1,https://rabota.sber.ru/search/4226659,QA Automation engineer,,,,,,1,1,2023-11-03
+221,1,https://rabota.sber.ru/search/4226400,Middle QA automation engineer Java,,,,,,1,1,2023-11-06
+222,1,https://rabota.sber.ru/search/4221349,Automation QA engineer (Java) в команду Департамента общих прикладных сервисов,,,,,,1,1,2023-10-31
+223,5,https://rabota.sber.ru/search/4218630,Senior UX/UI designer,,,,,,1,1,2023-10-12
+224,1,https://rabota.sber.ru/search/4147012,UI/UX дизайнер,,,,,,1,1,2023-11-01
+225,1,https://rabota.sber.ru/search/4198775,Senior Python Разработчик/Автотестировщик,,,,,,1,1,2023-10-17
+226,1,https://rabota.sber.ru/search/4224891,Ведущий системный аналитик,,,,,,1,1,2023-10-30
+227,1,https://rabota.sber.ru/search/4226416,QA Automation Engineer,,,,,,1,1,2023-11-03
+228,1,https://rabota.sber.ru/search/4218088,Manual QA Engineer,,,,,,1,1,2023-10-11
+229,1,https://rabota.sber.ru/search/4208131,Senior инженер по тестированию (аккредитивы ЮЛ),,,,,,1,1,2023-10-18
+230,1,https://rabota.sber.ru/search/4208595,Java разработчик,,,,,,1,1,2023-10-31
+231,1,https://rabota.sber.ru/search/4225554,QA engineer,,,,,,1,1,2023-11-02
+232,1,https://rabota.sber.ru/search/4212817,Главный аналитик DWH,,,,,,1,1,2023-10-12
+233,1,https://rabota.sber.ru/search/4223318,QA engineer (проект Геомаркетинг),,,,,,1,1,2023-11-01
+234,1,https://rabota.sber.ru/search/4215161,QA Mobile (SberBrowser),,,,,,1,1,2023-10-13
+235,1,https://rabota.sber.ru/search/4214078,Системный аналитик,,,,,,1,1,2023-10-31
+236,1,https://rabota.sber.ru/search/4225333,Старший аналитик DWH (команда МСФО отчетности),,,,,,1,1,2023-11-06
+237,1,https://rabota.sber.ru/search/4210433,Android-разработчик,,,,,,1,1,2023-11-01
+238,1,https://rabota.sber.ru/search/4226272,Системный аналитик,,,,,,1,1,2023-11-02
+239,1,https://rabota.sber.ru/search/4219681,QA engineer,,,,,,1,1,2023-10-18
+240,2,https://rabota.sber.ru/search/4220565,Product Owner (Идентификация в СберБизнес),,,,,,1,1,2023-10-28

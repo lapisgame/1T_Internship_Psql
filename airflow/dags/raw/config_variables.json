@@ -10,13 +10,17 @@
   "base_vk": "https://team.vk.company/vacancy/",
   "base_tin": "https://www.tinkoff.ru/career/it/",
   "base_remote": "https://remote-job.ru/search?search%5Bquery%5D=&search%5BsearchType%5D=vacancy",
+  "base_getmath": "https://getmatch.ru/vacancies?p={i}&sa=150000&pa=all&s=landing_ca_header",
   "raw_tables": [
     {"raw_tables_name": "raw_vk"},
     {"raw_tables_name": "raw_sber"},
     {"raw_tables_name": "raw_tinkoff"},
     {"raw_tables_name": "raw_yandex"},
     {"raw_tables_name": "raw_remote"},
-    {"raw_tables_name": "raw_habr"}
+    {"raw_tables_name": "raw_habr"},
+    {"raw_tables_name": "raw_getmach"},
+    {"raw_tables_name": "raw_zarplata"},
+    {"raw_tables_name": "raw_hh"}
   ],
   "professions": [
     {"fullName": "Data engineer"}
