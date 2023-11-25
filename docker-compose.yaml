@@ -22,6 +22,7 @@ x-airflow-common:
     - ./airflow/plugins/:/opt/airflow/plugins
     - ./parse_files/:/opt/airflow/parse_files
     - ./airflow/raw_data/:/opt/airflow/raw_data
+    - ./requirements/requirements.txt:/requirements/requirements.txt
   depends_on:
     &airflow-common-depends-on
     redis:
