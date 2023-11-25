@@ -14,7 +14,7 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.default,airflow.api.auth.backend.basic_auth'
-#    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-pandas selenium dateparser psycopg2-binary SQLAlchemy beautifulsoup4 fake-useragent requests webdriver-manager }
+    _PIP_ADDITIONAL_REQUIREMENTS: ./requirements/requirements.txt
 
   volumes:
     - ./airflow/cfg/airflow.cfg:/opt/airflow/airflow.cfg
@@ -179,8 +179,6 @@ services:
 #      - 10120:9100
 
   airflow-webserver:
-    build:
-      context: .
     <<: *airflow-common
     command: webserver
     ports:
