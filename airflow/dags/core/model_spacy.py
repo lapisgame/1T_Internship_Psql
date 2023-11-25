@@ -21,14 +21,14 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 # Загрузка словарей, потом заменяется на SQL / Python запросы к БД
-job_formats_dict = pd.read_csv("for_de/dict/raw_job_formats.csv")
-languages_dict = pd.read_csv("for_de/dict/raw_languages.csv")
-skills_dict = pd.read_csv("for_de/dict/raw_skills.csv")
-companies_dict = pd.read_csv("for_de/dict/raw_companies.csv")
-job_types_dict = pd.read_csv("for_de/dict/raw_job_types.csv")
-specialities_dict = pd.read_csv("for_de/dict/raw_specialities.csv")
-towns_dict = pd.read_csv("for_de/dict/raw_towns.csv")
-sources_dict = pd.read_csv("for_de/dict/raw_sources.csv")
+job_formats_dict = pd.read_csv("for_de/dict/job_formats.csv")
+languages_dict = pd.read_csv("for_de/dict/languages.csv")
+skills_dict = pd.read_csv("for_de/dict/skills.csv")
+companies_dict = pd.read_csv("for_de/dict/companies.csv")
+job_types_dict = pd.read_csv("for_de/dict/job_types.csv")
+specialities_dict = pd.read_csv("for_de/dict/specialities.csv")
+towns_dict = pd.read_csv("for_de/dict/towns.csv")
+sources_dict = pd.read_csv("for_de/dict/sources.csv")
 
 
 
