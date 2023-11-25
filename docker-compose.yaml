@@ -30,7 +30,9 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
-    postgresql_db:
+    postgresql_db_dev:
+      condition: service_healthy
+    postgresql_db_prod:
       condition: service_healthy
 
 services:
