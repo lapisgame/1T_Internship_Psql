@@ -8,9 +8,11 @@ from datetime import datetime
 from spacy.matcher import Matcher
 from spacy.lang.en import English
 
-
-from patterns_all import patterns_town, patterns_skill, patterns_jformat, patterns_jtype
-from dict_for_model import dict_i_jformat, dict_job_types, all_skill_dict, dict_all_spec
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core.patterns_all import patterns_town, patterns_skill, patterns_jformat, patterns_jtype
+from core.dict_for_model import dict_i_jformat, dict_job_types, all_skill_dict, dict_all_spec
 
 
 pd.DataFrame.iteritems = pd.DataFrame.items
