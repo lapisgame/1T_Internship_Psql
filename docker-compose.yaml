@@ -150,7 +150,7 @@ services:
       - ./grafana/datasources/:/etc/grafana/provisioning/datasources
       - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
     depends_on:
-      - postgresql_db
+      - postgresql_db_dev
     ports:
       - 10124:3000
     restart: unless-stopped
