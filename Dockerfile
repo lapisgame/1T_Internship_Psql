@@ -12,5 +12,8 @@ RUN python3 -m spacy download ru_core_news_lg
 RUN python3 -m spacy download en_core_web_sm
 RUN python3 -m spacy download en_core_web_md
 RUN python3 -m spacy download en_core_web_lg
-RUN python3 -m spacy download en_core_web_trf
+RUN python3 -m spacy download en_core_web_trf --no-cache-dir
+#RUN pip3 download https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.7.3/en_core_web_trf-3.7.3.tar.gz
+#RUN pip3 install /en_core_web_trf-3.7.3.tar.gz
+#RUN python3 -m spacy download en_core_web_trf
 
