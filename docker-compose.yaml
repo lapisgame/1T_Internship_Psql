@@ -312,7 +312,6 @@ services:
         mkdir -p /sources/airflow/logs /sources/airflow/dags /sources/airflow/plugins
         chown -R "${AIRFLOW_UID}:0" /sources/airflow/{logs,dags,plugins}
         exec /entrypoint airflow version
-    # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_UPGRADE: 'true'
