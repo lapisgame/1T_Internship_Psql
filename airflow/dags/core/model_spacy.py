@@ -44,12 +44,17 @@ for name in static_dictionaries_lst:
     cols = [desc[0] for desc in cur.description]
     dict_dict[f"{name}_dict"] = pd.DataFrame(result, columns=cols)
 
-current_id = pd.read_sql(dicts_query.format('vacancies_max_id'), engine)
+cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
+current_id = cur.fetchall()
+logging.info(f"current max id {current_id}")
+
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
-all_ids = pd.read_sql(query, engine)
+cur.execute(query)
+result = cur.fetchall()
+cols = [desc[0] for desc in cur.description]
+all_ids = pd.DataFrame(result, columns=cols)
 
-logging.info(f"max_id = {current_id[0, 0]}")
 
 
 class DataPreprocessing:
@@ -68,7 +73,7 @@ class DataPreprocessing:
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])]
-        new_data['id'] = range(current_id.iloc[0, 0] + 1, len(new_data) + current_id.iloc[0, 0] + 1)
+        new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False)
         self.dataframe.rename({'vacancy_url': 'url'}, inplace=True)
 
