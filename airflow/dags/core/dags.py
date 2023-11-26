@@ -100,6 +100,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+
 class Dags():
     def run_init_getmatch_parser(self):
         """
