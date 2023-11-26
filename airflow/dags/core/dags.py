@@ -128,8 +128,8 @@ class Dags():
         manager = DatabaseManager(conn)
         manager.db_creator()
 
-    def dml_core(self, conn, engine):
-        manager = DataManager(conn, engine, self.dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
+    def dml_core(self, conn, engine, dfs):
+        manager = DataManager(conn, engine, dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
                                                                                'https://rabota.sber.ru/search/4221748']}))
         manager.init_load()
 
