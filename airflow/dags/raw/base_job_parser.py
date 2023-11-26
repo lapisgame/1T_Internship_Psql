@@ -95,7 +95,6 @@ class BaseJobParser:
 
         register_adapter(np.float64, addapt_numpy_float64)
         register_adapter(np.int64, addapt_numpy_int64)
-        # register_adapter(np.datetime64, addapt_numpy_float64)
 
         self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
         self.dataframe_to_closed = self.dataframe_to_closed.fillna(psycopg2.extensions.AsIs('NULL'))

@@ -43,16 +43,16 @@ class Dags():
         """
         Основной вид задачи для запуска парсера для вакансий GetMatch
         """
-        log.info('Запуск парсера GetMatch')
+        log.info('Запуск парсера HabrCareer')
         try:
             parser = HabrJobParser(base_habr, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер GetMatch успешно провел работу')
+            log.info('Парсер HabrCareer успешно провел работу')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера GetMatch: {e}')
+            log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
 
 
     def model(self, df):
@@ -91,56 +91,3 @@ with DAG(
         python_callable=call_all_func,
         provide_context=True
     )
-
-
-# ddl_dag = DAG(dag_id='core_ddl_dag',
-#               tags=['admin_1T'],
-#               start_date=datetime(2023, 11, 25),
-#               schedule_interval=None,
-#               default_args=default_args
-#               )
-#
-# dml_init_dag = DAG(dag_id='core_dml_init_dag',
-#               tags=['admin_1T'],
-#               start_date=datetime(2023, 11, 25),
-#               schedule_interval=None,
-#               default_args=default_args
-#               )
-#
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Удачи"'
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task"
-# )
-#
-# create_golden_core = PythonOperator(
-#     task_id='create_core_tables',
-#     python_callable=ddl_core,
-#     provide_context=True,
-#     dag=ddl_dag
-# )
-#
-# init_golden_core = PythonOperator(
-#     task_id='create_core_tables',
-#     python_callable=dml_core,
-#     provide_context=True,
-#     dag=dml_init_dag
-# )
-#
-# hello_bash_task >> create_golden_core >> end_task
-# init_golden_core
-#
-#
-# with DAG(dag_id="initial_getmatch_parser",
-#          schedule_interval=None, tags=['admin_1T'],
-#          default_args=default_args,
-#          catchup=False) as dag_initial_getmatch_parser:
-#     parse_get_match_jobs = PythonOperator(
-#         task_id='init_run_getmatch_parser_task',
-#         python_callable=run_init_getmatch_parser,
-#         provide_context=True)
-#
-# parse_get_match_jobs
