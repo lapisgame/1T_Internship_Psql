@@ -189,14 +189,10 @@ class HabrJobParser(BaseJobParser):
                             "salary_from": salary_from,
                             "salary_to": salary_to}            
                         print(f"Adding item: {item}")
-                        self.items.append(item)
+                        self.df = self.df.append(item, ignore_index=True)
                         time.sleep(3)
 
-        # Convert the list of dictionaries to a DataFrame
-        self.df = pd.DataFrame(self.items)
-        self.log.info("В список добавлены данные")
-
-
+        self.log.info("В датафрейм добавлены данные")
 
 # # Создаем объект HabrJobParser
 # def init_run_habr_parser():
