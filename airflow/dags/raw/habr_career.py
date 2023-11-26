@@ -52,7 +52,7 @@ default_args = {
 class HabrJobParser(BaseJobParser):
     def find_vacancies(self):
         self.items = []
-        BASE_URL = "https://career.habr.com/vacancies"
+        # BASE_URL = "https://career.habr.com/vacancies"
         HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",}
@@ -87,7 +87,7 @@ class HabrJobParser(BaseJobParser):
         for qid in qid_values:
             
           for s_value in s_values:
-           url = f"{BASE_URL}?qid={qid}&s[]={s_value}&type=all"
+           url = f"{base_habr}?qid={qid}&s[]={s_value}&type=all"
            r = requests.get(url, headers=HEADERS)
            html = r.text if r.status_code == 200 else None
            if html:
@@ -105,7 +105,7 @@ class HabrJobParser(BaseJobParser):
             print(f"Found {total_pages} pages for qid={qid}, s[]={s_value}")
             
             for page in range(1, total_pages + 1):
-                url = f"{BASE_URL}?qid={qid}&s[]={s_value}&type=all&page={page}"
+                url = f"{base_habr}?qid={qid}&s[]={s_value}&type=all&page={page}"
                 r = requests.get(url, headers=HEADERS)
                 html = r.text if r.status_code == 200 else None
                 if html:
@@ -177,11 +177,11 @@ class HabrJobParser(BaseJobParser):
                             "vacancy_name": card.find("a", class_="vacancy-card__title-link").get_text(strip=False),
                             "skills": card.find("div", class_="vacancy-card__skills").get_text(strip=False),
                             "towns": card.find("div", class_="vacancy-card__meta").get_text(strip=False),
-                            "vacancy_id": "https://career.habr.com/" + card.find("a", class_="vacancy-card__title-link").get("href"),
+                            "vacancy_url": "https://career.habr.com/" + card.find("a", class_="vacancy-card__title-link").get("href"),
                             "description": description,
                             "date_created": date_created,
                             "date_of_download": date_of_download,
-                            "source_vac": BASE_URL,
+                            "source_vac": 2,
                             "status": status,
                             "version_vac": version_vac,
                             "actual": actual,
@@ -191,79 +191,86 @@ class HabrJobParser(BaseJobParser):
                         print(f"Adding item: {item}")
                         self.items.append(item)
                         time.sleep(3)
-                        
+
+        # Convert the list of dictionaries to a DataFrame
+        self.df = pd.DataFrame(self.items)
         self.log.info("В список добавлены данные")
         # return self.items
         # pass
 
 
 
-    def save_df(self, cursor, connection):
-        self.log.info(f"Запрос вставки данных")
-        try:
-            for item in self.items:
-                company = item["company"]
-                vacancy_title = item["vacancy_name"]
-                skills = item["skills"]
-                meta = item["towns"]
-                link_vacancy = item["vacancy_id"]
-                date_created=item["date_created"]
-                date_of_download=item["date_of_download"]
-                description=item["description"]
-                source_vac=item["source_vac"]
-                status=item["status"]
-                version_vac=item["version_vac"]
-                actual=item["actual"]
-                level=item["level"]
-                salary_from=item["salary_from"]
-                salary_to=item["salary_to"]
-
-            # SQL-запрос для вставки данных
-                sql = """INSERT INTO public.raw_habr (vacancy_id, company, vacancy_name, skills, towns, description, date_created,
-                                                 date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
-                values = (link_vacancy, company, vacancy_title, skills, meta, description, date_created, 
-                      date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
-                cursor.execute(sql, values)
-
-            connection.commit()
-            cursor.close()
-            connection.close()
-            print("Data successfully inserted into the database.")
-            self.log.info(f"Данные успешно добавлены")
-            print(f"Inserted data: {self.items}")
-        
-        # Clear the items list after successful insertion
-            self.items = []
-
-        except Exception as e:
-            print(f"Error during data insertion: {e}")
-            self.log.info(f"Ошибка добавления данных")
-            connection.rollback()
-            cursor.close()
-            connection.close()
+    # def save_df(self, cursor, connection):
+    #     self.log.info(f"Запрос вставки данных")
+    #     try:
+    #         for item in self.items:
+    #             company = item["company"]
+    #             vacancy_title = item["vacancy_name"]
+    #             skills = item["skills"]
+    #             meta = item["towns"]
+    #             link_vacancy = item["vacancy_url"]
+    #             date_created=item["date_created"]
+    #             date_of_download=item["date_of_download"]
+    #             description=item["description"]
+    #             source_vac=item["source_vac"]
+    #             status=item["status"]
+    #             version_vac=item["version_vac"]
+    #             actual=item["actual"]
+    #             level=item["level"]
+    #             salary_from=item["salary_from"]
+    #             salary_to=item["salary_to"]
+    #
+    #         # SQL-запрос для вставки данных
+    #             sql = """INSERT INTO public.raw_habr (vacancy_url, company, vacancy_name, skills, towns, description, date_created,
+    #                                              date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
+    #                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+    #             values = (link_vacancy, company, vacancy_title, skills, meta, description, date_created,
+    #                   date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
+    #             cursor.execute(sql, values)
+    #
+    #         connection.commit()
+    #         cursor.close()
+    #         connection.close()
+    #         print("Data successfully inserted into the database.")
+    #         self.log.info(f"Данные успешно добавлены")
+    #         print(f"Inserted data: {self.items}")
+    #
+    #     # Clear the items list after successful insertion
+    #         self.items = []
+    #
+    #     except Exception as e:
+    #         print(f"Error during data insertion: {e}")
+    #         self.log.info(f"Ошибка добавления данных")
+    #         connection.rollback()
+    #         cursor.close()
+    #         connection.close()
 
 
 # Создаем объект HabrJobParser
-habr_parser = HabrJobParser(conn=conn, log=log)
+
 
 def init_run_habr_parser():
     log.info('Запуск парсера Хабр. Карьера')
-    parser = HabrJobParser(conn, log)
+    parser = HabrJobParser(conn, log, table_name)
     parser.find_vacancies()
     parser.save_df()
     log.info('Парсер Хабр. Карьера успешно провел работу')
 
 
-with DAG(dag_id = "parse_habrjobs", schedule_interval = None, tags=['admin_1T'],
-    default_args = default_args, catchup = False) as dag:
+with DAG(
+        dag_id = "init_habrcareer_parser",
+        schedule_interval = None,
+        tags=['admin_1T'],
+        default_args = default_args,
+        catchup = False) as habr_dag:
 
 
 # Определение задачи
 
         parse_habrjobs = PythonOperator(
-            task_id='parse_habrjobs',
-            python_callable=init_run_habr_parser,
-             provide_context=True)
+                task_id='init_habrcareer_task',
+                python_callable=init_run_habr_parser,
+                provide_context=True
+                )
 
 parse_habrjobs
