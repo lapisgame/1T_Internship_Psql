@@ -7,6 +7,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+logging.basicConfig(
+    format='%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
 class DataManager:
     def __init__(self, conn, engine, dict_data_from_model, data_to_closed, descriptions_frame):

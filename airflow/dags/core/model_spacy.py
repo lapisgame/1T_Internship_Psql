@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 import spacy
+import logging
 
 from datetime import datetime
 from spacy.matcher import Matcher
@@ -14,7 +15,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.patterns_all import patterns_town, patterns_skill, patterns_jformat, patterns_jtype
 from core.dict_for_model import dict_i_jformat, dict_job_types, all_skill_dict, dict_all_spec
 
-from raw.connect_settings import engine
+from raw.connect_settings import conn, engine
+
+logging.basicConfig(
+    format='%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
 pd.DataFrame.iteritems = pd.DataFrame.items
 
@@ -23,23 +29,29 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-dicts_query = "SELECT * FROM inside_core_schema.{0}"
+static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
+                           'sources', 'specialities', 'skills',
+                           'towns', 'experience', 'specialities_skills']
 
-job_formats_dict = pd.read_sql(dicts_query.format('job_formats'), engine)
-languages_dict = pd.read_sql(dicts_query.format('languages'), engine)
-skills_dict = pd.read_sql(dicts_query.format('skills'), engine)
-companies_dict = pd.read_sql(dicts_query.format('companies'), engine)
-job_types_dict = pd.read_sql(dicts_query.format('job_types'), engine)
-specialities_dict = pd.read_sql(dicts_query.format('specialities'), engine)
-towns_dict = pd.read_sql(dicts_query.format('towns'), engine)
-sources_dict = pd.read_sql(dicts_query.format('sources'), engine)
+job_formats_dict, job_types, languages_dict, skills_dict, companies_dict, job_types_dict, specialities_dic, towns_dict, sources_dict = pd.DataFrame()
+
+with conn.cursor as cur:
+    dicts_query = "SELECT * FROM inside_core_schema.{0}"
+    for name in static_dictionaries_lst:
+        cur.execute(dicts_query.format(name))
+        result = cur.fetchall()
+        cols = [desc[0] for desc in cur.description]
+        globals()[name] = pd.DataFrame(result, columns=cols)
+
 current_id = pd.read_sql(dicts_query.format('vacancies_max_id'), engine)
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
 all_ids = pd.read_sql(query, engine)
 
+logging.info(f"max_id = {current_id[0, 0]}")
 
-class DataPreprocessing():
+
+class DataPreprocessing:
     def __init__(self, dataframe):
         """
         Initializing models spacy, connecting to the database, creating empty tables for core: vacancies,
