@@ -44,7 +44,7 @@ for name in static_dictionaries_lst:
     dict_dict[f"{name}_dict"] = pd.DataFrame(result, columns=cols)
 
 cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
-current_id = cur.fetchall()
+current_id = cur.fetchone()
 current_id = current_id.astype(int)
 logging.error(f"current max id {current_id}")
 
