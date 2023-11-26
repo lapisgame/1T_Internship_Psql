@@ -45,9 +45,9 @@ for name in static_dictionaries_lst:
 
 cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
 current_id = cur.fetchone()
-current_id = current_id.astype(int)
+print(current_id, type(current_id))
+current_id = int(current_id)
 logging.error(f"current max id {current_id}")
-
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
 cur.execute(query)
