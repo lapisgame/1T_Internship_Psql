@@ -33,23 +33,14 @@ static_dictionaries_lst = ['job_formats_dict', 'job_types_dict', 'languages_dict
                            'sources_dict', 'specialities_dict', 'skills_dict',
                            'towns_dict']
 
-job_formats_dict = pd.DataFrame()
-languages_dict = pd.DataFrame()
-skills_dict = pd.DataFrame()
-companies_dict = pd.DataFrame()
-job_types_dict = pd.DataFrame()
-specialities_dict = pd.DataFrame()
-towns_dict = pd.DataFrame()
-sources_dict = pd.DataFrame()
-
-
+dict_dict = {}
 with conn.cursor as cur:
     dicts_query = "SELECT * FROM inside_core_schema.{0}"
     for name in static_dictionaries_lst:
         cur.execute(dicts_query.format(name))
         result = cur.fetchall()
         cols = [desc[0] for desc in cur.description]
-        globals()[name] = pd.DataFrame(result, columns=cols)
+        dict_dict[f"{name}"] = pd.DataFrame(result, columns=cols)
 
 current_id = pd.read_sql(dicts_query.format('vacancies_max_id'), engine)
 
@@ -284,10 +275,10 @@ class DataPreprocessing:
         General function call method
         '''
         self.description_lemmatization_add()
-        self.description_processing_town(patterns_town, towns_dict)
-        self.description_processing_skill(patterns_skill, all_skill_dict, skills_dict)
-        self.description_processing_jformat(patterns_jformat, dict_i_jformat, job_formats_dict)
-        self.description_processing_jtype(patterns_jtype, job_types_dict, dict_job_types)
+        self.description_processing_town(patterns_town, dict_dict['towns_dict'])
+        self.description_processing_skill(patterns_skill, all_skill_dict, dict_dict['skills_dict'])
+        self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
+        self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
         self.save_dataframe()
 
         self.dict_all_data = {
