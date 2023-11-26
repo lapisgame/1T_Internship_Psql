@@ -61,7 +61,8 @@ class HabrJobParser(BaseJobParser):
         
         #Поиск у Хабр карьеры работает плохо, поэтому для поиска специализаций использовался внутренний фильтр Хабр.Карьеры, который классно работает 
         # и не подает в разделе для Дата инженеров вакансии с инженерами
-        s_values = [41, 42, 43, 95, 34, 3, 2, 4, 82, 23, 12, 10, 76, 44, 22]
+        # s_values = [41, 42, 43, 95, 34, 3, 2, 4, 82, 23, 12, 10, 76, 44, 22]
+        s_values = [41]
         s_value_descriptions = {
         41: "Системный аналитик",
         42: "Бизнес аналитик",
@@ -69,13 +70,13 @@ class HabrJobParser(BaseJobParser):
         95: "Менеджер проектов",
         34: "Менеджер продуктов",
         3: "Фронт-разработчик",
-        2: "Бэк-разработчик",        
+        2: "Бэк-разработчик",
         4: "Full-stack разработчик",
         82: "Веб дизайнер",
         23: "UI/UX специалист",
         12: "Инженер по тестированию",
-        10: "Инженер по автоматизированному тестированию",      
-        76: "Data инженер", 
+        10: "Инженер по автоматизированному тестированию",
+        76: "Data инженер",
         44: "Data scientist",
         22: "DevOps инженер"}
         self.items = []
@@ -194,59 +195,9 @@ class HabrJobParser(BaseJobParser):
         # Convert the list of dictionaries to a DataFrame
         self.df = pd.DataFrame(self.items)
         self.log.info("В список добавлены данные")
-        # return self.items
-        # pass
-
-
-
-    # def save_df(self, cursor, connection):
-    #     self.log.info(f"Запрос вставки данных")
-    #     try:
-    #         for item in self.items:
-    #             company = item["company"]
-    #             vacancy_title = item["vacancy_name"]
-    #             skills = item["skills"]
-    #             meta = item["towns"]
-    #             link_vacancy = item["vacancy_url"]
-    #             date_created=item["date_created"]
-    #             date_of_download=item["date_of_download"]
-    #             description=item["description"]
-    #             source_vac=item["source_vac"]
-    #             status=item["status"]
-    #             version_vac=item["version_vac"]
-    #             actual=item["actual"]
-    #             level=item["level"]
-    #             salary_from=item["salary_from"]
-    #             salary_to=item["salary_to"]
-    #
-    #         # SQL-запрос для вставки данных
-    #             sql = """INSERT INTO public.raw_habr (vacancy_url, company, vacancy_name, skills, towns, description, date_created,
-    #                                              date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
-    #                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
-    #             values = (link_vacancy, company, vacancy_title, skills, meta, description, date_created,
-    #                   date_of_download, source_vac, status, version_vac, actual, level, salary_from, salary_to)
-    #             cursor.execute(sql, values)
-    #
-    #         connection.commit()
-    #         cursor.close()
-    #         connection.close()
-    #         print("Data successfully inserted into the database.")
-    #         self.log.info(f"Данные успешно добавлены")
-    #         print(f"Inserted data: {self.items}")
-    #
-    #     # Clear the items list after successful insertion
-    #         self.items = []
-    #
-    #     except Exception as e:
-    #         print(f"Error during data insertion: {e}")
-    #         self.log.info(f"Ошибка добавления данных")
-    #         connection.rollback()
-    #         cursor.close()
-    #         connection.close()
 
 
 # Создаем объект HabrJobParser
-
 def init_run_habr_parser():
     log.info('Запуск парсера Хабр. Карьера')
     parser = HabrJobParser(base_habr, log, conn, table_name)
