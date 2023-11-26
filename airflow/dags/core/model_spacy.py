@@ -32,9 +32,9 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-static_dictionaries_lst = ['job_formats_dict', 'job_types_dict', 'languages_dict',
-                           'sources_dict', 'specialities_dict', 'skills_dict',
-                           'towns_dict']
+static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
+                           'sources', 'specialities', 'skills',
+                           'towns']
 
 dict_dict = {}
 
@@ -43,7 +43,7 @@ for name in static_dictionaries_lst:
     cur.execute(dicts_query.format(name))
     result = cur.fetchall()
     cols = [desc[0] for desc in cur.description]
-    dict_dict[f"{name}"] = pd.DataFrame(result, columns=cols)
+    dict_dict[f"{name}_dict"] = pd.DataFrame(result, columns=cols)
 
 current_id = pd.read_sql(dicts_query.format('vacancies_max_id'), engine)
 
