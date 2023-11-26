@@ -22,6 +22,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+cur = conn.cursor()
+
 pd.DataFrame.iteritems = pd.DataFrame.items
 
 # Отображение колонок и строк в VScode
@@ -34,13 +36,13 @@ static_dictionaries_lst = ['job_formats_dict', 'job_types_dict', 'languages_dict
                            'towns_dict']
 
 dict_dict = {}
-with conn.cursor as cur:
-    dicts_query = "SELECT * FROM inside_core_schema.{0}"
-    for name in static_dictionaries_lst:
-        cur.execute(dicts_query.format(name))
-        result = cur.fetchall()
-        cols = [desc[0] for desc in cur.description]
-        dict_dict[f"{name}"] = pd.DataFrame(result, columns=cols)
+
+dicts_query = "SELECT * FROM inside_core_schema.{0}"
+for name in static_dictionaries_lst:
+    cur.execute(dicts_query.format(name))
+    result = cur.fetchall()
+    cols = [desc[0] for desc in cur.description]
+    dict_dict[f"{name}"] = pd.DataFrame(result, columns=cols)
 
 current_id = pd.read_sql(dicts_query.format('vacancies_max_id'), engine)
 
