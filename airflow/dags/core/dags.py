@@ -111,15 +111,16 @@ class Dags():
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            self.df = parser.find_vacancies()
+            parser.find_vacancies()
             parser.stop()
             logging.info('Парсер GetMatch успешно провел работу')
+            self.model(self.df)
         except Exception as e:
             logging.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
 
-    def model(self):
-        test = Data_preprocessing(self.df)
+    def model(self, df):
+        test = Data_preprocessing(df)
         self.dfs = test.call_all_functions()
 
 

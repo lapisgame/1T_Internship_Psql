@@ -164,8 +164,6 @@ class GetMatchJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
-        return self.df
-
     def save_df(self):
         self.log.info(f"Осуществляем загрузку данных в БД")
         try:
