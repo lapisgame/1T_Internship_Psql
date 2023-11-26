@@ -205,10 +205,10 @@ class GetMatchJobParser(BaseJobParser):
         except Exception as e:
             self.log.error(f"Произошла ошибка при сохранении данных в функции 'save_df': {e}")
             raise
-
-        finally:
-            self.cur.close()
-            self.conn.close()
+        #
+        # finally:
+        #     self.cur.close()
+        #     self.conn.close()
 
     def generating_dataframes(self):
         """
