@@ -136,7 +136,6 @@ class Dags():
 def test_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
-    worker.model(parser.df)
     worker.ddl_core(conn)
     worker.dml_core(conn, engine)
 
