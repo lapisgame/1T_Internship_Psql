@@ -85,7 +85,7 @@ class BaseJobParser:
         with the string 'NULL'. This is done using the "fillna()" method, where we pass
         "psycopg2.extensions.AsIs('NULL')" as the value to fill missing values.
         """
-        self.cur = self.conn.cursor()
+        # self.cur = self.conn.cursor()
 
         def addapt_numpy_float64(numpy_float64):
             return AsIs(numpy_float64)
