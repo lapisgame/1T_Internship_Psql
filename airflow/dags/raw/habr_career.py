@@ -103,7 +103,7 @@ class HabrJobParser(BaseJobParser):
             else:
                 total_pages = 1
             print(f"Found {total_pages} pages for qid={qid}, s[]={s_value}")
-            
+
             for page in range(1, total_pages + 1):
                 url = f"{base_habr}?qid={qid}&s[]={s_value}&type=all&page={page}"
                 r = requests.get(url, headers=HEADERS)
@@ -194,6 +194,7 @@ class HabrJobParser(BaseJobParser):
 
         self.df['date_created'] = self.df['date_created'].apply(lambda x: dateparser.parse(x, languages=['ru']))
         self.df['date_created'] = pd.to_datetime(self.df['date_created']).dt.to_pydatetime()
+        self.df['date_created'] = self.df['date_created'].dt.date
 
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
