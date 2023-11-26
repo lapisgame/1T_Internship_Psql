@@ -42,11 +42,11 @@ from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][5]['raw_tables_name']
 
-# Параметры по умолчанию
-default_args = {
-    "owner": "admin_1T",
-    'start_date': days_ago(1)
-}
+# # Параметры по умолчанию
+# default_args = {
+#     "owner": "admin_1T",
+#     'start_date': days_ago(1)
+# }
 
 class HabrJobParser(BaseJobParser):
     def find_vacancies(self):
@@ -62,7 +62,7 @@ class HabrJobParser(BaseJobParser):
         #Поиск у Хабр карьеры работает плохо, поэтому для поиска специализаций использовался внутренний фильтр Хабр.Карьеры, который классно работает 
         # и не подает в разделе для Дата инженеров вакансии с инженерами
         # s_values = [41, 42, 43, 95, 34, 3, 2, 4, 82, 23, 12, 10, 76, 44, 22]
-        s_values = [41]
+        s_values = [44]
         s_value_descriptions = {
         41: "Системный аналитик",
         42: "Бизнес аналитик",
