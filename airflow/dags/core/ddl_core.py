@@ -172,7 +172,6 @@ class DatabaseManager:
         FOREIGN KEY (company_id) REFERENCES {0}.companies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
         source_id INT,
         FOREIGN KEY (source_id) REFERENCES {0}.sources (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-        vector DECIMAL,
         publicated_at DATE
         );
         """
@@ -207,7 +206,6 @@ class DatabaseManager:
         FOREIGN KEY (company_id) REFERENCES {0}.companies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
         source_id INT,
         FOREIGN KEY (source_id) REFERENCES {0}.sources (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-        vector DECIMAL,
         publicated_at DATE
         );
         """
