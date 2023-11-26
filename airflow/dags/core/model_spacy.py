@@ -30,7 +30,6 @@ pd.DataFrame.iteritems = pd.DataFrame.items
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
-
 static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
                            'sources', 'specialities', 'skills',
                            'towns']
