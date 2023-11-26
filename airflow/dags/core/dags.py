@@ -22,6 +22,7 @@ from raw.connect_settings import conn, engine
 from raw.get_match import GetMatchJobParser
 from raw.variables_settings import variables, base_getmatch
 from core.model_spacy import Data_preprocessing
+log = logging
 
 # job_formats = pd.read_csv(r'/opt/airflow/from_DS/job_formats.csv')
 # job_types = pd.read_csv(r'/opt/airflow/from_DS/job_types.csv')
@@ -108,7 +109,7 @@ class Dags():
         """
         logging.info('Запуск парсера GetMatch')
         try:
-            parser = GetMatchJobParser(base_getmatch, conn)
+            parser = GetMatchJobParser(base_getmatch, log, conn)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
