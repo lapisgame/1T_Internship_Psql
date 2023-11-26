@@ -122,7 +122,7 @@ class Data_preprocessing():
             fin_town = list(set(list_town))
             
             for element in fin_town:
-                index = int(towns_dict/loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                index = int(towns_dict.loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'], index]
 
         self.towns_vacancies.drop_duplicates(inplace = True)
@@ -157,7 +157,7 @@ class Data_preprocessing():
 
             for element in fin_skill:
                 try:
-                    index = int(skills_dict/loc[skills_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    index = int(skills_dict.loc[skills_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     self.skills_vacancies.loc[len(self.skills_vacancies.index)] = [self.dataframe.loc[i_skill, 'vacancy_id'], index]
                 except: pass
 
@@ -197,7 +197,7 @@ class Data_preprocessing():
                         fin_jformat[i] = fin_jformat[i].replace(val, key)
 
             for element in fin_jformat:
-                index = int(job_form_dict/loc[job_form_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                index = int(job_form_dict.loc[job_form_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.job_formats_vacancies.loc[len(self.job_formats_vacancies.index)] = [self.dataframe.loc[i_jformat, 'vacancy_id'], index]
 
 
@@ -226,7 +226,7 @@ class Data_preprocessing():
                         fin_jtype[i] = fin_jtype[i].replace(val, key)
 
             for element in fin_jtype:
-                index = int(job_type_dict/loc[job_type_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                index = int(job_type_dict.loc[job_type_dict['title'] == element.lower(), 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 self.job_types_vacancies.loc[len(self.job_types_vacancies.index)] = [self.dataframe.loc[i_jtype, 'vacancy_id'], index]
 
 
