@@ -189,7 +189,7 @@ class HabrJobParser(BaseJobParser):
                             "salary_from": salary_from,
                             "salary_to": salary_to}            
                         print(f"Adding item: {item}")
-                        self.df = self.df.append(item, ignore_index=True)
+                        self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
                         time.sleep(3)
 
         self.log.info("В датафрейм добавлены данные")
