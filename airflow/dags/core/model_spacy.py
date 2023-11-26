@@ -22,7 +22,8 @@ pd.DataFrame.iteritems = pd.DataFrame.items
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
-dicts_query = "SELECT * FROM {0}"
+
+dicts_query = "SELECT * FROM inside_core_schema.{0}"
 
 job_formats_dict = pd.read_sql(dicts_query.format('job_formats'), engine)
 languages_dict = pd.read_sql(dicts_query.format('languages'), engine)
