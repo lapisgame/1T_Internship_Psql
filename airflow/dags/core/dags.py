@@ -122,7 +122,7 @@ class Dags():
     def model(self, df):
         test = Data_preprocessing(df)
         test.call_all_functions()
-        self.dfs = test.dict_all_data()
+        self.dfs = test.dict_all_data
 
 
     def ddl_core(self, conn):
@@ -138,7 +138,6 @@ class Dags():
 def test_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
-    # df = worker.df
     worker.ddl_core(conn)
     worker.model(worker.df)
     worker.dml_core(conn, engine, worker.dfs)
