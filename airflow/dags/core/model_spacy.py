@@ -57,7 +57,7 @@ class DataPreprocessing():
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])]
         new_data['id'] = range(current_id.iloc[0, 0] + 1, len(new_data) + current_id.iloc[0, 0] + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False)
-        self.dataframe.rename({'vacancy_id': 'url'}, inplace=True)
+        self.dataframe.rename({'vacancy_url': 'url'}, inplace=True)
 
         # Initializing models for each column on core
         self.nlp = spacy.load('ru_core_news_lg')
