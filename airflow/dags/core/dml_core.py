@@ -62,20 +62,24 @@ class DataManager:
     def load_to_inside_schema(self, df_name):
         df = self.data[df_name]
         if not df.empty:
+            try:
+                self.fix_type()
 
-            self.fix_type()
+                # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
+                data_to_load = [tuple(x) for x in df.to_records(index=False)]
+                cols = ', '.join(list(df))
+                update_query = f"""
+                INSERT INTO {self.schema}.{df_name} 
+                VALUES ({', '.join(['%s'] * len(list(df)))})
+                ON CONFLICT (id) DO UPDATE
+                SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(df)])})
+                """
+                self.cur.executemany(update_query, data_to_load)
+                logging.info(f'Data loaded into {self.schema}.{df_name} successfully')
 
-            # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
-            data_to_load = [tuple(x) for x in df.to_records(index=False)]
-            cols = ', '.join(list(df))
-            update_query = f"""
-            INSERT INTO {self.schema}.{df_name} 
-            VALUES ({', '.join(['%s'] * len(list(df)))})
-            ON CONFLICT (id) DO UPDATE
-            SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(df)])})
-            """
-            self.cur.executemany(update_query, data_to_load)
-            logging.info(f'Data loaded into {self.schema}.{df_name} successfully')
+            except Exception as e:
+                logging.error(f"Error while data loading to dictionary {df_name}: {e}")
+                self.conn.rollback()
         else:
             logging.info(f'No data to loading, dataframe {df_name} is empty')
 
@@ -83,23 +87,26 @@ class DataManager:
     def load_dictionaries_core(self, df_name):
         df = self.data[df_name]
         if not df.empty:
+            try:
+                self.fix_type()
 
-            self.fix_type()
+                selected_columns = df[['id', 'title']].copy()
+                data_to_load = [tuple(x) for x in selected_columns.to_records(index=False)]
 
-            selected_columns = df[['id', 'title']].copy()
-            data_to_load = [tuple(x) for x in selected_columns.to_records(index=False)]
+                # selected_columns.to_sql(str(df_name).replace('', ''), self.engine,
+                #                         schema=self.schema, if_exists='append', index=False)
 
-            # selected_columns.to_sql(str(df_name).replace('', ''), self.engine,
-            #                         schema=self.schema, if_exists='append', index=False)
-
-            cols = ', '.join(list(selected_columns))
-            update_query = f"""
-            INSERT INTO {self.front_schema}.{df_name} 
-            VALUES ({', '.join(['%s'] * len(list(selected_columns)))})
-            ON CONFLICT (id) DO UPDATE
-            SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(selected_columns)])})
-            """
-            self.cur.executemany(update_query, data_to_load)
+                cols = ', '.join(list(selected_columns))
+                update_query = f"""
+                INSERT INTO {self.front_schema}.{df_name} 
+                VALUES ({', '.join(['%s'] * len(list(selected_columns)))})
+                ON CONFLICT (id) DO UPDATE
+                SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(selected_columns)])})
+                """
+                self.cur.executemany(update_query, data_to_load)
+            except Exception as e:
+                logging.error(f"Error while data loading to dictionary {df_name}: {e}")
+                self.conn.rollback()
         else:
             logging.info(f'No data to loading, dataframe {df_name} is empty')
 
