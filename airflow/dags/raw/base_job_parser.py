@@ -8,7 +8,7 @@ import numpy as np
 from datetime import datetime
 from airflow.utils.log.logging_mixin import LoggingMixin
 from psycopg2.extras import execute_values
-import logging
+import logging as log
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -21,8 +21,8 @@ class BaseJobParser:
     """
     Base class for parsing job vacancies
     """
-    def __init__(self, url, profs, conn, table_name):
-        self.log = logging
+    def __init__(self, url, profs, conn, table_name, log):
+        self.log = log
         self.table_name = table_name
         # self.log = LoggingMixin().log
         columns = [
@@ -51,7 +51,7 @@ class BaseJobParser:
         self.schema = schemes['raw']
         self.raw_tables = raw_tables
         self.conn = conn
-        self.cur = self.conn.cursor()
+        self.cur = conn.cursor()
     def scroll_down_page(self, page_height=0):
         """
         Method for scrolling down the page
