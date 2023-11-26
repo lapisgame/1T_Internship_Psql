@@ -247,10 +247,9 @@ class HabrJobParser(BaseJobParser):
 
 # Создаем объект HabrJobParser
 
-
 def init_run_habr_parser():
     log.info('Запуск парсера Хабр. Карьера')
-    parser = HabrJobParser(base_habr, conn, log, table_name)
+    parser = HabrJobParser(base_habr, log, conn, table_name)
     parser.find_vacancies()
     parser.save_df()
     log.info('Парсер Хабр. Карьера успешно провел работу')
