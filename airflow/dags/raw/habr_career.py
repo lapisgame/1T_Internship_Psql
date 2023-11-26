@@ -197,29 +197,30 @@ class HabrJobParser(BaseJobParser):
         self.log.info("В список добавлены данные")
 
 
-# Создаем объект HabrJobParser
-def init_run_habr_parser():
-    log.info('Запуск парсера Хабр. Карьера')
-    parser = HabrJobParser(base_habr, log, conn, table_name)
-    parser.find_vacancies()
-    parser.save_df()
-    log.info('Парсер Хабр. Карьера успешно провел работу')
 
-
-with DAG(
-        dag_id = "init_habrcareer_parser",
-        schedule_interval = None,
-        tags=['admin_1T'],
-        default_args = default_args,
-        catchup = False) as habr_dag:
-
-
-# Определение задачи
-
-        parse_habrjobs = PythonOperator(
-                task_id='init_habrcareer_task',
-                python_callable=init_run_habr_parser,
-                provide_context=True
-                )
-
-parse_habrjobs
+# # Создаем объект HabrJobParser
+# def init_run_habr_parser():
+#     log.info('Запуск парсера Хабр. Карьера')
+#     parser = HabrJobParser(base_habr, log, conn, table_name)
+#     parser.find_vacancies()
+#     parser.save_df()
+#     log.info('Парсер Хабр. Карьера успешно провел работу')
+#
+#
+# with DAG(
+#         dag_id = "init_habrcareer_parser",
+#         schedule_interval = None,
+#         tags=['admin_1T'],
+#         default_args = default_args,
+#         catchup = False) as habr_dag:
+#
+#
+# # Определение задачи
+#
+#         parse_habrjobs = PythonOperator(
+#                 task_id='init_habrcareer_task',
+#                 python_callable=init_run_habr_parser,
+#                 provide_context=True
+#                 )
+#
+# parse_habrjobs
