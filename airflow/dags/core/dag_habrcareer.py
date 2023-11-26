@@ -47,6 +47,7 @@ class Dags():
         try:
             parser = HabrJobParser(base_habr, log, conn, table_name)
             parser.find_vacancies()
+            parser.addapt_numpy_null()
             parser.save_df()
             log.info('Парсер GetMatch успешно провел работу')
             self.df = parser.df
