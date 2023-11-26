@@ -152,11 +152,7 @@ class HabrJobParser(BaseJobParser):
                                             }
 
 # Разбираем строку и получаем объект datetime
-                        date_parts = date_string.split()
-                        day = int(date_parts[0])
-                        month = months_mapping[date_parts[1].lower()]
-                        current_year = datetime.now().year  # Получаем текущий год
-                        date_created = datetime(current_year, month, day)
+                        date_created = datetime.now().date()
                         status ='existing'  
                         version_vac=1
                         actual=1
