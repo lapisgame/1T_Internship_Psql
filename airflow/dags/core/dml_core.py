@@ -9,44 +9,23 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class DataManager:
-    def __init__(self, conn, engine, dict_all_data, data_to_closed):
+    def __init__(self, conn, engine, dict_data_from_model, data_to_closed, descriptions_frame):
         self.conn = conn
         self.cur = conn.cursor()
         self.schema = 'inside_core_schema'
         self.front_schema = 'core_schema'
         self.engine = engine
+        self.descriptions = descriptions_frame
         self.data_to_closed = data_to_closed
-        self.data = dict_all_data
-        self.dictionary_tables_lst = ['job_formats', 'job_types', 'languages',
-                                      'companies', 'sources', 'specialities',
-                                      'skills', 'towns', 'experience']
+        self.dict_data_from_model = dict_data_from_model
+        # self.static_dicts_data = dicts
+        self.static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
+                                        'sources', 'specialities', 'skills',
+                                        'towns', 'experience', 'specialities_skills']
+        self.dynamic_dictionaries_lst = ['companies']
         self.link_tables_lst = ['job_formats_vacancies', 'job_types_vacancies', 'languages_vacancies',
                                 'specialities_vacancies', 'skills_vacancies', 'towns_vacancies',
-                                'specialities_skills', 'experience_vacancies']
-        """
-        Необходимо добавить все наборы данных от DS
-        """
-
-    # def new_update_foo(self):
-    #     logging.info("Loading data to vacancies")
-    #     if not self.data.get('vacancies').empty:
-    #         try:
-    #             self.load_data_to_dicts()
-    #             ids_to_update = tuple(self.data.get('vacancies')['id'].tolist())
-    #             for link_table in self.link_tables_lst:
-    #                 delete_query = f"""
-    #                 DELETE FROM {self.schema}.{link_table} WHERE vacancy_id IN %s
-    #                 """
-    #                 self.cur.execute(delete_query, (ids_to_update,))
-    #             self.load_data_to_vacancies()
-    #             self.load_data_to_links()
-    #             self.update_tech_table()
-    #             self.conn.commit()
-    #             self.conn.close()
-    #         except Exception as e:
-    #             logging.error(f"Error: {e}")
-    #             self.conn.rollback()
-
+                                'experience_vacancies']
     # Type fixing
     def fix_type(self):
         def addapt_numpy_int64(numpy_int64):
@@ -59,67 +38,60 @@ class DataManager:
         register_adapter(np.float64, addapt_numpy_float64)
 
     # Load data to DS dictionaries
-    def load_to_inside_schema(self, df_name):
-        df = self.data[df_name]
+    def load_to_inside_schema(self, df_name, what_dicts):
+        df = what_dicts[df_name]
         if not df.empty:
-            try:
-                self.fix_type()
 
-                # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
-                data_to_load = [tuple(x) for x in df.to_records(index=False)]
-                cols = ', '.join(list(df))
-                update_query = f"""
-                INSERT INTO {self.schema}.{df_name} 
-                VALUES ({', '.join(['%s'] * len(list(df)))})
-                ON CONFLICT (id) DO UPDATE
-                SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(df)])})
-                """
-                self.cur.executemany(update_query, data_to_load)
-                logging.info(f'Data loaded into {self.schema}.{df_name} successfully')
+            self.fix_type()
 
-            except Exception as e:
-                logging.error(f"Error while data loading to dictionary {df_name}: {e}")
-                self.conn.rollback()
+            # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
+            data_to_load = [tuple(x) for x in df.to_records(index=False)]
+            cols = ', '.join(list(df))
+            update_query = f"""
+            INSERT INTO {self.schema}.{df_name} 
+            VALUES ({', '.join(['%s'] * len(list(df)))})
+            ON CONFLICT (id) DO UPDATE
+            SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(df)])})
+            """
+            self.cur.executemany(update_query, data_to_load)
+            logging.info(f'Data loaded into {self.schema}.{df_name} successfully')
         else:
             logging.info(f'No data to loading, dataframe {df_name} is empty')
 
     # Load data to core dictionaries 
-    def load_dictionaries_core(self, df_name):
-        df = self.data[df_name]
+    def load_dictionaries_core(self, df_name, what_data):
+        df = what_data[df_name]
         if not df.empty:
-            try:
-                self.fix_type()
 
-                selected_columns = df[['id', 'title']].copy()
-                data_to_load = [tuple(x) for x in selected_columns.to_records(index=False)]
+            self.fix_type()
 
-                # selected_columns.to_sql(str(df_name).replace('', ''), self.engine,
-                #                         schema=self.schema, if_exists='append', index=False)
+            selected_columns = df[['id', 'title']].copy()
+            data_to_load = [tuple(x) for x in selected_columns.to_records(index=False)]
 
-                cols = ', '.join(list(selected_columns))
-                update_query = f"""
-                INSERT INTO {self.front_schema}.{df_name} 
-                VALUES ({', '.join(['%s'] * len(list(selected_columns)))})
-                ON CONFLICT (id) DO UPDATE
-                SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(selected_columns)])})
-                """
-                self.cur.executemany(update_query, data_to_load)
-            except Exception as e:
-                logging.error(f"Error while data loading to dictionary {df_name}: {e}")
-                self.conn.rollback()
+            # selected_columns.to_sql(str(df_name).replace('', ''), self.engine,
+            #                         schema=self.schema, if_exists='append', index=False)
+
+            cols = ', '.join(list(selected_columns))
+            update_query = f"""
+            INSERT INTO {self.front_schema}.{df_name} 
+            VALUES ({', '.join(['%s'] * len(list(selected_columns)))})
+            ON CONFLICT (id) DO UPDATE
+            SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(selected_columns)])})
+            """
+            self.cur.executemany(update_query, data_to_load)
         else:
             logging.info(f'No data to loading, dataframe {df_name} is empty')
 
-    # Load data to all dictionaries (union, no commit)
-    def load_data_to_dicts(self):
+    # Load data to dynamic/static dictionaries (union, commit)
+    def load_data_to_dicts(self, dictionaries_lst, what_data):
         self.fix_type()
         logging.info('Loading dictionary tables data')
-        for dict_table_name in self.dictionary_tables_lst:
+        for dict_table_name in dictionaries_lst:
             try:
                 # Load data to inside tables
-                self.load_to_inside_schema(dict_table_name)
+                self.load_to_inside_schema(dict_table_name, what_data)
                 # Load data to core tables
-                self.load_dictionaries_core(dict_table_name)
+                self.load_dictionaries_core(dict_table_name, what_data)
                 logging.info(f'Data loaded successfully to {dict_table_name}')
                 self.conn.commit()
             except Exception as e:
@@ -129,21 +101,21 @@ class DataManager:
     # Init vacancies loading (union, commit)
     def load_data_to_vacancies(self):
         logging.info('Loading data to vacancies')
-        if not self.data.get('vacancies').empty:
+        if not self.dict_data_from_model.get('vacancies').empty:
             try:
                 logging.info("Loading actual data into inside vacancies")
-                self.data.get('vacancies').to_sql('vacancies', self.engine, schema=self.schema, if_exists='append',
-                                                  index=False)
+                self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.schema,
+                                                                  if_exists='append', index=False)
                 logging.info("Loading actual vectors")
-                self.data.get('ds_search').to_sql('ds_search', self.engine, schema=self.schema, if_exists='append',
-                                                  index=False)
+                self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.schema,
+                                                                  if_exists='append', index=False)
                 logging.info("Completed")
                 logging.info("Loading actual data into core vacancies")
-                self.data.get('vacancies').to_sql('vacancies', self.engine, schema=self.front_schema,
-                                                  if_exists='append', index=False)
+                self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.front_schema,
+                                                                  if_exists='append', index=False)
                 logging.info("Loading actual vectors")
-                self.data.get('ds_search').to_sql('ds_search', self.engine, schema=self.front_schema,
-                                                  if_exists='append', index=False)
+                self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.front_schema,
+                                                                  if_exists='append', index=False)
                 logging.info("Completed")
                 self.conn.commit()
             except Exception as e:
@@ -154,7 +126,7 @@ class DataManager:
     def load_data_to_links(self):
         logging.info('Loading data to links tables')
         for link_table_name in self.link_tables_lst:
-            df = self.data[link_table_name]
+            df = self.dict_data_from_model[link_table_name]
             if not df.empty:
                 self.fix_type()
                 logging.info("Deleting old links")
@@ -209,25 +181,7 @@ class DataManager:
         SELECT id, url  FROM {self.schema}.vacancies
         """
         core_data = pd.read_sql(core_data_load_query, self.engine)
-        # Для оптимизации работы переопределять tables
-        # for table in tables:
-        # actual = f"""
-        # SELECT vacancy_id AS url, MAX(version_vac) AS version 
-        # FROM {self.schema}.{table}
-        # WHERE status != 'closed' 
-        # GROUP BY vacancy_id
-        # """
-        # actual_data = actual_data.append(pd.read_sql(actual, self.engine), ignore_index=True)
 
-        # Получение списка неактуальных вакансий на core 
-        # archive_df = core_data[~core_data['url'].isin(actual_data['url'])]            
-        # archive_urls = set(core_data['url']).difference(set(data['url']))
-
-        """
-        Предполагается получение датафрейма неактуальных вакансий
-        при запросе аналогичных данных для обновления raw
-        ЗАМЕНИТЬ НА РЕАЛЬНЫЙ df
-        """
         self.data_to_closed = pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
                                             'https://rabota.sber.ru/search/4221748']})
 
@@ -314,17 +268,19 @@ class DataManager:
 
     # Process. Update data on core-layer (union, commit)
     def load_and_update_actual_data(self):
-        if not self.data.get('vacancies').empty:
+        logging.info("Loading data starting")
+        if not self.dict_data_from_model.get('vacancies').empty:
             try:
                 self.fix_type()
 
                 # Loading to dictionaries
-                self.load_data_to_dicts()
-                # self.vacancies = self.vacancies.where(pd.notna(self.vacancies), 'nan')
+                logging.info("Loading data to dictionaries")
+                self.load_data_to_dicts(self.dynamic_dictionaries_lst, self.dict_data_from_model)
+
                 logging.info("New data loading to vacancies")
 
                 # Datatype fixing (NaN -> NULL)
-                vacancies = self.data.get('vacancies').fillna(psycopg2.extensions.AsIs('NULL'))
+                vacancies = self.dict_data_from_model.get('vacancies').fillna(psycopg2.extensions.AsIs('NULL'))
 
                 # Loading data to vacancies
                 data_to_load = [tuple(x) for x in vacancies.to_records(index=False)]
@@ -332,7 +288,8 @@ class DataManager:
                 cols = ', '.join(names)
                 update_query = """
                 INSERT INTO {0}.{1} 
-                ON CONFLICT (id) DO UPDATE 
+                VALUES ({2})
+                ON CONFLICT (id) DO UPDATE
                 SET ({3}) = ({4});
                 """
                 self.cur.executemany(update_query.format(self.schema, 'vacancies', ', '.join(['%s'] * len(names)), cols,
@@ -344,14 +301,15 @@ class DataManager:
                 logging.info("New data loading to search tables")
 
                 # Load data to ds_search
-                data_to_load = [tuple(x) for x in self.data.get('ds_search').to_records(index=False)]
-                names = list(self.data.get('ds_search'))
+                data_to_load = [tuple(x) for x in self.dict_data_from_model.get('ds_search').to_records(index=False)]
+                names = list(self.dict_data_from_model.get('ds_search'))
                 cols = ', '.join(names)
                 self.cur.executemany(update_query.format(self.schema, 'ds_search', ', '.join(['%s'] * len(names)), cols,
                                                          ','.join(['EXCLUDED.' + x for x in names])), data_to_load)
-                self.cur.executemany(update_query.format(self.front_schema, 'ds_search', ','.join(['%s'] * len(names)),
-                                                         cols, ','.join(['EXCLUDED.' + x for x in names])),
-                                     data_to_load)
+                # self.cur.executemany(update_query.format(self.front_schema,
+                #                                          'ds_search', ','.join(['%s'] * len(names)),
+                #                                          cols, ','.join(['EXCLUDED.' + x for x in names])),
+                #                      data_to_load)
                 logging.info("Data loaded")
 
                 # Load data to links
@@ -367,10 +325,53 @@ class DataManager:
         else:
             logging.info("No data to update")
 
+    # Process. Update vacancies table = pull descriptions (commit)
+    def load_descriptions(self):
+        try:
+            data_to_load = [tuple(x) for x in self.descriptions.to_records(index=False)]
+            names = list(self.descriptions)
+            cols = ', '.join(names)
+            update_query = """
+            INSERT INTO {0}.{1} 
+            VALUES ({2})
+            ON CONFLICT (url) DO UPDATE
+            SET ({3}) = ({4});
+            """
+            self.cur.executemany(update_query.format(self.schema, 'vacancies', ', '.join(['%s'] * len(names)), cols,
+                                                     ','.join(['EXCLUDED.' + x for x in names])), data_to_load)
+            logging.info(f"Descriptions loaded into {self.schema} successfully")
+            self.cur.executemany(update_query.format(self.front_schema, 'vacancies', ','.join(['%s'] * len(names)),
+                                                     cols, ','.join(['EXCLUDED.' + x for x in names])),
+                                 data_to_load)
+            logging.info(f"Descriptions loaded into {self.front_schema} successfully")
+        except Exception as e:
+            logging.error(f'Error while loading descriptions on core: {e}')
+
+    # Process. Pull or update static dictionaries
+    def work_with_static_dicts(self):
+        try:
+            # Reading static dictionaries
+            dicts = {
+                'job_formats_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_formats.csv"),
+                'languages_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/languages.csv"),
+                'skills_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/skills.csv"),
+                'companies_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/companies.csv"),
+                'job_types_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_types.csv"),
+                'specialities_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
+                'towns_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
+                'sources_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
+                'specialities_skills': pd.DataFrame()
+            }
+            # Loading
+            self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
+            logging.info("Data loaded to static dictionaries successfully")
+        except Exception as e:
+            logging.error(f"Error while loading data to static dicts: {e}")
+
     # Process. Init data loading (union, commit)
     def init_load(self):
         try:
-            self.load_data_to_dicts()
+            self.load_data_to_dicts(self.dynamic_dictionaries_lst, self.dict_data_from_model)
             self.load_data_to_vacancies()
             self.load_data_to_links()
             self.update_tech_table()
@@ -378,4 +379,3 @@ class DataManager:
         except Exception as e:
             self.conn.rollback()
             logging.info(f"Error while init data loading to core: {e}")
-
