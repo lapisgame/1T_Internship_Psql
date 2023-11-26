@@ -114,7 +114,7 @@ class Dags():
             parser.find_vacancies()
             parser.stop()
             logging.info('Парсер GetMatch успешно провел работу')
-            self.model(self.df)
+            self.model(parser.df)
         except Exception as e:
             logging.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
@@ -136,7 +136,7 @@ class Dags():
 def test_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
-    worker.model()
+    worker.model(parser.df)
     worker.ddl_core(conn)
     worker.dml_core(conn, engine)
 
