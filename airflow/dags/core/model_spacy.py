@@ -29,11 +29,19 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
-                           'sources', 'specialities', 'skills',
-                           'towns', 'experience', 'specialities_skills']
+static_dictionaries_lst = ['job_formats_dict', 'job_types_dict', 'languages_dict',
+                           'sources_dict', 'specialities_dict', 'skills_dict',
+                           'towns_dict']
 
-job_formats_dict, job_types, languages_dict, skills_dict, companies_dict, job_types_dict, specialities_dic, towns_dict, sources_dict = pd.DataFrame()
+job_formats_dict = pd.DataFrame()
+languages_dict = pd.DataFrame()
+skills_dict = pd.DataFrame()
+companies_dict = pd.DataFrame()
+job_types_dict = pd.DataFrame()
+specialities_dict = pd.DataFrame()
+towns_dict = pd.DataFrame()
+sources_dict = pd.DataFrame()
+
 
 with conn.cursor as cur:
     dicts_query = "SELECT * FROM inside_core_schema.{0}"
