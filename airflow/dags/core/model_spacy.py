@@ -51,7 +51,7 @@ class Data_preprocessing():
         
         # Loading dataframe from raw
         self.dataframe = dataframe
-        self.dataframe['vacancy_url'] = self.dataframe['url']
+        self.dataframe['url'] = self.dataframe['vacancy_url']
         self.dataframe['id'] = range(1, (self.dataframe.shape[0] + 1))
         # Добавить id с core!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
