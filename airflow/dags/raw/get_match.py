@@ -392,58 +392,58 @@ class GetMatchJobParser(BaseJobParser):
     #     finally:
     #         self.cur.close()
 
-def run_init_getmatch_parser():
-    """
-    Основной вид задачи для запуска парсера для вакансий GetMatch
-    """
-    # log = context['ti'].log
-    log.info('Запуск парсера GetMatch')
-    try:
-        parser = GetMatchJobParser(url, log, conn, table_name)
-        parser.find_vacancies()
-        parser.addapt_numpy_null()
-        parser.save_df()
-        log.info('Парсер GetMatch успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера GetMatch: {e}')
-
-
-with DAG(dag_id="initial_getmatch_parser",
-         schedule_interval=None, tags=['admin_1T'],
-         default_args=default_args,
-         catchup=False) as dag_initial_getmatch_parser:
-    parse_get_match_jobs = PythonOperator(
-        task_id='init_run_getmatch_parser_task',
-        python_callable=run_init_getmatch_parser,
-        provide_context=True)
-
-parse_get_match_jobs
-
-def run_update_getmatch_parser():
-    """
-    Основной вид задачи для запуска парсера для вакансий GetMatch
-    """
-    # log = context['ti'].log
-    log.info('Запуск парсера GetMatch')
-    try:
-        parser = GetMatchJobParser(url, log, conn, table_name)
-        parser.find_vacancies()
-        parser.generating_dataframes()
-        parser.addapt_numpy_null()
-        parser.update_database_queries()
-        # parser.stop()
-        log.info('Парсер GetMatch успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера GetMatch: {e}')
-
-with DAG(dag_id="update_getmatch_parser",
-         schedule_interval=None,
-         tags=['admin_1T'],
-         default_args=default_args,
-         catchup=False) as dag_update_getmatch_parser:
-    update_getmatch_parser_job = PythonOperator(
-        task_id='update_getmatch_parser_task',
-        python_callable=run_update_getmatch_parser,
-        provide_context=True)
-
-dag_update_getmatch_parser
+# def run_init_getmatch_parser():
+#     """
+#     Основной вид задачи для запуска парсера для вакансий GetMatch
+#     """
+#     # log = context['ti'].log
+#     log.info('Запуск парсера GetMatch')
+#     try:
+#         parser = GetMatchJobParser(url, log, conn, table_name)
+#         parser.find_vacancies()
+#         parser.addapt_numpy_null()
+#         parser.save_df()
+#         log.info('Парсер GetMatch успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера GetMatch: {e}')
+#
+#
+# with DAG(dag_id="initial_getmatch_parser",
+#          schedule_interval=None, tags=['admin_1T'],
+#          default_args=default_args,
+#          catchup=False) as dag_initial_getmatch_parser:
+#     parse_get_match_jobs = PythonOperator(
+#         task_id='init_run_getmatch_parser_task',
+#         python_callable=run_init_getmatch_parser,
+#         provide_context=True)
+#
+# parse_get_match_jobs
+#
+# def run_update_getmatch_parser():
+#     """
+#     Основной вид задачи для запуска парсера для вакансий GetMatch
+#     """
+#     # log = context['ti'].log
+#     log.info('Запуск парсера GetMatch')
+#     try:
+#         parser = GetMatchJobParser(url, log, conn, table_name)
+#         parser.find_vacancies()
+#         parser.generating_dataframes()
+#         parser.addapt_numpy_null()
+#         parser.update_database_queries()
+#         # parser.stop()
+#         log.info('Парсер GetMatch успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера GetMatch: {e}')
+#
+# with DAG(dag_id="update_getmatch_parser",
+#          schedule_interval=None,
+#          tags=['admin_1T'],
+#          default_args=default_args,
+#          catchup=False) as dag_update_getmatch_parser:
+#     update_getmatch_parser_job = PythonOperator(
+#         task_id='update_getmatch_parser_task',
+#         python_callable=run_update_getmatch_parser,
+#         provide_context=True)
+#
+# dag_update_getmatch_parser

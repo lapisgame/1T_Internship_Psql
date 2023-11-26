@@ -193,8 +193,9 @@ class HabrJobParser(BaseJobParser):
                         time.sleep(3)
                         
         self.log.info("В список добавлены данные")
-        return self.items
-        pass
+        # return self.items
+        # pass
+
 
 
     def save_df(self, cursor, connection):
