@@ -137,7 +137,7 @@ def test_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
     worker.ddl_core(conn)
-    worker.dml_core(conn, engine)
+    worker.dml_core(conn, engine, dfs)
 
 
 with DAG(dag_id="initial_test_parser",
