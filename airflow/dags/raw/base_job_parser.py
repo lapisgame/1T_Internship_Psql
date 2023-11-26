@@ -32,11 +32,11 @@ class BaseJobParser:
         self.dataframe_to_update = pd.DataFrame(columns=columns)
         self.log.info("Созданы DataFrame's для записи вакансий")
 
-        options = webdriver.ChromeOptions()
-        options.add_argument("--headless")
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
+        # options = webdriver.ChromeOptions()
+        # options.add_argument("--headless")
+        # options.add_argument('--no-sandbox')
+        # options.add_argument('--disable-dev-shm-usage')
+        # self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
         # self.browser = webdriver.Chrome(options=options)
         self.url = url
         self.browser.get(self.url)
