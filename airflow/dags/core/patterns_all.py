@@ -1239,7 +1239,7 @@ patterns_skill = [
     [{"LOWER": 'керас'}],
     [{"LOWER": 'kibana'}],
     [{"LOWER": 'kubernetes'}],
-    [{"LOWER": 'landing'}], {"LOWER": 'page'},
+    [{"LOWER": 'landing'}, {"LOWER": 'page'}],
     [{"LOWER": 'laravel'}],
     [{"LOWER": 'linux'}],
     [{"LOWER": 'linux'}],
