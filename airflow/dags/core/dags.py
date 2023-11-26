@@ -114,13 +114,13 @@ class Dags():
             self.parser.find_vacancies()
             self.parser.stop()
             logging.info('Парсер GetMatch успешно провел работу')
-            self.df = self.parser.df
+            # self.df = self.parser.df
         except Exception as e:
             logging.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
 
     def model(self):
-        df = self.df
+        df = self.parser.df
         test = Data_preprocessing(df)
         test.call_all_functions()
         self.dfs = test.dict_all_data()
