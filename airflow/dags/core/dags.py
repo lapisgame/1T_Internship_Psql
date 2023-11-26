@@ -119,7 +119,8 @@ class Dags():
             logging.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
 
-    def model(self, df):
+    def model(self):
+        df = self.df
         test = Data_preprocessing(df)
         test.call_all_functions()
         self.dfs = test.dict_all_data()
