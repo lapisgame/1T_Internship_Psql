@@ -1,4 +1,6 @@
 import json
+from raw.connect_settings import conn, engine
+conn.autocommit = False
 import psycopg2
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -18,8 +20,6 @@ import pandas as pd
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from raw.connect_settings import conn, engine
-conn.autocommit = False
 
 from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
