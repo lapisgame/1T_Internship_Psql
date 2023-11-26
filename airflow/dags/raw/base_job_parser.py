@@ -51,7 +51,7 @@ class BaseJobParser:
         self.schema = schemes['raw']
         self.raw_tables = raw_tables
         self.conn = conn
-        self.cur = conn.cursor()
+        self.cur = self.conn.cursor()
     def scroll_down_page(self, page_height=0):
         """
         Method for scrolling down the page
