@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from raw.connect_settings import conn, engine
 from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
-from core.model_spacy import Data_preprocessing
+from core.model_spacy import DataPreprocessing
 
 
 log.basicConfig(
@@ -57,7 +57,7 @@ class Dags():
 
 
     def model(self, df):
-        test = Data_preprocessing(df)
+        test = DataPreprocessing(df)
         test.call_all_functions()
         self.dfs = test.dict_all_data
 
