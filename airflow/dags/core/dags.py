@@ -19,70 +19,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from raw.connect_settings import conn, engine
-from raw.get_match import GetMatchJobParser
+from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
 from core.model_spacy import Data_preprocessing
 log = logging
 
-# job_formats = pd.read_csv(r'/opt/airflow/from_DS/job_formats.csv')
-# job_types = pd.read_csv(r'/opt/airflow/from_DS/job_types.csv')
-# languages = pd.read_csv(r'/opt/airflow/from_DS/languages.csv')
-# companies = pd.read_csv(r'/opt/airflow/from_DS/companies.csv')
-# sources = pd.read_csv(r'/opt/airflow/from_DS/sources.csv')
-# specialities = pd.read_csv(r'/opt/airflow/from_DS/specialities.csv')
-# skills = pd.read_csv(r'/opt/airflow/from_DS/skills.csv')
-# towns = pd.read_csv(r'/opt/airflow/from_DS/towns.csv')
-# experience = pd.read_csv(r'/opt/airflow/from_DS/experience.csv')
-#
-# job_formats_vacancies = pd.read_csv(r'/opt/airflow/from_DS/job_formats_vacancies.csv')
-# job_types_vacancies = pd.read_csv(r'/opt/airflow/from_DS/job_types_vacancies.csv')
-# languages_vacancies = pd.read_csv(r'/opt/airflow/from_DS/languages_vacancies.csv')
-# specialities_vacancies = pd.read_csv(r'/opt/airflow/from_DS/specialities_vacancies.csv')
-# skills_vacancies = pd.read_csv(r'/opt/airflow/from_DS/skills_vacancies.csv')
-# towns_vacancies = pd.read_csv(r'/opt/airflow/from_DS/towns_vacancies.csv')
-# experience_vacancies = pd.read_csv(r'/opt/airflow/from_DS/experience_vacancies.csv')
-# specialities_skills = pd.read_csv(r'/opt/airflow/from_DS/specialities_skills.csv')
-#
-# ds_search = pd.read_csv(r'/opt/airflow/from_DS/ds_search.csv')
-# vacancies = pd.read_csv(r'/opt/airflow/from_DS/vacancies.csv')
-
-# dfs = {'job_formats': job_formats,
-#        'job_types': job_types,
-#        'languages': languages,
-#        'companies': companies,
-#        'sources': sources,
-#        'specialities': specialities,
-#        'skills': skills,
-#        'towns': towns,
-#        'experience': experience,
-#        'job_formats_vacancies': job_formats_vacancies,
-#        'job_types_vacancies': job_types_vacancies,
-#        'languages_vacancies': languages_vacancies,
-#        'specialities_vacancies': specialities_vacancies,
-#        'skills_vacancies': skills_vacancies,
-#        'towns_vacancies': towns_vacancies,
-#        'specialities_skills': specialities_skills,
-#        'experience_vacancies': experience_vacancies,
-#        'ds_search': ds_search,
-#        'vacancies': vacancies
-#        }
-
-# # Loading connections data from json
-# with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
-#     connections_config = json.load(conn_file)
-#
-# # Getting connection config data and client config creating
-# conn_config = connections_config['psql_connect']
-#
-# config = {
-#     'database': conn_config['database'],
-#     'user': conn_config['user'],
-#     'password': conn_config['password'],
-#     'host': conn_config['host'],
-#     'port': conn_config['port'],
-# }
-#
-# conn = psycopg2.connect(**config)
 
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',
@@ -90,9 +31,6 @@ logging.basicConfig(
 )
 
 conn.autocommit = False
-# engine = create_engine(f"postgresql+psycopg2://{conn_config['user']}:{conn_config['password']}@{conn_config['host']}:"
-#                        f"{conn_config['port']}/{conn_config['database']}")
-
 
 # Default dag arguments
 default_args = {
@@ -109,7 +47,7 @@ class Dags():
         """
         logging.info('Запуск парсера GetMatch')
         try:
-            parser = GetMatchJobParser(base_getmatch, log, conn)
+            parser = GetMatchJobParser(base_getmatch, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
@@ -143,22 +81,18 @@ def test_func():
     worker.dml_core(conn, engine, worker.dfs)
 
 
+with DAG(
+        dag_id="init_getmatch_parser",
+        schedule_interval=None, tags=['admin_1T'],
+        default_args=default_args,
+        catchup=False
+    ) as dag_initial:
 
-# def test_func():
-#     worker = Dags()
-#     worker.run_init_getmatch_parser()
-#     worker.ddl_core(conn)
-#     worker.dml_core(conn, engine, dfs)
-
-
-with DAG(dag_id="initial_test_parser",
-         schedule_interval=None, tags=['admin_1T'],
-         default_args=default_args,
-         catchup=False) as dag_initial:
     parse_get_match_jobs = PythonOperator(
-        task_id='init_run_task',
+        task_id='init_getmatch_task',
         python_callable=test_func,
-        provide_context=True)
+        provide_context=True
+    )
 
 
 # ddl_dag = DAG(dag_id='core_ddl_dag',
