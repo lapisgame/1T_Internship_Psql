@@ -39,9 +39,9 @@ class BaseJobParser:
         # self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
         # self.browser = webdriver.Chrome(options=options)
         self.url = url
-        self.browser.get(self.url)
-        self.browser.maximize_window()
-        self.browser.delete_all_cookies()
+        # self.browser.get(self.url)
+        # self.browser.maximize_window()
+        # self.browser.delete_all_cookies()
         time.sleep(2)
         self.profs = profs
         self.schema = schemes['raw']
@@ -52,17 +52,17 @@ class BaseJobParser:
         """
         Method for scrolling down the page
         """
-        self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-        new_page_height = self.browser.execute_script('return document.body.scrollHeight')
-        if new_page_height > page_height:
-            self.scroll_down_page(new_page_height)
+        # self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        # time.sleep(2)
+        # new_page_height = self.browser.execute_script('return document.body.scrollHeight')
+        # if new_page_height > page_height:
+        #     self.scroll_down_page(new_page_height)
 
     def stop(self):
         """
         Method to exit Selenium Webdriver
         """
-        self.browser.quit()
+        # self.browser.quit()
 
     def find_vacancies(self):
         """

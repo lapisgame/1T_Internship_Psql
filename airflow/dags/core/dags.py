@@ -114,7 +114,6 @@ class Dags():
             parser.addapt_numpy_null()
             parser.save_df()
             parser.find_vacancies()
-            parser.stop()
             logging.info('Парсер GetMatch успешно провел работу')
             self.df = parser.df
         except Exception as e:
