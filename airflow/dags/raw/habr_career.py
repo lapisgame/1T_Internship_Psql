@@ -191,8 +191,9 @@ class HabrJobParser(BaseJobParser):
                         print(f"Adding item: {item}")
                         self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
                         time.sleep(3)
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
-        self.log.info("В датафрейм добавлены данные")
 
 # # Создаем объект HabrJobParser
 # def init_run_habr_parser():
