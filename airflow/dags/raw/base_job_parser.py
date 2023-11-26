@@ -15,7 +15,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from raw.variables_settings import variables
 
 raw_tables = variables['raw_tables']
-# table_name = variables['raw_tables'][0]['raw_tables_name']
 schemes = variables["schemes"]
 
 class BaseJobParser:
