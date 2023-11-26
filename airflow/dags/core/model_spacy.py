@@ -270,16 +270,25 @@ class Data_preprocessing():
         self.save_dataframe()
 
         self.dict_all_data = {
-                'vacancies': self.vacancies,
-                'job_formats_vacancies': self.job_formats_vacancies,
-                'languages_vacancies': self.languages_vacancies,
-                "skills_vacancies": self.skills_vacancies,
-                'job_types_vacancies': self.job_types_vacancies,
-                'specialities_vacancies': self.specialities_vacancies,
-                'towns_vacancies': self.towns_vacancies, 
-                'ds_search': self.ds_search,
-                'experience_vacancies': self.experience_vacancies,
-                'specialities_skills':self.specialities_skills    }
+            'job_formats': job_formats_dict,
+            'languages': languages_dict,
+            'skills': skills_dict,
+            'companies': companies_dict,
+            'job_types': job_types_dict,
+            'specialities': specialities_dict,
+            'towns': towns_dict,
+            'sources': sources_dict,
+            'vacancies': self.vacancies,
+            'job_formats_vacancies': self.job_formats_vacancies,
+            'languages_vacancies': self.languages_vacancies,
+            "skills_vacancies": self.skills_vacancies,
+            'job_types_vacancies': self.job_types_vacancies,
+            'specialities_vacancies': self.specialities_vacancies,
+            'towns_vacancies': self.towns_vacancies,
+            'ds_search': self.ds_search,
+            'experience_vacancies': self.experience_vacancies,
+            'specialities_skills': self.specialities_skills
+        }
 
 
 
