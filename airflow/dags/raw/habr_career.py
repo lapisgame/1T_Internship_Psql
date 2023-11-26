@@ -142,17 +142,21 @@ class HabrJobParser(BaseJobParser):
                         description_soup = BeautifulSoup(description_html, 'lxml')
                         description_text = description_soup.find("div", class_="vacancy-description__text")
                         description = ' '.join(description_text.stripped_strings) if description_text else ""
-                        date_of_download=datetime.now().date()
-                        date_string = card.find("time", class_="basic-date").text.strip()
+                        date_of_download = datetime.now().date()
+                        date_created = card.find("time", class_="basic-date").text.strip()
 
 # Маппинг месяцев для русского языка
-                        months_mapping = {
-                                            'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4, 'мая': 5, 'июня': 6,
-                                            'июля': 7, 'августа': 8, 'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
-                                            }
+#                         months_mapping = {
+#                                             'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4, 'мая': 5, 'июня': 6,
+#                                             'июля': 7, 'августа': 8, 'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
+#                                             }
 
 # Разбираем строку и получаем объект datetime
-                        date_created = datetime.now().date()
+#                         date_parts = date_string.split()
+#                         day = int(date_parts[0])
+#                         month = months_mapping[date_parts[1].lower()]
+#                         current_year = datetime.now().year  # Получаем текущий год
+#                         date_created = date_string
                         status ='existing'  
                         version_vac=1
                         actual=1
@@ -187,6 +191,10 @@ class HabrJobParser(BaseJobParser):
                         print(f"Adding item: {item}")
                         self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
                         time.sleep(3)
+
+        self.df['date_created'] = self.df['date_created'].apply(lambda x: dateparser.parse(x, languages=['ru']))
+        self.df['date_created'] = pd.to_datetime(self.df['date_created']).dt.to_pydatetime()
+
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
