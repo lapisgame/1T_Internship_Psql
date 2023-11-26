@@ -22,7 +22,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-
 cur = conn.cursor()
 
 pd.DataFrame.iteritems = pd.DataFrame.items
