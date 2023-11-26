@@ -1,8 +1,9 @@
 import logging
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# logging configuration parameters
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',
     level=logging.INFO
@@ -36,6 +37,9 @@ class DatabaseManager:
             );
             """
             self.cur.execute(tech_schema_query)
+            self.conn.commit()
+
+            self.cur.execute(f"INSERT INTO {self.schema}.vacancies_max_id(max_id) VALUES (0);")
             self.conn.commit()
             logging.info(f"Max id table created successfully in {self.schema}")
         except Exception as e:
@@ -257,7 +261,6 @@ class DatabaseManager:
         CREATE TABLE IF NOT EXISTS {0}.specialities_vacancies (
         vacancy_id BIGINT,
         spec_id INT,
-        concurrence_percent DECIMAL(4,1),
         FOREIGN KEY (vacancy_id) REFERENCES {0}.vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
         FOREIGN KEY (spec_id) REFERENCES {0}.specialities (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
@@ -332,7 +335,6 @@ class DatabaseManager:
         CREATE TABLE IF NOT EXISTS {0}.archive_specialities_vacancies (
         vacancy_id BIGINT,
         spec_id INT,
-        concurrence_percent DECIMAL(4,1),
         FOREIGN KEY (vacancy_id) REFERENCES {0}.archive_vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
         FOREIGN KEY (spec_id) REFERENCES {0}.specialities (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
