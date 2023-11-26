@@ -145,7 +145,7 @@ class GetMatchJobParser(BaseJobParser):
                         "salary_to": salary_to,
                         "date_created": date_created,
                         "date_of_download": date_of_download,
-                        "source_vac": 'https://getmatch.ru/',
+                        "source_vac": 1,
                         "status": status,
                         "version_vac": version_vac,
                         "actual": actual,
