@@ -383,7 +383,6 @@ class DataManager:
     # Process. Init data loading (union, commit)
     def init_load(self):
         try:
-            self.work_with_static_dicts()
             self.load_data_to_dicts(self.dynamic_dictionaries_lst, self.dict_data_from_model)
             self.load_data_to_vacancies()
             self.load_data_to_links(self.link_tables_lst, self.dict_data_from_model)

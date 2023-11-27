@@ -300,6 +300,7 @@ class DataPreprocessing:
             'towns_vacancies': self.towns_vacancies,
             'ds_search': self.ds_search,
             'experience_vacancies': self.experience_vacancies,
+            'companies': pd.DataFrame()
         }
 
 # test = Data_preprocessing(raw_sber)
