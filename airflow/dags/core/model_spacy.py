@@ -75,6 +75,7 @@ class DataPreprocessing:
         new_data['id'] = range(current_id + 1, len(new_data) + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False)
         self.dataframe.rename({'id': 'vacancy_id'}, inplace=True)
+        print(self.dataframe.columns)
         print(self.dataframe)
 
         # Initializing models for each column on core
