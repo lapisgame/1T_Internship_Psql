@@ -95,7 +95,7 @@ with DAG(
     )
 
 with DAG(
-        dag_id="init_habrcareer_parser",
+        dag_id="update_habrcareer_parser",
         schedule_interval=None, tags=['admin_1T'],
         default_args=default_args,
         catchup=False
