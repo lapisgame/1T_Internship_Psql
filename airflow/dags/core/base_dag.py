@@ -58,3 +58,4 @@ class BaseDags:
         manager.delete_archive_core_data()
         manager.load_ad_update_actual_data()
 
+

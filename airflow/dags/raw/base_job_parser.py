@@ -24,7 +24,6 @@ class BaseJobParser:
     def __init__(self, url, profs, conn, table_name):
         self.log = log
         self.table_name = table_name
-        # self.log = LoggingMixin().log
         columns = [
             'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from',
             'salary_to', 'exp_from', 'exp_to', 'description', 'job_type', 'job_format',
