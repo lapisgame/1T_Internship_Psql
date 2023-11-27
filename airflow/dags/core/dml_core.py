@@ -318,7 +318,7 @@ class DataManager:
 
                 # Load data to links
                 logging.info("Loading data to links")
-                self.load_data_to_links()
+                self.load_data_to_links(self.link_tables_lst)
 
                 # Update max id
                 self.update_tech_table()
