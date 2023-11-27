@@ -68,7 +68,7 @@ def init_call_all_func():
     worker.run_init_getmatch_parser()
     worker.update_dicts()
     worker.model(worker.df)
-    worker.dml_core_init(conn, engine, worker.dfs)
+    worker.dml_core_init(worker.dfs)
 
 def update_call_all_func():
     worker = Dags()

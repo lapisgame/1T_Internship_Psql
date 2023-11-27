@@ -68,8 +68,10 @@ class DataManager:
         if not df.empty:
 
             self.fix_type()
-
-            selected_columns = df[['id', 'title']].copy()
+            if not df_name == 'experience':
+                selected_columns = df[['id', 'title']].copy()
+            else:
+                selected_columns = df
             data_to_load = [tuple(x) for x in selected_columns.to_records(index=False)]
 
             # selected_columns.to_sql(str(df_name).replace('', ''), self.engine,
@@ -353,27 +355,30 @@ class DataManager:
 
     # Process. Pull or update static dictionaries
     def work_with_static_dicts(self):
+
+        # Reading static dictionaries
+        dicts = {
+            'job_formats': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_formats.csv"),
+            'languages': pd.read_csv("/opt/airflow/dags/core/for_de/dict/languages.csv"),
+            'skills': pd.read_csv("/opt/airflow/dags/core/for_de/dict/skills.csv"),
+            'companies': pd.read_csv("/opt/airflow/dags/core/for_de/dict/companies.csv"),
+            'job_types': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_types.csv"),
+            'specialities': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
+            'towns': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
+            'sources': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
+            'experience': pd.read_csv("/opt/airflow/dags/core/for_de/dict/experience.csv")
+        }
+        link = {'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")}
         try:
-            # Reading static dictionaries
-            dicts = {
-                'job_formats': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_formats.csv"),
-                'languages': pd.read_csv("/opt/airflow/dags/core/for_de/dict/languages.csv"),
-                'skills': pd.read_csv("/opt/airflow/dags/core/for_de/dict/skills.csv"),
-                'companies': pd.read_csv("/opt/airflow/dags/core/for_de/dict/companies.csv"),
-                'job_types': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_types.csv"),
-                'specialities': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
-                'towns': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
-                'sources': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
-                'experience': pd.read_csv("/opt/airflow/dags/core/for_de/dict/experience.csv")
-            }
-            link = {'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")}
             # Loading
             dicts["experience"] = dicts["experience"].fillna(psycopg2.extensions.AsIs('NULL'))
             self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
-            self.load_data_to_links('specialities_skills', link)
+
+            # self.load_data_to_links('specialities_skills', link)
             # try:
-            #     specialities_skills.to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
-            #     specialities_skills.to_sql('specialities_skills', self.engine, self.front_schema, if_exists='replace')
+            link['specialities_skills'].to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
+            link['specialities_skills'].to_sql('specialities_skills', self.engine, self.front_schema,
+                                               if_exists='replace')
             # except Exception as e:
             #     logging.error(f"Error with specialities_skills update: {e}")
             logging.info("Data loaded to static dictionaries successfully")
