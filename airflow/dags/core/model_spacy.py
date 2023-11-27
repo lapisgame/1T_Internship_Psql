@@ -56,7 +56,6 @@ cols = [desc[0] for desc in cur.description]
 all_ids = pd.DataFrame(result, columns=cols)
 
 
-
 class DataPreprocessing:
     def __init__(self, dataframe):
         """
