@@ -63,11 +63,18 @@ class Dags(BaseDags):
         parser.addapt_numpy_null()
         parser.update_database_queries()
 
+def init_call_all_func():
+    worker = Dags()
+    worker.run_init_habrcareer_parser()
+    worker.model(worker.df)
+    worker.dml_core_init(conn, engine, worker.dfs)
+
 def update_call_all_func():
     worker = Dags()
-    worker.run_init_getmatch_parser()
+    worker.run_update_getmatch()
+    worker.update_dicts()
     worker.model(worker.df)
-    worker.dml_core(conn, engine, worker.dfs)
+    worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
 
 
 with DAG(
@@ -79,7 +86,7 @@ with DAG(
 
     parse_get_match_jobs = PythonOperator(
         task_id='init_getmatch_task',
-        python_callable=update_call_all_func,
+        python_callable=init_call_all_func,
         provide_context=True
     )
 
@@ -89,7 +96,6 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as getmatch_update_dag:
-
     parse_delta_getmatch_jobs = PythonOperator(
         task_id='update_getmatch_task',
         python_callable=update_call_all_func,
