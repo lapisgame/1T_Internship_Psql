@@ -72,7 +72,7 @@ class DataPreprocessing:
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])]
-        new_data['id'] = range(current_id + 1, len(new_data) + 1)
+        new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False)
         self.dataframe['vacancy_id'] = self.dataframe['id']
         self.dataframe.drop('id', axis=1)
