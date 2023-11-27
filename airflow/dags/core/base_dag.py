@@ -48,7 +48,7 @@ class BaseDags:
         test.call_all_functions()
         self.dfs = test.dict_all_data
 
-    def dml_core_init(self, conn, engine, dfs):
+    def dml_core_init(self, dfs):
         manager = DataManager(conn, engine, dfs, pd.DataFrame(), pd.DataFrame())
         manager.init_load()
 
