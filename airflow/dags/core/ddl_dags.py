@@ -17,7 +17,7 @@ default_args = {
 }
 
 
-def ddl_core(conn):
+def ddl_core():
     manager = DatabaseManager(conn)
     manager.db_creator()
 

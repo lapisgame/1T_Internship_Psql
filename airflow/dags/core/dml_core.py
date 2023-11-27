@@ -25,7 +25,7 @@ class DataManager:
         # self.static_dicts_data = dicts
         self.static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
                                         'sources', 'specialities', 'skills',
-                                        'towns', 'experience', 'specialities_skills']
+                                        'towns', 'experience']
         self.dynamic_dictionaries_lst = ['companies']
         self.link_tables_lst = ['job_formats_vacancies', 'job_types_vacancies', 'languages_vacancies',
                                 'specialities_vacancies', 'skills_vacancies', 'towns_vacancies',
@@ -318,7 +318,7 @@ class DataManager:
 
                 # Load data to links
                 logging.info("Loading data to links")
-                self.load_data_to_links()
+                self.load_data_to_links(self.link_tables_lst)
 
                 # Update max id
                 self.update_tech_table()
@@ -363,7 +363,8 @@ class DataManager:
                 'job_types': pd.read_csv("/opt/airflow/dags/core/for_de/dict/job_types.csv"),
                 'specialities': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
                 'towns': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
-                'sources': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv")
+                'sources': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
+                'experience': pd.read_csv("/opt/airflow/dags/core/for_de/dict/experience.csv")
             }
             link = {'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")}
             # Loading
