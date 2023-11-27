@@ -34,3 +34,4 @@ with DAG(
         python_callable=ddl_core,
         provide_context=True
     )
+
