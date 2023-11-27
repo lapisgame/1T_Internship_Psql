@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from raw.habr_career import HabrJobParser, table_name
 from raw.variables_settings import variables, base_habr
 from core.model_spacy import DataPreprocessing
+from core.base_dag import BaseDags
 
 
 log.basicConfig(
@@ -39,7 +40,9 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-class Dags():
+
+class Dags(BaseDags):
+
     def run_init_habrcareer_parser(self):
         """
         Основной вид задачи для запуска парсера для вакансий GetMatch
@@ -55,29 +58,27 @@ class Dags():
         except Exception as e:
             log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
 
-
-    def model(self, df):
-        test = DataPreprocessing(df)
-        test.call_all_functions()
-        self.dfs = test.dict_all_data
-
-
-    def ddl_core(self, conn):
-        manager = DatabaseManager(conn)
-        manager.db_creator()
-
-    def dml_core(self, conn, engine, dfs):
-        manager = DataManager(conn, engine, dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
-                                                                               'https://rabota.sber.ru/search/4221748']}), pd.DataFrame())
-        manager.init_load()
+    def run_update_habr(self):
+        parser = HabrJobParser(base_habr, log, conn, table_name)
+        parser.find_vacancies()
+        parser.generating_dataframes()
+        parser.addapt_numpy_null()
+        parser.update_database_queries()
 
 
-def call_all_func():
+
+def init_call_all_func():
     worker = Dags()
     worker.run_init_habrcareer_parser()
-    worker.ddl_core(conn)
     worker.model(worker.df)
-    worker.dml_core(conn, engine, worker.dfs)
+    worker.dml_core_init(conn, engine, worker.dfs)
+
+def update_call_all_func():
+    worker = Dags()
+    worker.run_update_habr()
+    worker.update_dicts()
+    worker.model(worker.df)
+    worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
 
 
 with DAG(
@@ -85,10 +86,23 @@ with DAG(
         schedule_interval=None, tags=['admin_1T'],
         default_args=default_args,
         catchup=False
-    ) as habr_dag:
+) as habr_dag:
 
-    parse_get_match_jobs = PythonOperator(
+    parse_habr_match_jobs = PythonOperator(
         task_id='init_habrcareer_task',
-        python_callable=call_all_func,
+        python_callable=init_call_all_func,
         provide_context=True
     )
+
+with DAG(
+        dag_id="init_habrcareer_parser",
+        schedule_interval=None, tags=['admin_1T'],
+        default_args=default_args,
+        catchup=False
+) as habr_update_dag:
+    parse_delta_habr_jobs = PythonOperator(
+        task_id='update_habrcareer_task',
+        python_callable=update_call_all_func,
+        provide_context=True
+    )
+

@@ -39,7 +39,7 @@ default_args = {
 }
 
 
-class Dags():
+class Dags:
     def run_init_getmatch_parser(self):
         """
         Основной вид задачи для запуска парсера для вакансий GetMatch
@@ -55,16 +55,10 @@ class Dags():
         except Exception as e:
             log.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
-
     def model(self, df):
         test = DataPreprocessing(df)
         test.call_all_functions()
         self.dfs = test.dict_all_data
-
-
-    def ddl_core(self, conn):
-        manager = DatabaseManager(conn)
-        manager.db_creator()
 
     def dml_core(self, conn, engine, dfs):
         manager = DataManager(conn, engine, dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
@@ -75,7 +69,6 @@ class Dags():
 def call_all_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
-    worker.ddl_core(conn)
     worker.model(worker.df)
     worker.dml_core(conn, engine, worker.dfs)
 
@@ -85,7 +78,7 @@ with DAG(
         schedule_interval=None, tags=['admin_1T'],
         default_args=default_args,
         catchup=False
-    ) as dag_initial:
+) as dag_initial:
 
     parse_get_match_jobs = PythonOperator(
         task_id='init_getmatch_task',

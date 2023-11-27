@@ -364,7 +364,7 @@ class DataManager:
                 'specialities_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
                 'towns_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
                 'sources_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
-                'specialities_skills': pd.DataFrame()
+                'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")
             }
             # Loading
             self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
@@ -375,6 +375,7 @@ class DataManager:
     # Process. Init data loading (union, commit)
     def init_load(self):
         try:
+            self.work_with_static_dicts()
             self.load_data_to_dicts(self.dynamic_dictionaries_lst, self.dict_data_from_model)
             self.load_data_to_vacancies()
             self.load_data_to_links()
