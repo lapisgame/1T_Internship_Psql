@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
 from core.model_spacy import DataPreprocessing
+from core.base_dag import BaseDags
 
 
 log.basicConfig(
@@ -39,7 +40,7 @@ default_args = {
 }
 
 
-class Dags:
+class Dags(BaseDags):
     def run_init_getmatch_parser(self):
         """
         Основной вид задачи для запуска парсера для вакансий GetMatch
@@ -55,18 +56,14 @@ class Dags:
         except Exception as e:
             log.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
-    def model(self, df):
-        test = DataPreprocessing(df)
-        test.call_all_functions()
-        self.dfs = test.dict_all_data
+    def run_update_getmatch(self):
+        parser = GetMatchJobParser(base_getmatch, log, conn, table_name)
+        parser.find_vacancies()
+        parser.generating_dataframes()
+        parser.addapt_numpy_null()
+        parser.update_database_queries()
 
-    def dml_core(self, conn, engine, dfs):
-        manager = DataManager(conn, engine, dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
-                                                                               'https://rabota.sber.ru/search/4221748']}))
-        manager.init_load()
-
-
-def call_all_func():
+def update_call_all_func():
     worker = Dags()
     worker.run_init_getmatch_parser()
     worker.model(worker.df)
@@ -82,7 +79,20 @@ with DAG(
 
     parse_get_match_jobs = PythonOperator(
         task_id='init_getmatch_task',
-        python_callable=call_all_func,
+        python_callable=update_call_all_func,
+        provide_context=True
+    )
+
+with DAG(
+        dag_id="update_getmatch_parser",
+        schedule_interval=None, tags=['admin_1T'],
+        default_args=default_args,
+        catchup=False
+) as getmatch_update_dag:
+
+    parse_delta_getmatch_jobs = PythonOperator(
+        task_id='update_getmatch_task',
+        python_callable=update_call_all_func,
         provide_context=True
     )
 
