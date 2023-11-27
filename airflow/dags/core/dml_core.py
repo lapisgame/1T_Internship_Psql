@@ -21,7 +21,10 @@ class DataManager:
         self.front_schema = 'core_schema'
         self.engine = engine
         self.descriptions = descriptions_frame
-        self.data_to_closed = data_to_closed['vacancy_url']
+        if not data_to_closed.empty:
+            self.data_to_closed = data_to_closed['vacancy_url']
+        else:
+            self.data_to_closed = pd.DataFrame()
         self.dict_data_from_model = dict_data_from_model
         # self.static_dicts_data = dicts
         self.static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
