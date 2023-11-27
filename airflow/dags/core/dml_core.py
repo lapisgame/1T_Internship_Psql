@@ -12,6 +12,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+
 class DataManager:
     def __init__(self, conn, engine, dict_data_from_model, data_to_closed, descriptions_frame):
         self.conn = conn
