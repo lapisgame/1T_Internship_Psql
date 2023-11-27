@@ -20,7 +20,7 @@ class DataManager:
         self.front_schema = 'core_schema'
         self.engine = engine
         self.descriptions = descriptions_frame
-        self.data_to_closed = data_to_closed.drop('date_closed', axis=1)
+        self.data_to_closed = data_to_closed['vacancy_url']
         self.dict_data_from_model = dict_data_from_model
         # self.static_dicts_data = dicts
         self.static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
@@ -188,8 +188,8 @@ class DataManager:
         """
         core_data = pd.read_sql(core_data_load_query, self.engine)
 
-        self.data_to_closed = pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
-                                            'https://rabota.sber.ru/search/4221748']})
+        # self.data_to_closed = pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
+        #                                     'https://rabota.sber.ru/search/4221748']})
 
         old_data = self.data_to_closed.merge(core_data, how='inner', left_on='url', right_on='vacancy_url')
         old_data = old_data.drop('vacancy_url', axis=1)
