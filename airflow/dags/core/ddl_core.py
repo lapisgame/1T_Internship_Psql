@@ -94,8 +94,8 @@ class DatabaseManager:
             
             CREATE TABLE IF NOT EXISTS {0}.experience(
             id SERIAL PRIMARY KEY,
-            "from" DECIMAL(2,1),
-            "to" DECIMAL(2,1)
+            exp_from DECIMAL(2,1),
+            exp_to DECIMAL(2,1)
             );
             """
             self.cur.execute(create_raw_dict_table_query.format(self.schema))
