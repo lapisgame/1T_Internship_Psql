@@ -64,7 +64,7 @@ class GetMatchJobParser(BaseJobParser):
 
         vacancy_count = 0
         for link in self.all_links:
-            if vacancy_count < 10:
+            if vacancy_count < 12:
                 resp = requests.get(link, HEADERS)
                 vac = BeautifulSoup(resp.content, 'lxml')
 
