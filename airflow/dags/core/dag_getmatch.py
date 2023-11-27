@@ -83,7 +83,6 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_initial:
-
     parse_get_match_jobs = PythonOperator(
         task_id='init_getmatch_task',
         python_callable=init_call_all_func,
