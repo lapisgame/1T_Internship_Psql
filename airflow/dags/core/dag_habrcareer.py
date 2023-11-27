@@ -70,6 +70,7 @@ class Dags(BaseDags):
 def init_call_all_func():
     worker = Dags()
     worker.run_init_habrcareer_parser()
+    worker.update_dicts()
     worker.model(worker.df)
     worker.dml_core_init(worker.dfs)
 
