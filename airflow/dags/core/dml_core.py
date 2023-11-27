@@ -126,6 +126,7 @@ class DataManager:
                 logging.error(f"Error while data loading to vacancies: {e}")
                 self.conn.rollback()
 
+
     # Init loading and updating links tables    
     def load_data_to_links(self, tables_lst):
         logging.info('Loading data to links tables')
