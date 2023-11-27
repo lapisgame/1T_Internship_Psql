@@ -53,6 +53,8 @@ class Dags(BaseDags):
             parser.save_df()
             log.info('Парсер GetMatch успешно провел работу')
             self.df = parser.df
+            self.dataframe_to_update = parser.dataframe_to_update
+            self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
             log.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
