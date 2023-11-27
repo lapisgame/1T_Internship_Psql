@@ -320,6 +320,7 @@ class DataManager:
                 #                      data_to_load)
                 logging.info("Data loaded")
 
+
                 # Load data to links
                 logging.info("Loading data to links")
                 self.load_data_to_links(self.link_tables_lst, self.dict_data_from_model)
