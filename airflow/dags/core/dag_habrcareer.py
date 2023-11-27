@@ -68,7 +68,7 @@ class Dags():
 
     def dml_core(self, conn, engine, dfs):
         manager = DataManager(conn, engine, dfs, pd.DataFrame({'vacancy_url': ['https://rabota.sber.ru/search/4219605',
-                                                                               'https://rabota.sber.ru/search/4221748']}), pd.DataFrame(), pd.DataFrame)
+                                                                               'https://rabota.sber.ru/search/4221748']}), pd.DataFrame())
         manager.init_load()
 
 
