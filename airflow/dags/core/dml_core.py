@@ -20,7 +20,7 @@ class DataManager:
         self.front_schema = 'core_schema'
         self.engine = engine
         self.descriptions = descriptions_frame
-        self.data_to_closed = data_to_closed
+        self.data_to_closed = data_to_closed.drop('date_closed', axis=1)
         self.dict_data_from_model = dict_data_from_model
         # self.static_dicts_data = dicts
         self.static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
@@ -271,6 +271,7 @@ class DataManager:
                 self.conn.rollback()
         else:
             logging.info("No data to remove to archive")
+            pass
 
     # Process. Update data on core-layer (union, commit)
     def load_and_update_actual_data(self):
@@ -330,6 +331,7 @@ class DataManager:
                 self.conn.rollback()
         else:
             logging.info("No data to update")
+            pass
 
     # Process. Update vacancies table = pull descriptions (commit)
     def load_descriptions(self):
