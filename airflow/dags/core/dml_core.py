@@ -126,12 +126,11 @@ class DataManager:
                 logging.error(f"Error while data loading to vacancies: {e}")
                 self.conn.rollback()
 
-
     # Init loading and updating links tables    
-    def load_data_to_links(self, tables_lst):
+    def load_data_to_links(self, tables_lst, data):
         logging.info('Loading data to links tables')
         for link_table_name in tables_lst:
-            df = self.dict_data_from_model[link_table_name]
+            df = data[link_table_name]
             if not df.empty:
                 self.fix_type()
                 logging.info("Deleting old links")
@@ -319,7 +318,7 @@ class DataManager:
 
                 # Load data to links
                 logging.info("Loading data to links")
-                self.load_data_to_links(self.link_tables_lst)
+                self.load_data_to_links(self.link_tables_lst, self.dict_data_from_model)
 
                 # Update max id
                 self.update_tech_table()
@@ -369,8 +368,9 @@ class DataManager:
             }
             link = {'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")}
             # Loading
+            dicts["experience"] = dicts["experience"].fillna(psycopg2.extensions.AsIs('NULL'))
             self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
-            self.load_data_to_links(link)
+            self.load_data_to_links('specialities_skills', link)
             # try:
             #     specialities_skills.to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
             #     specialities_skills.to_sql('specialities_skills', self.engine, self.front_schema, if_exists='replace')
@@ -386,7 +386,7 @@ class DataManager:
             self.work_with_static_dicts()
             self.load_data_to_dicts(self.dynamic_dictionaries_lst, self.dict_data_from_model)
             self.load_data_to_vacancies()
-            self.load_data_to_links(self.link_tables_lst)
+            self.load_data_to_links(self.link_tables_lst, self.dict_data_from_model)
             self.update_tech_table()
             self.conn.commit()
         except Exception as e:
