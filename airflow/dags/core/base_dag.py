@@ -38,7 +38,6 @@ class BaseDags:
     def __init__(self):
         self.df = pd.DataFrame()
         self.dfs = pd.DataFrame()
-        conn.autocommit = False
 
     def update_dicts(self):
         manager = DataManager(conn, engine, pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
