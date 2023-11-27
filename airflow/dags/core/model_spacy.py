@@ -103,6 +103,8 @@ class DataPreprocessing:
         self.towns_vacancies = pd.DataFrame(columns=['vacancy_id', 'town_id'])
         self.ds_search = pd.DataFrame(columns=['id', 'vector'])
 
+        self.dict_all_data = {}
+
     def description_lemmatization(self, text):
         '''
         Lemmatization function. Returns completely cleared text
@@ -283,25 +285,39 @@ class DataPreprocessing:
         '''
         General function call method
         '''
-        self.description_lemmatization_add()
-        self.description_processing_town(patterns_town, dict_dict['towns_dict'])
-        self.description_processing_skill(patterns_skill, all_skill_dict, dict_dict['skills_dict'])
-        self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
-        self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
-        self.save_dataframe()
+        if not self.dataframe.empty:
+            self.description_lemmatization_add()
+            self.description_processing_town(patterns_town, dict_dict['towns_dict'])
+            self.description_processing_skill(patterns_skill, all_skill_dict, dict_dict['skills_dict'])
+            self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
+            self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
+            self.save_dataframe()
 
-        self.dict_all_data = {
-            'vacancies': self.vacancies,
-            'job_formats_vacancies': self.job_formats_vacancies,
-            'languages_vacancies': self.languages_vacancies,
-            "skills_vacancies": self.skills_vacancies,
-            'job_types_vacancies': self.job_types_vacancies,
-            'specialities_vacancies': self.specialities_vacancies,
-            'towns_vacancies': self.towns_vacancies,
-            'ds_search': self.ds_search,
-            'experience_vacancies': self.experience_vacancies,
-            'companies': pd.DataFrame()
-        }
+            self.dict_all_data = {
+                'vacancies': self.vacancies,
+                'job_formats_vacancies': self.job_formats_vacancies,
+                'languages_vacancies': self.languages_vacancies,
+                "skills_vacancies": self.skills_vacancies,
+                'job_types_vacancies': self.job_types_vacancies,
+                'specialities_vacancies': self.specialities_vacancies,
+                'towns_vacancies': self.towns_vacancies,
+                'ds_search': self.ds_search,
+                'experience_vacancies': self.experience_vacancies,
+                'companies': pd.DataFrame()
+            }
+        else:
+            self.dict_all_data = {
+                'vacancies': pd.DataFrame(),
+                'job_formats_vacancies': pd.DataFrame(),
+                'languages_vacancies': pd.DataFrame(),
+                "skills_vacancies": pd.DataFrame(),
+                'job_types_vacancies': pd.DataFrame(),
+                'specialities_vacancies': pd.DataFrame(),
+                'towns_vacancies': pd.DataFrame(),
+                'ds_search': pd.DataFrame(),
+                'experience_vacancies': pd.DataFrame(),
+                'companies': pd.DataFrame()
+                }
 
 # test = Data_preprocessing(raw_sber)
 # test.call_all_functions()
