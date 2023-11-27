@@ -1,6 +1,5 @@
 import json
 from raw.connect_settings import conn, engine
-conn.autocommit = False
 import psycopg2
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -39,6 +38,7 @@ class BaseDags:
     def __init__(self):
         self.df = pd.DataFrame()
         self.dfs = pd.DataFrame()
+        conn.autocommit = False
 
     def update_dicts(self):
         manager = DataManager(conn, engine, pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
