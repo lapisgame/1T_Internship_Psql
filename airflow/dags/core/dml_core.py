@@ -364,10 +364,16 @@ class DataManager:
                 'specialities_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/specialities.csv"),
                 'towns_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/towns.csv"),
                 'sources_dict': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
-                'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")
+
             }
+            specialities_skills = pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")
             # Loading
             self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
+            try:
+                specialities_skills.to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
+                specialities_skills.to_sql('specialities_skills', self.engine, self.front_schema, if_exists='replace')
+            except Exception as e:
+                logging.error(f"Error with specialities_skills update: {e}")
             logging.info("Data loaded to static dictionaries successfully")
         except Exception as e:
             logging.error(f"Error while loading data to static dicts: {e}")
