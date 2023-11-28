@@ -310,7 +310,7 @@ class BaseJobParser:
                             len(self.dataframe_to_closed.columns))})"""
                 self.log.info(f"Запрос вставки данных: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
-                self.log.info(f"Количество строк удалено из {self.schema}.{self.table_name}: "
+                self.log.info(f"Количество строк помечено как 'closed' в {self.schema}.{self.table_name}: "
                               f"{len(data_tuples_to_closed)}, обновлена таблица {self.schema}.{self.table_name} в БД.")
             else:
                 self.log.info(f"dataframe_to_closed пуст.")
