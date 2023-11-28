@@ -109,9 +109,9 @@ class DatabaseManager:
             );
             
             CREATE TABLE IF NOT EXISTS {0}.control_df(
-            id INT NOT NULL
+            id INT NOT NULL,
             tag VARCHAR(10),
-            "cleaner_description" TEXT
+            cleaner_description TEXT
             ); 
             """
             self.cur.execute(create_raw_dict_table_query.format(self.schema))
