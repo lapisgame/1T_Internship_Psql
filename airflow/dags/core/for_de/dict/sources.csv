@@ -1,4 +1,11 @@
-id,title
-1,Getmatch
-2,Habr Career
-3,careerspace
+id,title,raw_table_name
+1,Getmatch,raw_getmatch
+2,Habr Career,raw_habr
+3,Careerspace,raw_careerspace
+4,HH.ru,raw_hh
+5,Зарплата.ru,raw_zarplata
+6,RemoteJob,raw_remote
+7,Сбербанк,raw_sber
+8,Тинькофф,raw_tinkoff
+9,VK,raw_vk
+10,Yandex,raw_yandex
