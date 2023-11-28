@@ -31,7 +31,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, base_careerspace
 
-raw_tables = ['raw_careerspace']
+table_name = variables['raw_tables'][9]['raw_tables_name']
 
 
 logging_level = os.environ.get('LOGGING_LEVEL', 'DEBUG').upper()
@@ -103,7 +103,7 @@ class CareerspaceJobParser(BaseJobParser):
                     data = r.json()
                     # Извлекаем ссылки из JSON
                     for job in data.get('jobs', []):
-                        full_url = 'https://careerspace.app/job/' + str(job.get('job_id')) 
+                        full_url = 'https://careerspace.app/job/' + str(job.get('job_id'))
                         
                         # получаем зарплату из JSON 
                         if job.get('job_salary_currency') == 'RUB':
