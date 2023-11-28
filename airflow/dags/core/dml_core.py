@@ -382,10 +382,25 @@ class DataManager:
 
             # self.load_data_to_links('specialities_skills', link)
             # try:
-            link['specialities_skills'].to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
-            link['specialities_skills'].to_sql('specialities_skills', self.engine, self.front_schema,
-                                               if_exists='replace')
-            # except Exception as e:
+            # link['specialities_skills'].to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
+            # link['specialities_skills'].to_sql('specialities_skills', self.engine, self.front_schema,
+            #                                    if_exists='replace')
+
+            self.fix_type()
+
+            # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
+            data_to_load = [tuple(x) for x in link['specialities_skills'].to_records(index=False)]
+            for schema_name in [self.schema, self.front_schema]:
+                delete_old_links = f"""
+                TRUNCATE TABLE {schema_name}.specialities_skills
+                """
+                self.cur.execute(delete_old_links)
+                update_query = f"""
+                INSERT INTO {schema_name}.specialities_skills 
+                VALUES ({', '.join(['%s'] * len(link['specialities_skills']))})
+                """
+                self.cur.executemany(update_query, data_to_load)
+
             #     logging.error(f"Error with specialities_skills update: {e}")
             logging.info("Data loaded to static dictionaries successfully")
         except Exception as e:
