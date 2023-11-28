@@ -109,7 +109,7 @@ class DatabaseManager:
             );
             
             CREATE TABLE IF NOT EXISTS {0}.control_df(
-            id INT NOT NULL,
+            id INT PRIMARY KEY,
             tag VARCHAR(10),
             cleaner_description TEXT
             ); 
