@@ -5,6 +5,7 @@ import psycopg2
 from psycopg2.extensions import register_adapter, AsIs
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logging.basicConfig(
@@ -34,6 +35,7 @@ class DataManager:
         self.link_tables_lst = ['job_formats_vacancies', 'job_types_vacancies', 'languages_vacancies',
                                 'specialities_vacancies', 'skills_vacancies', 'towns_vacancies',
                                 'experience_vacancies']
+
     # Type fixing
     def fix_type(self):
         def addapt_numpy_int64(numpy_int64):
@@ -113,19 +115,42 @@ class DataManager:
         logging.info('Loading data to vacancies')
         if not self.dict_data_from_model.get('vacancies').empty:
             try:
-                logging.info("Loading actual data into inside vacancies")
-                self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.schema,
-                                                                  if_exists='append', index=False)
-                logging.info("Loading actual vectors")
-                self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.schema,
-                                                                  if_exists='append', index=False)
-                logging.info("Completed")
-                logging.info("Loading actual data into core vacancies")
-                self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.front_schema,
-                                                                  if_exists='append', index=False)
-                logging.info("Loading actual vectors")
-                self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.front_schema,
-                                                                  if_exists='append', index=False)
+                data_vacancy = [tuple(x) for x in self.dict_data_from_model.get('vacancies').to_records(index=False)]
+                data_ds_search = [tuple(x) for x in self.dict_data_from_model.get('ds_search').to_records(index=False)]
+                lst_vacancy = list(self.dict_data_from_model.get('vacancies'))
+                lst_ds_search = list(self.dict_data_from_model.get('ds_search'))
+                cols_vac = ', '.join(lst_vacancy)
+                cols_ds = ', '.join(lst_ds_search)
+                update_query = """
+                            INSERT INTO {0}.{1} 
+                            VALUES ({2})
+                            ON CONFLICT (id) DO UPDATE
+                            SET ({3}) = ({})
+                            """
+                for schema in [self.schema, self.front_schema]:
+                    logging.info(f'loading data ito {schema}.vacancies')
+                    self.cur.executemany(update_query.format(schema, 'vacancies',
+                                                             ','.join(['%s'] * len(lst_vacancy)), cols_vac,
+                                                             ','.join(['EXCLUDED.' + x for x in list(lst_vacancy)])),
+                                         data_vacancy)
+                    logging.info(f'loading data ito {schema}.vacancies')
+                    self.cur.executemany(update_query.format(schema, 'ds_search',
+                                                             ','.join(['%s'] * len(lst_ds_search)), cols_ds,
+                                                             ','.join(['EXCLUDED.' + x for x in list(lst_ds_search)])),
+                                         data_ds_search)
+                # logging.info("Loading actual data into inside vacancies")
+                # self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.schema,
+                #                                                   if_exists='append', index=False)
+                # logging.info("Loading actual vectors")
+                # self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.schema,
+                #                                                   if_exists='append', index=False)
+                # logging.info("Completed")
+                # logging.info("Loading actual data into core vacancies")
+                # self.dict_data_from_model.get('vacancies').to_sql('vacancies', self.engine, schema=self.front_schema,
+                #                                                   if_exists='append', index=False)
+                # logging.info("Loading actual vectors")
+                # self.dict_data_from_model.get('ds_search').to_sql('ds_search', self.engine, schema=self.front_schema,
+                #                                                   if_exists='append', index=False)
                 logging.info("Completed")
                 self.conn.commit()
             except Exception as e:
@@ -380,31 +405,24 @@ class DataManager:
             dicts["experience"] = dicts["experience"].fillna(psycopg2.extensions.AsIs('NULL'))
             self.load_data_to_dicts(self.static_dictionaries_lst, dicts)
 
-            # self.load_data_to_links('specialities_skills', link)
-            # try:
-            # link['specialities_skills'].to_sql('specialities_skills', self.engine, self.schema, if_exists='replace')
-            # link['specialities_skills'].to_sql('specialities_skills', self.engine, self.front_schema,
-            #                                    if_exists='replace')
-
             self.fix_type()
 
-            # df.to_sql(df_name, self.engine, schema=self.schema, if_exists='append', index=False)
             data_to_load = [tuple(x) for x in link['specialities_skills'].to_records(index=False)]
-            for schema_name in [self.schema, self.front_schema]:
+            for schema in [self.schema, self.front_schema]:
                 delete_old_links = f"""
-                TRUNCATE TABLE {schema_name}.specialities_skills
+                TRUNCATE TABLE {schema}.specialities_skills
                 """
                 self.cur.execute(delete_old_links)
-                update_query = f"""
-                INSERT INTO {schema_name}.specialities_skills 
-                VALUES ({', '.join(['%s'] * len(link['specialities_skills']))})
-                """
-                self.cur.executemany(update_query, data_to_load)
-
-            #     logging.error(f"Error with specialities_skills update: {e}")
+                load_data_query = f"""
+                                INSERT INTO {schema}.specialities_skills
+                                VALUES ({', '.join(['%s'] * len(list(link['specialities_skills'])))})
+                                """
+                self.cur.executemany(load_data_query, data_to_load)
             logging.info("Data loaded to static dictionaries successfully")
+            self.cur.commit()
         except Exception as e:
             logging.error(f"Error while loading data to static dicts: {e}")
+            self.cur.rollback()
 
     # Process. Init data loading (union, commit)
     def init_load(self):
