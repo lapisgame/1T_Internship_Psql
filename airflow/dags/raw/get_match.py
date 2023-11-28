@@ -1,8 +1,3 @@
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
-import logging
 from airflow.utils.task_group import TaskGroup
 import logging
 import time
@@ -20,10 +15,10 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, base_getmatch
+from raw.variables_settings import variables, base_careerspace
 
 table_name = variables['raw_tables'][6]['raw_tables_name']
-url = base_getmatch
+url = base_careerspace
 
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',

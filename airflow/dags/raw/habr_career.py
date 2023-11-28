@@ -42,16 +42,9 @@ from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][5]['raw_tables_name']
 
-# # Параметры по умолчанию
-# default_args = {
-#     "owner": "admin_1T",
-#     'start_date': days_ago(1)
-# }
-
 class HabrJobParser(BaseJobParser):
     def find_vacancies(self):
         self.items = []
-        # BASE_URL = "https://career.habr.com/vacancies"
         HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",}
@@ -144,19 +137,6 @@ class HabrJobParser(BaseJobParser):
                         description = ' '.join(description_text.stripped_strings) if description_text else ""
                         date_of_download = datetime.now().date()
                         date_created = card.find("time", class_="basic-date").text.strip()
-
-# Маппинг месяцев для русского языка
-#                         months_mapping = {
-#                                             'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4, 'мая': 5, 'июня': 6,
-#                                             'июля': 7, 'августа': 8, 'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
-#                                             }
-
-# Разбираем строку и получаем объект datetime
-#                         date_parts = date_string.split()
-#                         day = int(date_parts[0])
-#                         month = months_mapping[date_parts[1].lower()]
-#                         current_year = datetime.now().year  # Получаем текущий год
-#                         date_created = date_string
                         status ='existing'  
                         version_vac=1
                         actual=1

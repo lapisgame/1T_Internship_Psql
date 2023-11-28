@@ -1,77 +1,41 @@
-import dateparser
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import csv, json
-import psycopg2
-from airflow import settings
-from psycopg2.extras import execute_values
-from psycopg2.extensions import register_adapter, AsIs
-from airflow import settings
-from sqlalchemy import create_engine
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.utils.log.logging_mixin import LoggingMixin
-from typing import Callable
 from airflow.utils.task_group import TaskGroup
 import logging
 from logging import handlers
 from datetime import datetime, timedelta
+from airflow.utils.dates import days_ago
 import pandas as pd
 import numpy as np
-import os
 import requests
 from bs4 import BeautifulSoup
-from airflow.utils.dates import days_ago
-import re
-
+import time
 
 import sys
 import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from raw.connect_settings import conn
 from raw.variables_settings import variables, base_careerspace
+from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][9]['raw_tables_name']
 
+logging.basicConfig(
+    format='%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO
+)
 
-logging_level = os.environ.get('LOGGING_LEVEL', 'DEBUG').upper()
-logging.basicConfig(level=logging_level)
-log = logging.getLogger(__name__)
-log_handler = handlers.RotatingFileHandler('/opt/airflow/logs/airflow.log',
-                                           maxBytes=5000,
-                                           backupCount=5)
+log = logging
 
-log_handler.setLevel(logging.DEBUG)
-log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-log_handler.setFormatter(log_formatter)
-log.addHandler(log_handler)
-
-
-class BaseJobParser:
-    def __init__(self, conn, log):
-        self.conn = conn
-        self.log = log
-
-    def find_vacancies(self, conn):
-        """
-        Метод для парсинга вакансий, должен быть переопределен в наследниках
-        """
-        raise NotImplementedError("Вы должны определить метод find_vacancies")
-
-    def save_df(self):
-        """
-        Метод для сохранения данных из pandas DataFrame
-        """
-        raise NotImplementedError("Вы должны определить метод save_df")
-   
-
+# Параметры по умолчанию
+default_args = {
+    "owner": "admin_1T",
+    'start_date': days_ago(1)
+}
 
 class CareerspaceJobParser(BaseJobParser):
-
-    def __init__(self, conn, log):
-        super().__init__(conn, log)
-        
-        
     def find_vacancies(self):
         HEADERS = {
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -94,7 +58,7 @@ class CareerspaceJobParser(BaseJobParser):
             # Пока страницы есть
             while True:
                 i = page * 8  # 8 - это кол-во вакансий на странице (по-умолчанию)
-                url = url_template.format(i=i, o=o)  # Обновляем URL на каждой итерации
+                url = base_careerspace.format(i=i, o=o)  # Обновляем URL на каждой итерации
                 r = requests.get(url)
 
                 # Проверяем успешность запроса
@@ -136,7 +100,6 @@ class CareerspaceJobParser(BaseJobParser):
                         description = vac.find('div', {'class': 'j-d-desc'}).text.strip()
                         
                         date_created = date_of_download = datetime.now().date()   
-                        url_source='https://careerspace.app/jobs?isPreFilter=true'
                         
                         # Задаем значения для уровня опыта
                         if o == 'intern':
@@ -153,13 +116,13 @@ class CareerspaceJobParser(BaseJobParser):
                         item = {
                                 "company": job.get('company', {}).get('company_name'),
                                 "vacancy_name": job.get('job_name'),
-                                "vacancy_id": full_url,
+                                "vacancy_url": full_url,
                                 "job_format": job_format,
                                 "salary_from": salary_from,
                                 "salary_to": salary_to,
                                 "date_created": date_created,
                                 "date_of_download": date_of_download,
-                                "source_vac": url_source,
+                                "source_vac": 3,
                                 "status": 'existing',
                                 "version_vac": '1',
                                 "actual": '1',
@@ -168,7 +131,8 @@ class CareerspaceJobParser(BaseJobParser):
                                 "level": level,
                                 }
                         print(f"Adding item: {item}")
-                        self.items.append(item)
+                        self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
+                        time.sleep(3)
 
                    # Проверяем, есть ли следующая страница
                     if not data.get('jobs'):
@@ -180,81 +144,29 @@ class CareerspaceJobParser(BaseJobParser):
                     break  # Прерываем цикл при ошибке запрос
             self.all_items.extend(self.items)
 
-        self.log.info("В список добавлены данные")
-        return self.all_items
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
 
-    def save_df(self, cursor, connection):
-        self.log.info(f"Inserting data into the database")
-        try:
-            for item in self.all_items:
-                company = item["company"]
-                vacancy_title = item["vacancy_name"]
-                meta = item["towns"]
-                link_vacancy = item["vacancy_id"]
-                date_created=item["date_created"]
-                date_of_download=item["date_of_download"]
-                description=item["description"]
-                source_vac=item["source_vac"]
-                status=item["status"]
-                version_vac=item["version_vac"]
-                actual=item["actual"]
-                salary_from=item["salary_from"]
-                salary_to=item["salary_to"]
-                job_format=item["job_format"]
-                level=item["level"]
-
-                # SQL-запрос для вставки данных
-                sql = """INSERT INTO public.raw_careerspace (vacancy_id, company, vacancy_name,  towns, description, date_created,
-                                                 date_of_download, source_vac, status, level, version_vac, actual, salary_from, salary_to, job_format)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                   ON CONFLICT (vacancy_id) DO NOTHING;"""
-                values = (link_vacancy, company, vacancy_title, meta, description, date_created, 
-                      date_of_download, source_vac, status, level, version_vac, actual, salary_from, salary_to, job_format)
-                cursor.execute(sql, values)
-
-            connection.commit()
-            cursor.close()
-            connection.close()
-            print("Data successfully inserted into the database.")
-            self.log.info("Data successfully inserted")
-            print(f"Inserted data: {self.items}")
-
-        except Exception as e:
-            print(f"Error during data insertion: {e}")
-            self.log.info(f"Ошибка добавления данных")
-            connection.rollback()
-            cursor.close()
-            connection.close()
-
-# Создаем объект DatabaseManager
-db_manager = DatabaseManager(conn=conn)
-
-# Создаем объект CareerspaceJobParser
-get_match_parser = CareerspaceJobParser(conn=conn, log=log)
-
-def init_run_careerspace_parser(**context):
-    log.info('Запуск парсера Get Match')
-    parser = CareerspaceJobParser(conn, log)
-    items = parser.find_vacancies()
-    log.info('Парсер Get Match успешно провел работу')
-    parser.save_df(cursor=conn.cursor(), connection=conn)
-
-
-with DAG(dag_id = "parse_careerspace_jobs", schedule_interval = '@daily', tags=['admin_1T'],
-    default_args = default_args, catchup = False) as dag:
-
-
-# Определение задачи
-        create_raw_tables = PythonOperator(
-            task_id='create_raw_tables',
-            python_callable=db_manager.create_raw_tables,
-            provide_context=True
-)
-
-        parse_careerspace_jobs = PythonOperator(
-            task_id='parse_careerspace_jobs',
-            python_callable=init_run_careerspace_parser,
-             provide_context=True)
-
-create_raw_tables >> parse_careerspace_jobs
+# # Создаем объект CareerspaceJobParser
+# get_match_parser = CareerspaceJobParser(conn=conn, log=log)
+#
+# def init_run_careerspace_parser():
+#     log.info('Запуск парсера Careerspace')
+#     parser = CareerspaceJobParser(conn, log)
+#     items = parser.find_vacancies()
+#     log.info('Парсер Get Match успешно провел работу')
+#     parser.save_df(cursor=conn.cursor(), connection=conn)
+#
+#
+# with DAG(dag_id = "parse_careerspace_jobs", schedule_interval = '@daily', tags=['admin_1T'],
+#     default_args = default_args, catchup = False) as dag:
+#
+#
+#         parse_careerspace_jobs = PythonOperator(
+#             task_id='parse_careerspace_jobs',
+#             python_callable=init_run_careerspace_parser,
+#              provide_context=True)
+#
+#
+# parse_careerspace_jobs
