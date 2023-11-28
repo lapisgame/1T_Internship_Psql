@@ -399,6 +399,10 @@ class DataManager:
             'sources': pd.read_csv("/opt/airflow/dags/core/for_de/dict/sources.csv"),
             'experience': pd.read_csv("/opt/airflow/dags/core/for_de/dict/experience.csv")
         }
+        only_raw = {
+            'control_df': pd.read_csv("/opt/airflow/dags/core/for_de/dict/control_df.csv")
+        }
+        self.load_to_inside_schema('control_df', only_raw)
         link = {'specialities_skills': pd.read_csv("/opt/airflow/dags/core/for_de/id-id/specialities_skills.csv")}
         try:
             # Loading

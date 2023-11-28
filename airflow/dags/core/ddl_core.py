@@ -83,7 +83,8 @@ class DatabaseManager:
 
             CREATE TABLE IF NOT EXISTS {0}.sources(
             id SERIAL PRIMARY KEY,
-            title VARCHAR(50)
+            title VARCHAR(50),
+            raw_table_name VARCHAR(50)
             );
 
             CREATE TABLE IF NOT EXISTS {0}.companies(
@@ -96,6 +97,12 @@ class DatabaseManager:
             exp_from DECIMAL(2,1),
             exp_to DECIMAL(2,1)
             );
+            
+            CREATE TABLE IF NOT EXISTS {0}.control_df(
+            id INT NOT NULL
+            tag VARCHAR(10),
+            "cleaner_description" TEXT
+            ); 
             """
             self.cur.execute(create_raw_dict_table_query.format(self.schema))
             self.conn.commit()
