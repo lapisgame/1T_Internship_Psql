@@ -59,102 +59,102 @@ class GetMatchJobParser(BaseJobParser):
 
         vacancy_count = 0
         for link in self.all_links:
-            # if vacancy_count < 15:
-            resp = requests.get(link, HEADERS)
-            vac = BeautifulSoup(resp.content, 'lxml')
+            if vacancy_count < 10:
+                resp = requests.get(link, HEADERS)
+                vac = BeautifulSoup(resp.content, 'lxml')
 
-            try:
-                # парсим грейд вакансии
-                term_element = vac.find('div', {'class': 'col b-term'}, text='Уровень')
-                level = term_element.find_next('div', {'class': 'col b-value'}).text.strip() if term_element else None
+                try:
+                    # парсим грейд вакансии
+                    term_element = vac.find('div', {'class': 'col b-term'}, text='Уровень')
+                    level = term_element.find_next('div', {'class': 'col b-value'}).text.strip() if term_element else None
 
-                # Парсим иностранные языки
-                lang = vac.find('div', {'class': 'col b-term'}, text='Английский')
-                if lang is not None:
-                    level_lang= lang.find_next('span', {'class': 'b-language-description d-md-none'}).text.strip()
-                    lang=lang.text.strip()
-                    language = f"{lang}: {level_lang}"
-                    if level==level_lang:
-                        level=None
-                else:
-                    language=None
+                    # Парсим иностранные языки
+                    lang = vac.find('div', {'class': 'col b-term'}, text='Английский')
+                    if lang is not None:
+                        level_lang= lang.find_next('span', {'class': 'b-language-description d-md-none'}).text.strip()
+                        lang=lang.text.strip()
+                        language = f"{lang}: {level_lang}"
+                        if level==level_lang:
+                            level=None
+                    else:
+                        language=None
 
-                # Парсим навыки
-                stack_container = vac.find('div', class_='b-vacancy-stack-container')
-                if stack_container is not None:
-                    labels = stack_container.find_all('span', class_='g-label')
-                    page_stacks = ', '.join([label.text.strip('][') for label in labels])
-                else:
-                    page_stacks=None
+                    # Парсим навыки
+                    stack_container = vac.find('div', class_='b-vacancy-stack-container')
+                    if stack_container is not None:
+                        labels = stack_container.find_all('span', class_='g-label')
+                        page_stacks = ', '.join([label.text.strip('][') for label in labels])
+                    else:
+                        page_stacks=None
 
-                # Парсим описание вакансий
-                description_element = vac.find('section', class_='b-vacancy-description')
-                description_lines = description_element.stripped_strings
-                description = '\n'.join(description_lines)
+                    # Парсим описание вакансий
+                    description_element = vac.find('section', class_='b-vacancy-description')
+                    description_lines = description_element.stripped_strings
+                    description = '\n'.join(description_lines)
 
-                # Парсим и распаршиваем зарплаты
-                salary_text = vac.find('h3').text.strip()
-                salary_text = salary_text.replace('\u200d', '-').replace('—', '-')
-                if '₽/мес на руки' in vac.find('h3').text:
-                    salary_parts = list(map(str.strip, salary_text.split('-')))
-                    salary_from = salary_parts[0]
-                    if len(salary_parts) == 1:
-                        salary_to = None if 'от' in vac.find('h3').text else salary_parts[0]
-                    elif len(salary_parts) > 1:
-                        salary_to = salary_parts[2]
-                else:
-                    salary_from = None
-                    salary_to = None
+                    # Парсим и распаршиваем зарплаты
+                    salary_text = vac.find('h3').text.strip()
+                    salary_text = salary_text.replace('\u200d', '-').replace('—', '-')
+                    if '₽/мес на руки' in vac.find('h3').text:
+                        salary_parts = list(map(str.strip, salary_text.split('-')))
+                        salary_from = salary_parts[0]
+                        if len(salary_parts) == 1:
+                            salary_to = None if 'от' in vac.find('h3').text else salary_parts[0]
+                        elif len(salary_parts) > 1:
+                            salary_to = salary_parts[2]
+                    else:
+                        salary_from = None
+                        salary_to = None
 
-                # Приводим зарплаты к числовому формату
-                if salary_from is not None:
-                    numbers = re.findall(r'\d+', salary_from)
-                    combined_number = ''.join(numbers)
-                    salary_from = int(combined_number) if combined_number else None
-                if salary_to is not None:
-                    numbers = re.findall(r'\d+', salary_to)
-                    combined_number = ''.join(numbers)
-                    salary_to = int(combined_number) if combined_number else None
+                    # Приводим зарплаты к числовому формату
+                    if salary_from is not None:
+                        numbers = re.findall(r'\d+', salary_from)
+                        combined_number = ''.join(numbers)
+                        salary_from = int(combined_number) if combined_number else None
+                    if salary_to is not None:
+                        numbers = re.findall(r'\d+', salary_to)
+                        combined_number = ''.join(numbers)
+                        salary_to = int(combined_number) if combined_number else None
 
-                # Парсим формат работы
-                job_form_classes = ['g-label-linen', 'g-label-zanah', 'ng-star-inserted']
-                job_form = vac.find('span', class_=job_form_classes)
-                job_format = job_form.get_text(strip=True) if job_form is not None else None
+                    # Парсим формат работы
+                    job_form_classes = ['g-label-linen', 'g-label-zanah', 'ng-star-inserted']
+                    job_form = vac.find('span', class_=job_form_classes)
+                    job_format = job_form.get_text(strip=True) if job_form is not None else None
 
-                # Получаем другие переменные
-                date_created = date_of_download = datetime.now().date()
-                status ='existing'
-                version_vac=1
-                actual=1
+                    # Получаем другие переменные
+                    date_created = date_of_download = datetime.now().date()
+                    status ='existing'
+                    version_vac=1
+                    actual=1
 
-                item = {
-                    "company": vac.find('h2').text.replace('\xa0', ' ').strip('в'),
-                    "vacancy_name": vac.find('h1').text,
-                    "skills": page_stacks,
-                    "towns": ', '.join([span.get_text(strip=True).replace('📍', '') for span in vac.find_all('span', class_='g-label-secondary')]),
-                    "vacancy_url": link,
-                    "description": description,
-                    "job_format": job_format,
-                    "level": level,
-                    "salary_from": salary_from,
-                    "salary_to": salary_to,
-                    "date_created": date_created,
-                    "date_of_download": date_of_download,
-                    "source_vac": 1,
-                    "status": status,
-                    "version_vac": version_vac,
-                    "actual": actual,
-                    "languages":language,
-                    }
-                print(f"Adding item: {item}")
-                item_df = pd.DataFrame([item])
-                self.df = pd.concat([self.df, item_df], ignore_index=True)
-                time.sleep(3)
-                vacancy_count += 1
-            except AttributeError as e:
-                print(f"Error processing link {link}: {e}")
-            # else:
-            #     break
+                    item = {
+                        "company": vac.find('h2').text.replace('\xa0', ' ').strip('в'),
+                        "vacancy_name": vac.find('h1').text,
+                        "skills": page_stacks,
+                        "towns": ', '.join([span.get_text(strip=True).replace('📍', '') for span in vac.find_all('span', class_='g-label-secondary')]),
+                        "vacancy_url": link,
+                        "description": description,
+                        "job_format": job_format,
+                        "level": level,
+                        "salary_from": salary_from,
+                        "salary_to": salary_to,
+                        "date_created": date_created,
+                        "date_of_download": date_of_download,
+                        "source_vac": 1,
+                        "status": status,
+                        "version_vac": version_vac,
+                        "actual": actual,
+                        "languages":language,
+                        }
+                    print(f"Adding item: {item}")
+                    item_df = pd.DataFrame([item])
+                    self.df = pd.concat([self.df, item_df], ignore_index=True)
+                    time.sleep(3)
+                    vacancy_count += 1
+                except AttributeError as e:
+                    print(f"Error processing link {link}: {e}")
+            else:
+                break
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
