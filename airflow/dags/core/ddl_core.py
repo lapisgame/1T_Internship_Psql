@@ -17,6 +17,16 @@ class DatabaseManager:
         self.schema = 'inside_core_schema'
         self.front_schema = 'core_schema'
 
+    def drop_schema(self):
+        drop_query = """DROP SCHEMA IF EXISTS {0}"""
+        try:
+            self.cur.execute(drop_query.format(self.schema))
+            self.cur.execute(drop_query.format(self.front_schema))
+            self.conn.commit()
+            logging.info(f"Schemas {self.schema}, {self.front_schema} droped")
+        except Exception as e:
+            logging.error(f"Error while droping schemas: {e}")
+
     def create_schema(self):
         try:
             create_schema_query = "CREATE SCHEMA IF NOT EXISTS {0}"
@@ -389,6 +399,8 @@ class DatabaseManager:
             self.create_archive_vacancies_table()
             self.create_link_tables()
             self.create_archive_link_tables()
+            self.conn.close()
             logging.info('Successfully')
         except Exception as e:
             logging.error(f'Error while core layer creating: {e}')
+            self.conn.close()
