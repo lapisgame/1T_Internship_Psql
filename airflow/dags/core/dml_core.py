@@ -125,7 +125,7 @@ class DataManager:
                             INSERT INTO {0}.{1} 
                             VALUES ({2})
                             ON CONFLICT (id) DO UPDATE
-                            SET ({3}) = ({})
+                            SET ({3}) = ({4})
                             """
                 for schema in [self.schema, self.front_schema]:
                     logging.info(f'loading data ito {schema}.vacancies')
@@ -282,17 +282,15 @@ class DataManager:
                     self.cur.execute(delete_data_query.format(self.front_schema, table_name), (ids_tuple,))
 
                 # Delete not actual vacancies from core    
-                delete_archive_data_ds = """
-                DELETE FROM {0}.ds_search WHERE vacancy_id IN %s;
+                delete_archive = """
+                DELETE FROM {0}.{1} WHERE id IN %s;
                 """
-                delete_archive_data_vacancies = """
-                DELETE FROM {0}.vacancies WHERE url IN %s;
-                """
-                self.cur.execute(delete_archive_data_ds.format(self.schema), (ids_tuple,))
-                self.cur.execute(delete_archive_data_vacancies.format(self.schema), (urls_tuple,))
 
-                self.cur.execute(delete_archive_data_ds.format(self.front_schema), (ids_tuple,))
-                self.cur.execute(delete_archive_data_vacancies.format(self.front_schema), (urls_tuple,))
+                self.cur.execute(delete_archive.format(self.schema, 'ds_search'), (ids_tuple,))
+                self.cur.execute(delete_archive.format(self.schema, 'vacancy'), (ids_tuple,))
+
+                self.cur.execute(delete_archive.format(self.front_schema, 'ds_search'), (ids_tuple,))
+                self.cur.execute(delete_archive.format(self.front_schema, 'vacancy'), (ids_tuple,))
                 self.conn.commit()
                 logging.info("Archive tables updated successfully")
             except Exception as e:
