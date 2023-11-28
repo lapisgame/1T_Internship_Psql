@@ -146,10 +146,16 @@ class DataPreprocessing:
             fin_town = list(set(list_town))
 
             for element in fin_town:
-                index = int(towns_dict.loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1])
-                # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
-                                                                             index]
+                try:
+                    index = int(towns_dict.loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1])
+                    # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
+                                                                                 index]
+                except:
+                    index = 1112
+                    # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
+                                                                                index]
 
         self.towns_vacancies.drop_duplicates(inplace=True)
 
