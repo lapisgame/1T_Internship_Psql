@@ -27,6 +27,7 @@ variables = {
         {"raw_tables_name": "raw_getmatch"},
         {"raw_tables_name": "raw_zarplata"},
         {"raw_tables_name": "raw_hh"},
+        {"raw_tables_name": "raw_careerspace"},
     ],
     "professions": [
         {"fullName": "Data engineer"}
@@ -45,5 +46,6 @@ base_tin = variables.get('base_tin')
 base_remote = variables.get('base_remote')
 base_getmatch = variables.get('base_getmatch')
 base_habr = variables.get('base_habr')
+
 
 

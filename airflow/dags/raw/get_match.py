@@ -22,7 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, base_getmatch
 
-table_name = variables['raw_tables'][6]['raw_tables_name']
+table_name = variables['raw_tables'][10]['raw_tables_name']
 url = base_getmatch
 
 logging.basicConfig(
