@@ -16,7 +16,6 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.connect_settings import conn
 from raw.variables_settings import variables, base_careerspace
 from raw.base_job_parser import BaseJobParser
 
