@@ -419,10 +419,10 @@ class DataManager:
                                 """
                 self.cur.executemany(load_data_query, data_to_load)
             logging.info("Data loaded to static dictionaries successfully")
-            self.cur.commit()
+            self.conn.commit()
         except Exception as e:
             logging.error(f"Error while loading data to static dicts: {e}")
-            self.cur.rollback()
+            self.conn.rollback()
 
     # Process. Init data loading (union, commit)
     def init_load(self):
