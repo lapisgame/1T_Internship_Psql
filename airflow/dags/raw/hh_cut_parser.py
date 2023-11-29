@@ -44,7 +44,9 @@ class HHJobParser(BaseJobParser):
         for vac_name in self.profs:
             self.pars_vac(vac_name, index=self.profs.index(vac_name) + 1)
             time.sleep(5)
-        
+
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
         self.log.info('ПАРСИНГ ЗАВЕРШЕН')
 
     #* Добавление в new_df всех вакансий которые возможно получить по названию vac_name
@@ -146,7 +148,4 @@ class HHJobParser(BaseJobParser):
                 self.log.error(f'ERROR {vac_name} {e}')
                 time.sleep(5)
                 continue
-
-        self.df = self.df.drop_duplicates()
-        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
