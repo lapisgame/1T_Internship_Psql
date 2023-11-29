@@ -139,29 +139,27 @@ class DataPreprocessing:
             try:
                 self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
                                                                    self.dataframe.loc[i_town, 'town_search'])
+
+                doc = self.nlp(self.dataframe.loc[i_town, 'town_search'])
+                matches = matcher_town(doc)
+
+                list_town = []
+                for match_id, start, end in matches:
+                    span = str(doc[start:end])
+                    list_town.append(span)
+                fin_town = list(set(list_town))
+
+                for element in fin_town:
+
+                        index = int(towns_dict.loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1])
+                        # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
+                                                                                     index]
             except:
-                self.dataframe.loc[i_town, 'town_search'] = 'не указан'
-
-            doc = self.nlp(self.dataframe.loc[i_town, 'town_search'])
-            matches = matcher_town(doc)
-
-            list_town = []
-            for match_id, start, end in matches:
-                span = str(doc[start:end])
-                list_town.append(span)
-            fin_town = list(set(list_town))
-
-            for element in fin_town:
-                try:
-                    index = int(towns_dict.loc[towns_dict['clear_title'] == element.lower(), 'id'].iloc[-1])
-                    # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
-                                                                                 index]
-                except:
-                    index = 1112
-                    # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
-                                                                                index]
+                index = 1112
+                # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                self.towns_vacancies.loc[len(self.towns_vacancies.index)] = [self.dataframe.loc[i_town, 'vacancy_id'],
+                                                                            index]
 
         self.towns_vacancies.drop_duplicates(inplace=True)
 
