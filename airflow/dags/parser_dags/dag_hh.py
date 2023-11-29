@@ -9,7 +9,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.hh_cut_parser import HHJobParser, table_name
-from raw.variables_settings import variables, base_hh
+from raw.variables_settings import variables, base_hh, profs
 from parser_dags.base_dag import BaseDags
 
 
@@ -35,7 +35,7 @@ class Dags(BaseDags):
         """
         log.info('Запуск парсера HabrCareer')
         try:
-            parser = HHJobParser(base_hh, log, conn, table_name)
+            parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
@@ -50,7 +50,7 @@ class Dags(BaseDags):
         """
         log.info('Запуск парсера HabrCareer')
         try:
-            parser = HHJobParser(base_hh, log, conn, table_name)
+            parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
