@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
-from core.base_dag import BaseDags
+from parser_dags.base_dag import BaseDags
 
 
 log.basicConfig(

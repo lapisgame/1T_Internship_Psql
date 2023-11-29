@@ -12,6 +12,7 @@ sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, base_hh, profs
+from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][8]['raw_tables_name']
 url = base_hh
@@ -28,8 +29,6 @@ default_args = {
     "owner": "admin_1T",
     'start_date': days_ago(1)
 }
-
-from raw.base_job_parser import BaseJobParser
 
 class HHJobParser(BaseJobParser):
     # def __init__(self, max_page_count=5) -> None:
