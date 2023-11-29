@@ -81,7 +81,7 @@ class HHJobParser(BaseJobParser):
             }
 
             try:
-                print(f'get 1.{page_number} {index}/{len(self.profs)} - {self.vac_name}')
+                self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {self.vac_name}')
                 req = requests.get(f'{base_hh}', params=params).json()
                 time.sleep(5)
                 
