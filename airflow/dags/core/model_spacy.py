@@ -111,7 +111,6 @@ class DataPreprocessing:
         '''
         Lemmatization function. Returns completely cleared text
         '''
-        logging.info("Lemmatization started")
         text = re.sub(r'[^\w\s]', ' ', text)
         doc = self.nlp_lem(text)
         processed = " ".join([token.lemma_ for token in doc])
@@ -122,7 +121,6 @@ class DataPreprocessing:
         '''
         Adds lemmatization to the dataframe in the all_search cell
         '''
-        logging.info("Adding lemmatization data")
         # We combine all search strings into one
         self.dataframe['all_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['description'].astype(
             str) + ' ' + self.dataframe['job_type'].astype(str) + ' ' + self.dataframe['job_format'].astype(str) \
@@ -133,7 +131,6 @@ class DataPreprocessing:
         '''
         Loading the dataframe and dictionary patterns_town
         '''
-        logging.info("Town processing started")
         matcher_town = self.matcher_town
         matcher_town.add("TOWN_PATTERNS", pat_town)
         self.dataframe['town_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['skills'].astype(str)
@@ -168,7 +165,6 @@ class DataPreprocessing:
         '''
         Loading the dataframe and dictionary patterns_skill, all_skill_dict
         '''
-        logging.info("Skill processing started")
         matcher_skill = self.matcher_skill
         matcher_skill.add("SKILL_PATTERNS", pat_skill)
 
@@ -213,7 +209,6 @@ class DataPreprocessing:
         '''
         Loading dataframe and dictionary patterns_jformat, dict_i_jformat
         '''
-        logging.info("Description processing jformat started")
         matcher_jformat = self.matcher_jformat
         matcher_jformat.add("JFORMAT_PATTERNS", pat_jformat)
 
@@ -243,7 +238,6 @@ class DataPreprocessing:
         '''
         Loading a dataframe and dictionary patterns_jtype, dict_job_types
         '''
-        logging.info("Description processing jtype started")
         matcher_jtype = self.matcher_jtype
         matcher_jtype.add("JTYPE_PATTERNS", pat_jtype)
 
@@ -300,10 +294,15 @@ class DataPreprocessing:
         General function call method
         '''
         if not self.dataframe.empty:
+            logging.info("Lemmatization started")
             self.description_lemmatization_add()
+            logging.info("Town processing started")
             self.description_processing_town(patterns_town, dict_dict['towns_dict'])
+            logging.info("Skill processing started")
             self.description_processing_skill(patterns_skill, all_skill_dict, dict_dict['skills_dict'])
+            logging.info("Description processing jformat started")
             self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
+            logging.info("Description processing jtype started")
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
             self.save_dataframe()
 

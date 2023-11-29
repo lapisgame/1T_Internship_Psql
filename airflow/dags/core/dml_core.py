@@ -306,7 +306,6 @@ class DataManager:
                 # Update max id
                 self.update_tech_table()
                 self.conn.commit()
-                self.conn.close()
             except Exception as e:
                 logging.error(f'Error while loading data to core tables: {e}')
                 self.conn.rollback()
