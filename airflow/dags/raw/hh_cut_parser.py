@@ -153,7 +153,6 @@ class HHJobParser(BaseJobParser):
 
                             self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
 
-
                         except Exception as exc:
                             self.log.error(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} '
                                   f'произошла ошибка {exc} \n\n')
@@ -168,3 +167,4 @@ class HHJobParser(BaseJobParser):
 
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
+
