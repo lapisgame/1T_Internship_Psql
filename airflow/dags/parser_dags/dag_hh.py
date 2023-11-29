@@ -30,7 +30,7 @@ default_args = {
 
 class Dags(BaseDags):
 
-    def run_init_habrcareer_parser(self):
+    def run_init_hh_parser(self):
         """
         Основной вид задачи для запуска парсера для вакансий HeadHunter
         """
@@ -45,7 +45,7 @@ class Dags(BaseDags):
         except Exception as e:
             log.error(f'Ошибка во время работы парсера HeadHunter: {e}')
 
-    def run_update_habr(self):
+    def run_update_hh(self):
         """
         Основной вид задачи для запуска парсера для вакансий HeadHunter
         """
@@ -64,14 +64,14 @@ class Dags(BaseDags):
 
 def init_call_all_func():
     worker = Dags()
-    worker.run_init_habrcareer_parser()
+    worker.run_init_hh_parser()
     worker.update_dicts()
     worker.model(worker.df)
     worker.dml_core_init(worker.dfs)
 
 def update_call_all_func():
     worker = Dags()
-    worker.run_update_habr()
+    worker.run_update_hh()
     worker.update_dicts()
     worker.model(worker.dataframe_to_update)
     worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
