@@ -36,7 +36,8 @@ class HHJobParser(BaseJobParser):
         dictionaries = requests.get('https://api.hh.ru/dictionaries').json()
         for currency in dictionaries['currency']:
             currencies[currency['code']] = (1/currency['rate'])
-            
+        currencies['RUS'] = 1
+
         self.max_page_count = 10
         self.re_html_tag_remove = r'<[^>]+>'
 
