@@ -136,8 +136,12 @@ class DataPreprocessing:
         self.dataframe['town_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['skills'].astype(str)
 
         for i_town in range(self.dataframe.shape[0]):
-            self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
-                                                               self.dataframe.loc[i_town, 'town_search'])
+            try:
+                self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
+                                                                   self.dataframe.loc[i_town, 'town_search'])
+            except:
+                self.dataframe.loc[i_town, 'town_search'] = 'не указан'
+
             doc = self.nlp(self.dataframe.loc[i_town, 'town_search'])
             matches = matcher_town(doc)
 
