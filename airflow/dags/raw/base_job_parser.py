@@ -12,7 +12,7 @@ import logging as log
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables
+from raw.variables_settings import variables, profs
 
 raw_tables = variables['raw_tables']
 schemes = variables["schemes"]
