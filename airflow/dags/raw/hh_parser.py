@@ -32,7 +32,7 @@ default_args = {
 
 class HHJobParser(BaseJobParser):
     def find_vacancies(self):
-        self.max_page_count = 3
+        self.max_page_count = 10
         self.re_html_tag_remove = r'<[^>]+>'
 
         for index, vac_name in enumerate(self.profs):

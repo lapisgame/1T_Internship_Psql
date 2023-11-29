@@ -30,13 +30,29 @@ variables = {
         {"raw_tables_name": "raw_zarplata"},
         {"raw_tables_name": "raw_hh"},
         {"raw_tables_name": "raw_careerspace"},
-    ],
-    "professions": [
-        {"fullName": "Data engineer"}
     ]
 }
 
-profs = variables.get('professions')
+
+profs = [
+    "Data engineer",
+    # "Data analyst",
+    # "Data scientist",
+    # "System analyst",
+    # "Business analyst",
+    # "Project manager",
+    # "Product manager",
+    # "Backend developer",
+    # "Frontend developer",
+    # "Fullstack developer",
+    # "digital marketing specialist",
+    # "Web designer",
+    # "UI/UX",
+    # "UX/UI",
+    # "QA engineer",
+    # "DevOps"
+]
+
 schemes = variables.get('schemes')
 raw_tables = variables.get('raw_tables')
 

@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.hh_parser_v2 import HHJobParser, table_name
+from raw.hh_parser import HHJobParser, table_name
 from raw.variables_settings import variables, base_hh, profs
 from parser_dags.base_dag import BaseDags
 
@@ -25,7 +25,6 @@ default_args = {
     'start_date': datetime(2023, 11, 26),
     'retry_delay': timedelta(minutes=5),
 }
-
 
 class Dags(BaseDags):
     def run_init_hh_parser(self):
