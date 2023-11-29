@@ -49,9 +49,7 @@ if current_id[0] is None:
     current_id = 0
 else:
     current_id = int(current_id[0])
-    print(current_id, type(current_id))
-
-logging.error(f"current max id {current_id}")
+    logging.info(f"{current_id, type(current_id)}")
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
 cur.execute(query)
@@ -113,6 +111,7 @@ class DataPreprocessing:
         '''
         Lemmatization function. Returns completely cleared text
         '''
+        logging.info("Lemmatization started")
         text = re.sub(r'[^\w\s]', ' ', text)
         doc = self.nlp_lem(text)
         processed = " ".join([token.lemma_ for token in doc])
@@ -123,6 +122,7 @@ class DataPreprocessing:
         '''
         Adds lemmatization to the dataframe in the all_search cell
         '''
+        logging.info("Adding lemmatization data")
         # We combine all search strings into one
         self.dataframe['all_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['description'].astype(
             str) + ' ' + self.dataframe['job_type'].astype(str) + ' ' + self.dataframe['job_format'].astype(str) \
@@ -133,6 +133,7 @@ class DataPreprocessing:
         '''
         Loading the dataframe and dictionary patterns_town
         '''
+        logging.info("Town processing started")
         matcher_town = self.matcher_town
         matcher_town.add("TOWN_PATTERNS", pat_town)
         self.dataframe['town_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['skills'].astype(str)
@@ -167,6 +168,7 @@ class DataPreprocessing:
         '''
         Loading the dataframe and dictionary patterns_skill, all_skill_dict
         '''
+        logging.info("Skill processing started")
         matcher_skill = self.matcher_skill
         matcher_skill.add("SKILL_PATTERNS", pat_skill)
 
@@ -211,6 +213,7 @@ class DataPreprocessing:
         '''
         Loading dataframe and dictionary patterns_jformat, dict_i_jformat
         '''
+        logging.info("Description processing jformat started")
         matcher_jformat = self.matcher_jformat
         matcher_jformat.add("JFORMAT_PATTERNS", pat_jformat)
 
@@ -240,6 +243,7 @@ class DataPreprocessing:
         '''
         Loading a dataframe and dictionary patterns_jtype, dict_job_types
         '''
+        logging.info("Description processing jtype started")
         matcher_jtype = self.matcher_jtype
         matcher_jtype.add("JTYPE_PATTERNS", pat_jtype)
 
@@ -303,6 +307,7 @@ class DataPreprocessing:
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
             self.save_dataframe()
 
+            logging.info("Dataframes processing started")
             self.dict_all_data = {
                 'vacancies': self.vacancies,
                 'job_formats_vacancies': self.job_formats_vacancies,
@@ -328,6 +333,7 @@ class DataPreprocessing:
                 'experience_vacancies': pd.DataFrame(),
                 'companies': pd.DataFrame()
                 }
+        logging.info("Model spacy finished work successfully")
 
 # test = Data_preprocessing(raw_sber)
 # test.call_all_functions()
