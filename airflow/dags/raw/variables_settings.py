@@ -18,6 +18,7 @@ variables = {
     "base_habr": "https://career.habr.com/vacancies",
     "base_getmatch": "https://getmatch.ru/vacancies?p={i}&sa=150000&pa=all&s=landing_ca_header",
     "base_careerspace": "https://careerspace.app/api/v2/jobs/filters?skip={i}&take=8&sortBy=new-desc&functions=8%2C13%2C14%2C9&jobLevel%5B0%5D={o}&currencyCode=RUR",
+    "base_hh": "https://api.hh.ru/vacancies",
     "raw_tables": [
         {"raw_tables_name": "raw_vk"},
         {"raw_tables_name": "raw_sber"},
@@ -48,6 +49,7 @@ base_remote = variables.get('base_remote')
 base_getmatch = variables.get('base_getmatch')
 base_habr = variables.get('base_habr')
 base_careerspace = variables.get('base_careerspace')
+base_hh = variables.get('base_hh')
 
 
 

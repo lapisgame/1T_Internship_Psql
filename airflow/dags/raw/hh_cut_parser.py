@@ -3,33 +3,67 @@ import pandas as pd
 import time
 import requests
 from datetime import date, datetime
+from airflow.utils.dates import days_ago
+import logging
 
-class hh_parser:
-    def __init__(self, max_page_count=5) -> None:
-        self.table_name = 'hh_row'
-        self.max_page_count = max_page_count
+import sys
+import os
+sys.path.insert(0, '/opt/airflow/dags/')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-        self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ
+from raw.variables_settings import variables, base_hh, profs
+
+table_name = variables['raw_tables'][8]['raw_tables_name']
+url = base_hh
+
+logging.basicConfig(
+    format='%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO
+)
+
+log = logging
+
+# Параметры по умолчанию
+default_args = {
+    "owner": "admin_1T",
+    'start_date': days_ago(1)
+}
+
+from raw.base_job_parser import BaseJobParser
+
+class HHJobParser(BaseJobParser):
+    # def __init__(self, max_page_count=5) -> None:
+        # self.table_name = 'hh_row'
+        # self.max_page_count = 5
+        #
+        # self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ
+        #
+        # #& Регулярное выражение для удаление HTML тегов из описания
+        # self.re_html_tag_remove = r'<[^>]+>'
+
+        # self.new_df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns',
+        #                         'level', 'company', 'salary_from', 'salary_to',
+        #                         'exp_from', 'exp_to', 'description',
+        #                         'job_type', 'job_format', 'languages',
+        #                         'skills', 'source_vac',
+        #                         'date_created', 'date_of_download',
+        #                         'status', 'date_closed',
+        #                         'version_vac', 'actual'])
+
+    #* Основная функция парсинга
+    def find_vacancies(self):
+        # connection = self.pg_hook.get_conn()
+        # cur = connection.cursor()
+        self.max_page_count = 5
+
+        # self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ
 
         #& Регулярное выражение для удаление HTML тегов из описания
         self.re_html_tag_remove = r'<[^>]+>'
 
-        self.new_df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 
-                                'level', 'company', 'salary_from', 'salary_to',
-                                'exp_from', 'exp_to', 'description', 
-                                'job_type', 'job_format', 'languages', 
-                                'skills', 'source_vac', 
-                                'date_created', 'date_of_download', 
-                                'status', 'date_closed',
-                                'version_vac', 'actual'])
-
-    #* Основная функция парсинга
-    def topars(self):
-        connection = self.pg_hook.get_conn()
-        cur = connection.cursor()
-
-        for vac_name in self.vac_name_list:
-            self.pars_vac(vac_name, index=self.vac_name_list.index(vac_name)+1)
+        # for vac_name in self.vac_name_list:
+        for vac_name in self.profs:
+            self.pars_vac(self.vac_name, index=self.vac_name_list.index(vac_name)+1)
             time.sleep(5)
         
         print('ПАРСИНГ ЗАВЕРШЕН')
@@ -38,7 +72,7 @@ class hh_parser:
     def pars_vac(self, vac_name:str, index:int):
         for page_number in range(self.max_page_count):
             params = {
-                'text': f'{vac_name}',
+                'text': f'{self.vac_name}',
                 'page': page_number,
                 'per_page': 20,
                 'area': '113',
@@ -49,12 +83,12 @@ class hh_parser:
 
             try:
                 print(f'get 1.{page_number} {index}/{len(self.vac_name_list)} - {vac_name}')
-                req = requests.get('https://api.hh.ru/vacancies', params=params).json()
+                req = requests.get(f'{base_hh}', params=params).json()
                 time.sleep(5)
                 
                 if 'items' in req.keys():
                     for item in req['items']:
-                        item = requests.get(f'https://api.hh.ru/vacancies/{item["id"]}').json()
+                        item = requests.get(f'{base_hh}/{item["id"]}').json()
                         res = {}
                         try:
                             res['vacancy_id'] = f'https://hh.ru/vacancy/{item["id"]}'
@@ -63,26 +97,25 @@ class hh_parser:
                             res['level'] = ''
                             res['company'] = item['employer']['name']
 
-                            if item['salary'] == None:
-                                res['salary_from'] = 0
-                                res['salary_to'] = 999999999
-                            else:
+                            # if item['salary'] == None:
+                                # res['salary_from'] = 0
+                                # res['salary_to'] = 999999999
+                            if item['salary'] != None:
                                 if item['salary']['from'] != None:
                                     res['salary_from'] = int(item['salary']['from'])
-                                else:
-                                    res['salary_from'] = 0
-                                    
+                                # else:
+                                #     res['salary_from'] = 0
                                 if item['salary']['to'] != None:
                                     res['salary_to'] = int(item['salary']['to'])
-                                else:
-                                    res['salary_to'] = 999999999
+                                # else:
+                                #     res['salary_to'] = 999999999
 
-                            if item['experience'] == None:
+                            # if item['experience'] == None:
+                            #     res['exp_from'] = '0'
+                            #     res['exp_to'] = '100'
+                            if item['experience']['id'] == 'noExperience':
                                 res['exp_from'] = '0'
-                                res['exp_to'] = '100'
-                            elif item['experience']['id'] == 'noExperience':
-                                res['exp_from'] = '0'
-                                res['exp_to'] = '0'
+                                # res['exp_to'] = '0'
                                 res['level'] = 'Junior'
                             elif item['experience']['id'] == 'between1And3':
                                 res['exp_from'] = '1'
@@ -94,7 +127,7 @@ class hh_parser:
                                 res['level'] = 'Senior'
                             else:
                                 res['exp_from'] = '6'
-                                res['exp_to'] = '100'
+                                # res['exp_to'] = '100'
                                 res['level'] = 'Lead'
 
                             res['description'] = re.sub(self.re_html_tag_remove, '', item['description'])
@@ -102,30 +135,37 @@ class hh_parser:
                             res['job_type'] = item['employment']['name']
                             res['job_format'] = item['schedule']['name']
 
-                            res['languages'] = 'Russian'
+                            # res['languages'] = 'Russian'
 
                             res['skills'] = ' '.join(skill['name'] for skill in item['key_skills'])
 
-                            res['source_vac'] = 'hh.ru'
+                            res['source_vac'] = 4
 
                             res['date_created'] = item['published_at']
 
-                            res['date_of_download'] = datetime.now()
-                            res['status'] = item['type']['name']
+                            res['date_of_download'] = datetime.now().date()
+                            # res['status'] = item['type']['name']
+                            res['status'] = 'existing'
 
-                            res['date_closed'] = date(2025, 1, 1)
+                            # res['date_closed'] = date(2025, 1, 1)
 
                             res['version_vac'] = 1 
                             res['actual'] = 1   
 
-                            self.new_df = pd.concat([self.new_df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
+                            self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
+
+
                         except Exception as exc:
-                            print(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} произошла ошибка {exc} \n\n')
+                            self.log.error(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} '
+                                  f'произошла ошибка {exc} \n\n')
 
                 else:
-                    print(req)
+                    self.log.info(req)
 
             except Exception as e:
-                print(f'ERROR {vac_name} {e}')
+                self.log.error(f'ERROR {vac_name} {e}')
                 time.sleep(5)
                 continue
+
+        self.df = self.df.drop_duplicates()
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
