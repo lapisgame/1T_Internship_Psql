@@ -103,4 +103,3 @@ with DAG(
         python_callable=update_call_all_func,
         provide_context=True
     )
-
