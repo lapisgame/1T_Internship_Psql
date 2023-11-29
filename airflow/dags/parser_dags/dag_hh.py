@@ -64,16 +64,16 @@ class Dags(BaseDags):
 def init_call_all_func():
     worker = Dags()
     worker.run_init_hh_parser()
-    worker.update_dicts()
-    worker.model(worker.df)
-    worker.dml_core_init(worker.dfs)
+    # worker.update_dicts()
+    # worker.model(worker.df)
+    # worker.dml_core_init(worker.dfs)
 
 def update_call_all_func():
     worker = Dags()
     worker.run_update_hh()
-    worker.update_dicts()
-    worker.model(worker.dataframe_to_update)
-    worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
+    # worker.update_dicts()
+    # worker.model(worker.dataframe_to_update)
+    # worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
 
 
 with DAG(
