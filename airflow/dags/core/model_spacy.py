@@ -42,14 +42,14 @@ for name in static_dictionaries_lst:
     cols = [desc[0] for desc in cur.description]
     dict_dict[f"{name}_dict"] = pd.DataFrame(result, columns=cols)
 
-# cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
-# current_id = cur.fetchone()
-# print(current_id[0], type(current_id))
-# if current_id:
-#     current_id = int(current_id[0])
-# else:
-#     current_id = 0
-current_id = 0
+cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
+current_id = cur.fetchone()
+
+if current_id is None:
+    current_id = 0
+else:
+    current_id = int(current_id[0])
+    print(current_id[0], type(current_id))
 
 logging.error(f"current max id {current_id}")
 

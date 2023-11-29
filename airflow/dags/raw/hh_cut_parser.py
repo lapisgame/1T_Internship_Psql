@@ -75,7 +75,7 @@ class HHJobParser(BaseJobParser):
                 'page': page_number,
                 'per_page': 20,
                 'area': '113',
-                'only_with_salary': 'true',
+                # 'only_with_salary': 'true',
                 'negotiations_order': 'updated_at',
                 'vacancy_search_order': 'publication_time'
             }
