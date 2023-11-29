@@ -26,7 +26,6 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-
 class Dags(BaseDags):
     def run_init_hh_parser(self):
         """
