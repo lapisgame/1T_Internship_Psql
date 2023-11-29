@@ -45,7 +45,7 @@ for name in static_dictionaries_lst:
 cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
 current_id = cur.fetchone()
 
-if current_id is None:
+if current_id[0] is None:
     current_id = 0
 else:
     current_id = int(current_id[0])
