@@ -21,7 +21,7 @@ class BaseJobParser:
     """
     Base class for parsing job vacancies
     """
-    def __init__(self, url, profs, conn, table_name):
+    def __init__(self, url, profs, log, conn, table_name):
         self.log = log
         self.table_name = table_name
         columns = [
