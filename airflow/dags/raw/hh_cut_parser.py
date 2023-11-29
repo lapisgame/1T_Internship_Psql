@@ -41,17 +41,17 @@ class HHJobParser(BaseJobParser):
         self.re_html_tag_remove = r'<[^>]+>'
 
         # for vac_name in self.vac_name_list:
-        for self.vac_name in self.profs:
-            self.pars_vac(self.vac_name, index=self.profs.index(self.vac_name) + 1)
+        for vac_name in self.profs:
+            self.pars_vac(vac_name, index=self.profs.index(vac_name) + 1)
             time.sleep(5)
         
         self.log.info('ПАРСИНГ ЗАВЕРШЕН')
 
     #* Добавление в new_df всех вакансий которые возможно получить по названию vac_name
-    def pars_vac(self, vac_name:str, index:int):
+    def pars_vac(self, vac_name, index):
         for page_number in range(self.max_page_count):
             params = {
-                'text': f'{self.vac_name}',
+                'text': f'{vac_name}',
                 'page': page_number,
                 'per_page': 20,
                 'area': '113',
@@ -61,7 +61,7 @@ class HHJobParser(BaseJobParser):
             }
 
             try:
-                self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {self.vac_name}')
+                self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {vac_name}')
                 req = requests.get(f'{base_hh}', params=params).json()
                 time.sleep(5)
                 
@@ -132,7 +132,8 @@ class HHJobParser(BaseJobParser):
                             res['actual'] = 1   
 
                             self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
-                            self.log.info(self.df)
+                            print(self.df.head())
+                            self.log.info(self.df.head())
 
                         except Exception as exc:
                             self.log.error(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} '
@@ -142,7 +143,7 @@ class HHJobParser(BaseJobParser):
                     self.log.info(req)
 
             except Exception as e:
-                self.log.error(f'ERROR {self.vac_name} {e}')
+                self.log.error(f'ERROR {vac_name} {e}')
                 time.sleep(5)
                 continue
 
