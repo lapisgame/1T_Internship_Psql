@@ -33,7 +33,7 @@ default_args = {
 class HHJobParser(BaseJobParser):
     def find_vacancies(self):
 
-        self.max_page_count = 5
+        self.max_page_count = 10
 
         # self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ
 
