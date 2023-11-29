@@ -1,6 +1,5 @@
 from raw.connect_settings import conn, engine
 conn.autocommit = False
-import psycopg2
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import logging as log

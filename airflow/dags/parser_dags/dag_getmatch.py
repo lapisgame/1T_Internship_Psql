@@ -1,29 +1,17 @@
-import json
 from raw.connect_settings import conn, engine
 conn.autocommit = False
-import psycopg2
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
 import logging as log
-from logging import handlers
-from airflow.models import Variable
+
 from datetime import datetime, timedelta
-import time
-from airflow.utils.log.logging_mixin import LoggingMixin
-import os
-from sqlalchemy import create_engine
-from core.ddl_core import DatabaseManager
-from core.dml_core import DataManager
-import pandas as pd
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.get_match import GetMatchJobParser, table_name
 from raw.variables_settings import variables, base_getmatch
-from core.model_spacy import DataPreprocessing
 from core.base_dag import BaseDags
 
 
@@ -57,13 +45,20 @@ class Dags(BaseDags):
             log.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
     def run_update_getmatch(self):
-        parser = GetMatchJobParser(base_getmatch, log, conn, table_name)
-        parser.find_vacancies()
-        parser.generating_dataframes()
-        parser.addapt_numpy_null()
-        parser.update_database_queries()
-        self.dataframe_to_update = parser.dataframe_to_update
-        self.dataframe_to_closed = parser.dataframe_to_closed
+        """
+        Основной вид задачи для запуска парсера для вакансий GetMatch
+        """
+        log.info('Запуск парсера GetMatch')
+        try:
+            parser = GetMatchJobParser(base_getmatch, log, conn, table_name)
+            parser.find_vacancies()
+            parser.generating_dataframes()
+            parser.addapt_numpy_null()
+            parser.update_database_queries()
+            self.dataframe_to_update = parser.dataframe_to_update
+            self.dataframe_to_closed = parser.dataframe_to_closed
+        except Exception as e:
+            log.error(f'Ошибка во время работы парсера GetMatch: {e}')
 
 def init_call_all_func():
     worker = Dags()
