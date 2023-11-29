@@ -15,7 +15,6 @@ from raw.variables_settings import variables, base_hh, profs
 from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][8]['raw_tables_name']
-url = base_hh
 
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',
