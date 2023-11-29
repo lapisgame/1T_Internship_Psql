@@ -32,6 +32,11 @@ default_args = {
 
 class HHJobParser(BaseJobParser):
     def find_vacancies(self):
+        currencies = {}
+        dictionaries = requests.get('https://api.hh.ru/dictionaries').json()
+        for currency in dictionaries['currency']:
+            currencies[currency['code']] = (1/currency['rate'])
+            
         self.max_page_count = 10
         self.re_html_tag_remove = r'<[^>]+>'
 
@@ -63,10 +68,14 @@ class HHJobParser(BaseJobParser):
 
                                 if item['salary'] != None:
                                     if item['salary']['from'] != None:
-                                        res['salary_from'] = int(item['salary']['from'])
-
+                                        res['salary_from'] = int(item['salary']['from']) * currencies[item['currency']]
+                                    else:
+                                        res['salary_from'] = None
+                                    
                                     if item['salary']['to'] != None:
-                                        res['salary_to'] = int(item['salary']['to'])
+                                        res['salary_to'] = int(item['salary']['to']) * currencies[item['currency']]
+                                    else:
+                                        res['salary_to'] = None
                                 else:
                                     item['salary_form'] = None
                                     item['salary_to'] = None
