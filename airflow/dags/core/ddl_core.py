@@ -295,7 +295,7 @@ class DatabaseManager:
         FOREIGN KEY (id) REFERENCES {0}.vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
         
-        CREATE TABLE IF NOT EXISTS {0}.experience_vacancy(
+        CREATE TABLE IF NOT EXISTS {0}.experience_vacancies(
         vacancy_id BIGINT,
         experience_id INT,
         FOREIGN KEY (vacancy_id) REFERENCES {0}.vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -356,7 +356,7 @@ class DatabaseManager:
         FOREIGN KEY (spec_id) REFERENCES {0}.specialities (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
         
-        CREATE TABLE IF NOT EXISTS {0}.archive_experience_vacancy(
+        CREATE TABLE IF NOT EXISTS {0}.archive_experience_vacancies(
         vacancy_id BIGINT,
         experience_id INT,
         FOREIGN KEY (vacancy_id) REFERENCES {0}.archive_vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
