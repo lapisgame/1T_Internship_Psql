@@ -132,6 +132,7 @@ class HHJobParser(BaseJobParser):
                             res['actual'] = 1   
 
                             self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
+                            self.log.info(self.df)
 
                         except Exception as exc:
                             self.log.error(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} '
