@@ -81,7 +81,7 @@ class HHJobParser(BaseJobParser):
             }
 
             try:
-                print(f'get 1.{page_number} {index}/{len(self.vac_name_list)} - {vac_name}')
+                print(f'get 1.{page_number} {index}/{len(self.profs)} - {self.vac_name}')
                 req = requests.get(f'{base_hh}', params=params).json()
                 time.sleep(5)
                 
@@ -162,7 +162,7 @@ class HHJobParser(BaseJobParser):
                     self.log.info(req)
 
             except Exception as e:
-                self.log.error(f'ERROR {vac_name} {e}')
+                self.log.error(f'ERROR {self.vac_name} {e}')
                 time.sleep(5)
                 continue
 
