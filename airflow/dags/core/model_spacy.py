@@ -49,7 +49,7 @@ if current_id is None:
     current_id = 0
 else:
     current_id = int(current_id[0])
-    print(current_id[0], type(current_id))
+    print(current_id, type(current_id))
 
 logging.error(f"current max id {current_id}")
 
