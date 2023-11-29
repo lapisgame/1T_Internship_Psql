@@ -48,9 +48,6 @@ class DatabaseManager:
             """
             self.cur.execute(tech_schema_query)
             self.conn.commit()
-
-            self.cur.execute(f"INSERT INTO {self.schema}.vacancies_max_id(max_id) VALUES (0);")
-            self.conn.commit()
             logging.info(f"Max id table created successfully in {self.schema}")
         except Exception as e:
             logging.error(f"Max id table creating failed with error: {e}")
@@ -295,7 +292,7 @@ class DatabaseManager:
         FOREIGN KEY (id) REFERENCES {0}.vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
         
-        CREATE TABLE IF NOT EXISTS {0}.experience_vacancy(
+        CREATE TABLE IF NOT EXISTS {0}.experience_vacancies(
         vacancy_id BIGINT,
         experience_id INT,
         FOREIGN KEY (vacancy_id) REFERENCES {0}.vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -356,7 +353,7 @@ class DatabaseManager:
         FOREIGN KEY (spec_id) REFERENCES {0}.specialities (id) ON UPDATE CASCADE ON DELETE RESTRICT
         );
         
-        CREATE TABLE IF NOT EXISTS {0}.archive_experience_vacancy(
+        CREATE TABLE IF NOT EXISTS {0}.archive_experience_vacancies(
         vacancy_id BIGINT,
         experience_id INT,
         FOREIGN KEY (vacancy_id) REFERENCES {0}.archive_vacancies (id) ON UPDATE CASCADE ON DELETE RESTRICT,

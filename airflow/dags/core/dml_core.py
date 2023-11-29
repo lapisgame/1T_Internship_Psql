@@ -91,6 +91,7 @@ class DataManager:
             SET ({cols}) = ({','.join(['EXCLUDED.' + x for x in list(selected_columns)])})
             """
             self.cur.executemany(update_query, data_to_load)
+            logging.info(f'Data loaded into {self.front_schema}.{df_name} successfully')
         else:
             logging.info(f'No data to loading, dataframe {df_name} is empty')
 
