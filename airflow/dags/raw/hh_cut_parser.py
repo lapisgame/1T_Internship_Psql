@@ -61,7 +61,7 @@ class HHJobParser(BaseJobParser):
         self.re_html_tag_remove = r'<[^>]+>'
 
         # for vac_name in self.vac_name_list:
-        for vac_name in list(self.profs):
+        for vac_name in self.profs:
             self.pars_vac(self.vac_name, index=self.vac_name_list.index(vac_name)+1)
             time.sleep(5)
         
