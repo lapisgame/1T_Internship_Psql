@@ -61,11 +61,11 @@ class HHJobParser(BaseJobParser):
         self.re_html_tag_remove = r'<[^>]+>'
 
         # for vac_name in self.vac_name_list:
-        for vac_name in self.profs:
-            self.pars_vac(vac_name, index=self.profs.index(vac_name) + 1)
+        for self.vac_name in self.profs:
+            self.pars_vac(self.vac_name, index=self.profs.index(self.vac_name) + 1)
             time.sleep(5)
         
-        print('ПАРСИНГ ЗАВЕРШЕН')
+        self.log.info('ПАРСИНГ ЗАВЕРШЕН')
 
     #* Добавление в new_df всех вакансий которые возможно получить по названию vac_name
     def pars_vac(self, vac_name:str, index:int):
