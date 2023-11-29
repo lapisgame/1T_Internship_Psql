@@ -62,7 +62,7 @@ class HHJobParser(BaseJobParser):
 
         # for vac_name in self.vac_name_list:
         for vac_name in self.profs:
-            self.pars_vac(self.vac_name, index=self.vac_name_list.index(vac_name)+1)
+            self.pars_vac(vac_name, index=self.profs.index(vac_name) + 1)
             time.sleep(5)
         
         print('ПАРСИНГ ЗАВЕРШЕН')

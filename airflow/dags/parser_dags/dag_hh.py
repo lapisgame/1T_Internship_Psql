@@ -33,7 +33,7 @@ class Dags(BaseDags):
         """
         Основной вид задачи для запуска парсера для вакансий HeadHunter
         """
-        log.info('Запуск парсера HabrCareer')
+        log.info('Запуск парсера HeadHunter')
         try:
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -46,9 +46,9 @@ class Dags(BaseDags):
 
     def run_update_hh(self):
         """
-        Основной вид задачи для запуска парсера для вакансий HeadHunter
+        Основной вид задачи для запуска парсера для обновления вакансий HeadHunter
         """
-        log.info('Запуск парсера HabrCareer')
+        log.info('Запуск парсера HeadHunter')
         try:
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
