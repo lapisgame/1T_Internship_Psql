@@ -49,9 +49,7 @@ if current_id[0] is None:
     current_id = 0
 else:
     current_id = int(current_id[0])
-    print(current_id, type(current_id))
-
-logging.error(f"current max id {current_id}")
+    logging.info(f"{current_id, type(current_id)}")
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
 cur.execute(query)
@@ -138,8 +136,12 @@ class DataPreprocessing:
         self.dataframe['town_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['skills'].astype(str)
 
         for i_town in range(self.dataframe.shape[0]):
-            self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
-                                                               self.dataframe.loc[i_town, 'town_search'])
+            try:
+                self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
+                                                                   self.dataframe.loc[i_town, 'town_search'])
+            except:
+                self.dataframe.loc[i_town, 'town_search'] = 'не указан'
+
             doc = self.nlp(self.dataframe.loc[i_town, 'town_search'])
             matches = matcher_town(doc)
 
@@ -296,13 +298,19 @@ class DataPreprocessing:
         General function call method
         '''
         if not self.dataframe.empty:
+            logging.info("Lemmatization started")
             self.description_lemmatization_add()
+            logging.info("Town processing started")
             self.description_processing_town(patterns_town, dict_dict['towns_dict'])
+            logging.info("Skill processing started")
             self.description_processing_skill(patterns_skill, all_skill_dict, dict_dict['skills_dict'])
+            logging.info("Description processing jformat started")
             self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
+            logging.info("Description processing jtype started")
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
             self.save_dataframe()
 
+            logging.info("Dataframes processing started")
             self.dict_all_data = {
                 'vacancies': self.vacancies,
                 'job_formats_vacancies': self.job_formats_vacancies,
@@ -328,6 +336,7 @@ class DataPreprocessing:
                 'experience_vacancies': pd.DataFrame(),
                 'companies': pd.DataFrame()
                 }
+        logging.info("Model spacy finished work successfully")
 
 # test = Data_preprocessing(raw_sber)
 # test.call_all_functions()
