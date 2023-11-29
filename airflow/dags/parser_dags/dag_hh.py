@@ -27,8 +27,8 @@ default_args = {
 }
 
 
-class Dags(BaseDags):
-
+# class Dags(BaseDags):
+class Dags():
     def run_init_hh_parser(self):
         """
         Основной вид задачи для запуска парсера для вакансий HeadHunter
