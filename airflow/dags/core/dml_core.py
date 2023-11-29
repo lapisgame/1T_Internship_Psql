@@ -310,10 +310,8 @@ class DataManager:
             except Exception as e:
                 logging.error(f'Error while loading data to core tables: {e}')
                 self.conn.rollback()
-                self.conn.close()
         else:
             logging.info("No data to update")
-            self.conn.close()
 
     # Process. Update vacancies table = pull descriptions (commit)
     def load_descriptions(self):
@@ -392,4 +390,15 @@ class DataManager:
         except Exception as e:
             self.conn.rollback()
             logging.info(f"Error while init data loading to core: {e}")
+            self.conn.close()
+
+    # Process. Update and archive data (union, commited previously)
+    def updating(self):
+        try:
+            self.delete_archive_core_data()
+            self.load_and_update_actual_data()
+            logging.info("Updated successfully")
+            self.conn.close()
+        except Exception as e:
+            logging.error(f"Error while updating: {e}")
             self.conn.close()
