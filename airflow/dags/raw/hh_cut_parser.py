@@ -31,28 +31,8 @@ default_args = {
 }
 
 class HHJobParser(BaseJobParser):
-    # def __init__(self, max_page_count=5) -> None:
-        # self.table_name = 'hh_row'
-        # self.max_page_count = 5
-        #
-        # self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ
-        #
-        # #& Регулярное выражение для удаление HTML тегов из описания
-        # self.re_html_tag_remove = r'<[^>]+>'
-
-        # self.new_df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns',
-        #                         'level', 'company', 'salary_from', 'salary_to',
-        #                         'exp_from', 'exp_to', 'description',
-        #                         'job_type', 'job_format', 'languages',
-        #                         'skills', 'source_vac',
-        #                         'date_created', 'date_of_download',
-        #                         'status', 'date_closed',
-        #                         'version_vac', 'actual'])
-
-    #* Основная функция парсинга
     def find_vacancies(self):
-        # connection = self.pg_hook.get_conn()
-        # cur = connection.cursor()
+
         self.max_page_count = 5
 
         # self.vac_name_list = [] #ВСТАВИТЬ СПИСОК ВАКАНСИЙ

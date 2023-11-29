@@ -11,7 +11,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.careerspace import CareerspaceJobParser, table_name
-from raw.variables_settings import variables, base_careerspace
+from raw.variables_settings import variables, base_careerspace, profs
 from parser_dags.base_dag import BaseDags
 
 
@@ -37,7 +37,7 @@ class Dags(BaseDags):
         """
         log.info('Запуск парсера HabrCareer')
         try:
-            parser = CareerspaceJobParser(base_careerspace, log, conn, table_name)
+            parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
@@ -47,7 +47,7 @@ class Dags(BaseDags):
             log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
 
     def run_update_habr(self):
-        parser = CareerspaceJobParser(base_careerspace, log, conn, table_name)
+        parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
         parser.find_vacancies()
         parser.generating_dataframes()
         parser.addapt_numpy_null()
