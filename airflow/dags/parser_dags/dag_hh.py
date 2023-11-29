@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.hh_parser import HHJobParser, table_name
+from raw.hh_parser_v2 import HHJobParser, table_name
 from raw.variables_settings import variables, base_hh, profs
 from parser_dags.base_dag import BaseDags
 
@@ -38,7 +38,7 @@ class Dags(BaseDags):
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер HabrCareer успешно провел работу')
+            log.info('Парсер HeadHunter успешно провел работу')
             self.df = parser.df
         except Exception as e:
             log.error(f'Ошибка во время работы парсера HeadHunter: {e}')
@@ -54,6 +54,7 @@ class Dags(BaseDags):
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
+            log.info('Парсер HeadHunter успешно провел работу')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
