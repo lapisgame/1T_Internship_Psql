@@ -90,7 +90,7 @@ class HHJobParser(BaseJobParser):
                         item = requests.get(f'{base_hh}/{item["id"]}').json()
                         res = {}
                         try:
-                            res['vacancy_id'] = f'https://hh.ru/vacancy/{item["id"]}'
+                            res['vacancy_url'] = f'https://hh.ru/vacancy/{item["id"]}'
                             res['vacancy_name'] = item['name']
                             res['towns'] = item['area']['name']
                             res['level'] = ''
