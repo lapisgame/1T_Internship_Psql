@@ -36,7 +36,7 @@ variables = {
     ]
 }
 
-profs = variables.get('professions')
+profs = variables['professions']
 schemes = variables.get('schemes')
 raw_tables = variables.get('raw_tables')
 
