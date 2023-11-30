@@ -43,6 +43,10 @@ class BaseDags:
         manager = DataManager(conn, engine, pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
         manager.work_with_static_dicts()
 
+    def archiving(self, data_to_closed):
+        manager = DataManager(conn, engine, pd.DataFrame(), data_to_closed, pd.DataFrame())
+        manager.delete_and_archive()
+
     def model(self, df):
         test = DataPreprocessing(df)
         test.call_all_functions()
@@ -52,8 +56,8 @@ class BaseDags:
         manager = DataManager(conn, engine, dfs, pd.DataFrame(), pd.DataFrame())
         manager.init_load()
 
-    def dml_core_update_and_archivate(self, dfs, data_to_closed):
-        manager = DataManager(conn, engine, dfs, data_to_closed, pd.DataFrame())
+    def dml_core_update(self, dfs):
+        manager = DataManager(conn, engine, dfs, pd.DataFrame(), pd.DataFrame())
         manager.delete_archive_core_data()
         manager.load_and_update_actual_data()
 

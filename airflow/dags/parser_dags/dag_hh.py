@@ -69,10 +69,11 @@ def init_call_all_func():
 
 def update_call_all_func():
     worker = Dags()
-    worker.run_update_hh()
+    worker.run_update_getmatch()
     worker.update_dicts()
+    worker.data_to_closed(worker.dataframe_to_closed)
     worker.model(worker.dataframe_to_update)
-    worker.dml_core_update_and_archivate(worker.dfs, worker.dataframe_to_closed)
+    worker.dml_core_update_and_archivate(worker.dfs)
 
 
 with DAG(
