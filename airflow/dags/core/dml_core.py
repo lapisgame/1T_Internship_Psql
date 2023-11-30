@@ -241,10 +241,10 @@ class DataManager:
                 """
 
                 self.cur.execute(delete_archive.format(self.schema, 'ds_search'), (ids_tuple,))
-                self.cur.execute(delete_archive.format(self.schema, 'vacancy'), (ids_tuple,))
+                self.cur.execute(delete_archive.format(self.schema, 'vacancies'), (ids_tuple,))
 
                 self.cur.execute(delete_archive.format(self.front_schema, 'ds_search'), (ids_tuple,))
-                self.cur.execute(delete_archive.format(self.front_schema, 'vacancy'), (ids_tuple,))
+                self.cur.execute(delete_archive.format(self.front_schema, 'vacancies'), (ids_tuple,))
                 self.conn.commit()
                 logging.info("Archive tables updated successfully")
             except Exception as e:
