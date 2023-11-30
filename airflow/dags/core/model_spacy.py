@@ -8,11 +8,14 @@ from datetime import datetime
 from spacy.matcher import Matcher
 from spacy.lang.en import English
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.spatial.distance import cosine
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.patterns_all import patterns_town, patterns_skill, patterns_jformat, patterns_jtype
-from core.dict_for_model import dict_i_jformat, dict_job_types, all_skill_dict, dict_all_spec
+from core.dict_for_model import dict_i_jformat, dict_job_types, all_skill_dict, dict_all_spec, spec_dict
 
 from raw.connect_settings import conn, engine
 
@@ -31,7 +34,7 @@ pd.set_option('display.max_columns', None)
 
 static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
                            'sources', 'specialities', 'skills',
-                           'towns']
+                           'towns', 'cotrol_df']
 
 dict_dict = {}
 
@@ -274,11 +277,91 @@ class DataPreprocessing:
 
     # Experience and salary. There is no final solution yet
 
-    def clustering_specialties(self):
+    def preprocess_text(self, text):
+        text = re.sub(r'[^\w\s]','', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        text = text.lower()
+        return text
+    
+    def marker(self, vacancy_name: str, spec_dict: dict) -> str:
+        tag = next((k for k, v in spec_dict.items() if (isinstance(vacancy_name, str) and any(value in vacancy_name.lower() for value in v)) or (isinstance(vacancy_name, list) and any(value in [val.lower() for val in vacancy_name] for value in v))), None)
+        return tag if tag else 'NEEDED'
+    
+    def cosine_similarity(self, v1, v2):
+        return 1 - cosine(v1, v2)
+    
+    def avg_cosine_distance(self, v1, v2_list):
+        similarities = [self.cosine_similarity(v1, v2) for v2 in v2_list]
+        return np.mean(similarities)
+
+    def clustering_specialties(self, control_df, spec_dict, specialities_dict):
         '''
         Clustering by specialty
         '''
-        pass
+
+        vectorizer = TfidfVectorizer()
+        vectorizer.fit(control_df['cleaner_descr'])
+
+        control_df['tfidf_vector'] = control_df['cleaner_descr'].apply(lambda x: (vectorizer.transform([x])).toarray()[0])
+
+        da_emb = []
+        de_emb = []
+        dms_emb = []
+        ds_emb = []
+        full_emb = []
+        projm_emb = []
+        qa_emb = []
+        sa_emb = []
+        uxui_emb = []
+
+        for vec in control_df[control_df.tag=='DA'].tfidf_vector:
+            da_emb.append(vec)
+        for vec in control_df[control_df.tag=='DE'].tfidf_vector:
+            de_emb.append(vec)
+        for vec in control_df[control_df.tag=='DMS'].tfidf_vector:
+            dms_emb.append(vec)
+        for vec in control_df[control_df.tag=='DS'].tfidf_vector:
+            ds_emb.append(vec)
+        for vec in control_df[control_df.tag=='Full'].tfidf_vector:
+            full_emb.append(vec)
+        for vec in control_df[control_df.tag=='ProjM'].tfidf_vector:
+            projm_emb.append(vec)
+        for vec in control_df[control_df.tag=='QA'].tfidf_vector:
+            qa_emb.append(vec)
+        for vec in control_df[control_df.tag=='SA'].tfidf_vector:
+            sa_emb.append(vec)
+        for vec in control_df[control_df.tag=='UXUI'].tfidf_vector:
+            uxui_emb.append(vec)
+
+        list_of_lists = [da_emb, de_emb, dms_emb, ds_emb, full_emb, projm_emb, qa_emb, sa_emb, uxui_emb]
+        positions = ['DA', 'DE', 'DMS', 'DS', 'Full', 'ProjM', 'QA', 'SA', 'UXUI']
+        
+        for i in range(self.dataframe.shape[0]):
+            try:
+                vacancy_description_clean = self.preprocess_text(self.dataframe.loc[i, 'description'])
+                vacancy_vector = (vectorizer.transform([vacancy_description_clean])).toarray()[0]
+                mean_distances = []
+                for vector_list in list_of_lists:
+                    mean_distance = self.avg_cosine_distance(vacancy_vector, vector_list)
+                    mean_distances.append(mean_distance)
+
+                best_match_index = mean_distances.index(max(mean_distances))
+                best_match_position = positions[best_match_index]
+                name_tag = self.marker(self.dataframe.loc[i, 'vacancy_name'], spec_dict)
+
+                if best_match_position == name_tag:
+                    self.dataframe.loc[i, 'tag'] = best_match_position
+                else:
+                    if max(mean_distances) > 0.11:
+                        self.dataframe.loc[i, 'tag'] = best_match_position
+                    else:
+                        self.dataframe.loc[i, 'tag'] = 'NEEDED'
+            except:
+                self.dataframe.loc[i, 'tag'] = 'NEEDED'
+                
+            index = int(specialities_dict.loc[specialities_dict['tag'] == self.dataframe.loc[i, 'tag'], 'id'].iloc[-1]) # Можно заменить SQL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            self.specialities_vacancies.loc[len(self.specialities_vacancies.index)] = [self.dataframe.loc[i, 'vacancy_id'], index]
+
 
     def save_dataframe(self):
         '''
@@ -312,6 +395,7 @@ class DataPreprocessing:
             self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
             logging.info("Description processing jtype started")
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
+            self.clustering_specialties(dict_dict['control_df'], spec_dict, dict_dict['specialities_dict'])
             self.save_dataframe()
 
             logging.info("Dataframes processing started")
