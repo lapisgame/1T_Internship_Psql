@@ -396,10 +396,8 @@ class DataManager:
         try:
             self.delete_archive_core_data()
             logging.info("Archived successfully")
-            self.conn.close()
         except Exception as e:
             logging.error(f"Error while archiving: {e}")
-            self.conn.close()
 
     # Process. Update and archive data (union, commited previously)
     def updating(self):
