@@ -34,7 +34,7 @@ pd.set_option('display.max_columns', None)
 
 static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
                            'sources', 'specialities', 'skills',
-                           'towns']
+                           'towns', 'control_df']
 
 dict_dict = {}
 
@@ -395,7 +395,7 @@ class DataPreprocessing:
             self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
             logging.info("Description processing jtype started")
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
-            self.clustering_specialties(control_df, spec_dict, specialities_dict)
+            self.clustering_specialties(dict_dict['control_df_dict'], spec_dict, dict_dict['specialities_dict'])
             self.save_dataframe()
 
             logging.info("Dataframes processing started")
