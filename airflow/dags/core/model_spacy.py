@@ -73,11 +73,15 @@ class DataPreprocessing:
         # Assigning id
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
-        new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])]
-        new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
+        new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
+        for i in range(current_id + 1, len(new_data) + current_id + 1):
+            new_data.loc[i, 'id'] = i
+        # new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False, ignore_index=True)
-        self.dataframe['vacancy_id'] = self.dataframe['id']
-        self.dataframe.drop('id', axis=1)
+        self.dataframe = self.dataframe.reset_index()
+        self.dataframe.rename(columns={'id': 'vacancy_id'}, inplace=True)
+        # self.dataframe['vacancy_id'] = self.dataframe['id']
+        # self.dataframe.drop('id', axis=1)
         print(self.dataframe.columns)
         print(self.dataframe)
 
