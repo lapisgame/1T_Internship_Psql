@@ -116,8 +116,8 @@ class DataPreprocessing:
         self.dict_all_data = {}
 
     def find_company(self):
-        # self.new_data['company'] - new values to load
-        # dict_dict['companies'] - dictionary from DB
+        # self.dataframe[['vacancy_id', 'company']] - values to init load or update
+        # dict_dict['companies_dict'] - dictionary from DB
         data = self.dataframe[['vacancy_id', 'company']].copy()
         companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
                                    right_on='title', how='inner').drop('title',  axis=1)
@@ -130,10 +130,12 @@ class DataPreprocessing:
         for i in range(1, len(self.companies)):
             self.companies.loc[i, 'id'] = max_company_id + i
 
-        companies_dict = dict(zip(dict_dict.get('companies_dict')['company'], dict_dict.get('companies_dict')['id']))
+        print(self.companies)
+        companies_dict = dict(zip(dict_dict.get('companies_dict')['title'].rename(columns={'title': 'company'},
+                                                                                  inplace=True),
+                                  dict_dict.get('companies_dict')['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
-
-
+        print(self.dataframe)
 
     def description_lemmatization(self, text):
         '''
