@@ -135,12 +135,12 @@ class DataPreprocessing:
         matcher_town.add("TOWN_PATTERNS", pat_town)
         self.dataframe['town_search'] = self.dataframe['towns'].astype(str) + ' ' + self.dataframe['skills'].astype(str)
 
-        self.dataframe['town_search'] = self.dataframe['town_search'].replace('[^\w\s]', ' ', regex=True)
+        # self.dataframe['town_search'] = self.dataframe['town_search'].replace('[^\w\s]', ' ', regex=True)
 
-        for i_town in range(self.dataframe.shape[0]):
+        for i_town in range(len(self.dataframe)):
             try:
-                # self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
-                #                                                    self.dataframe.loc[i_town, 'town_search'])
+                self.dataframe.loc[i_town, 'town_search'] = re.sub(r'[^\w\s]', ' ',
+                                                                   self.dataframe.loc[i_town, 'town_search'])
 
                 doc = self.nlp(self.dataframe.loc[i_town, 'town_search'])
                 matches = matcher_town(doc)
