@@ -34,7 +34,7 @@ pd.set_option('display.max_columns', None)
 
 static_dictionaries_lst = ['job_formats', 'job_types', 'languages',
                            'sources', 'specialities', 'skills',
-                           'towns', 'control_df']
+                           'towns', 'control_df', 'experience', 'companies']
 
 dict_dict = {}
 
@@ -76,11 +76,11 @@ class DataPreprocessing:
         # Assigning id
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
-        new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
-        for i in range(current_id + 1, len(new_data) + current_id + 1):
-            new_data.loc[i, 'id'] = i
+        self.new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
+        for i in range(current_id + 1, len(self.new_data) + current_id + 1):
+            self.new_data.loc[i, 'id'] = i
         # new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
-        self.dataframe = pd.concat([updating_data, new_data], sort=False, ignore_index=True)
+        self.dataframe = pd.concat([updating_data, self.new_data], sort=False, ignore_index=True)
         self.dataframe = self.dataframe.reset_index()
         self.dataframe.rename(columns={'id': 'vacancy_id'}, inplace=True)
         # self.dataframe['vacancy_id'] = self.dataframe['id']
@@ -112,7 +112,25 @@ class DataPreprocessing:
         self.towns_vacancies = pd.DataFrame(columns=['vacancy_id', 'town_id'])
         self.ds_search = pd.DataFrame(columns=['id', 'vector'])
 
+        self.companies = pd.DataFrame(columns=['id', 'title'])
         self.dict_all_data = {}
+
+    def find_company(self):
+        # self.new_data['company'] - new values to load
+        # dict_dict['companies'] - dictionary from DB
+        data = self.dataframe[['vacancy_id', 'company']].copy()
+        companies_in_db = pd.merge(data, dict_dict['companies'], left_on='company',
+                                   right_on='title', how='inner').drop('title',  axis=1)
+
+        self.companies = data[~data['company'].isin(companies_in_db['company'])].copy()
+        max_company_id = max(dict_dict['companies']['id'])
+        for i in range(1, len(self.companies)):
+            self.companies.loc[i, 'id'] = max_company_id + i
+
+        companies_dict = dict(zip(dict_dict['companies']['company'], dict_dict['companies']['id']))
+        self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
+
+
 
     def description_lemmatization(self, text):
         '''
@@ -300,9 +318,9 @@ class DataPreprocessing:
         '''
 
         vectorizer = TfidfVectorizer()
-        vectorizer.fit(control_df['cleaner_descr'])
+        vectorizer.fit(control_df['cleaner_description'])
 
-        control_df['tfidf_vector'] = control_df['cleaner_descr'].apply(lambda x: (vectorizer.transform([x])).toarray()[0])
+        control_df['tfidf_vector'] = control_df['cleaner_description'].apply(lambda x: (vectorizer.transform([x])).toarray()[0])
 
         da_emb = []
         de_emb = []
@@ -385,6 +403,8 @@ class DataPreprocessing:
         General function call method
         '''
         if not self.dataframe.empty:
+            logging.info("Companies finding started")
+            self.find_company()
             logging.info("Lemmatization started")
             self.description_lemmatization_add()
             logging.info("Town processing started")
@@ -409,7 +429,7 @@ class DataPreprocessing:
                 'towns_vacancies': self.towns_vacancies,
                 'ds_search': self.ds_search,
                 'experience_vacancies': self.experience_vacancies,
-                'companies': pd.DataFrame()
+                'companies': self.companies
             }
         else:
             self.dict_all_data = {
