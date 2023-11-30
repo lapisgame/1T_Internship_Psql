@@ -12,5 +12,5 @@ RUN python3 -m spacy download ru_core_news_lg
 RUN python3 -m spacy download en_core_web_sm
 RUN python3 -m spacy download en_core_web_md
 RUN python3 -m spacy download en_core_web_lg
-RUN python3 -m spacy download en_core_web_trf --no-cache-dir
+#RUN python3 -m spacy download en_core_web_trf --no-cache-dir
 

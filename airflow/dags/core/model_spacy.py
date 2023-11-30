@@ -108,7 +108,7 @@ class DataPreprocessing:
         self.skills_vacancies = pd.DataFrame(columns=['vacancy_id', 'skill_id'])
         self.specialities_skills = pd.DataFrame(columns=['spec_id', 'skill_id'])
         self.job_types_vacancies = pd.DataFrame(columns=['vacancy_id', 'job_type_id'])
-        self.specialities_vacancies = pd.DataFrame(columns=['vacancy_id', 'spec_id', 'concurrence_percent'])
+        self.specialities_vacancies = pd.DataFrame(columns=['vacancy_id', 'spec_id'])
         self.towns_vacancies = pd.DataFrame(columns=['vacancy_id', 'town_id'])
         self.ds_search = pd.DataFrame(columns=['id', 'vector'])
 
