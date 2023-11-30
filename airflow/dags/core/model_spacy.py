@@ -395,7 +395,11 @@ class DataPreprocessing:
             self.description_processing_jformat(patterns_jformat, dict_i_jformat, dict_dict['job_formats_dict'])
             logging.info("Description processing jtype started")
             self.description_processing_jtype(patterns_jtype, dict_dict['job_types_dict'], dict_job_types)
+<<<<<<< HEAD
             self.clustering_specialties(dict_dict['control_df'], spec_dict, dict_dict['specialities_dict'])
+=======
+            self.clustering_specialties(control_df, spec_dict, specialities_dict)
+>>>>>>> a47c0f7f70f53c39aadf135b1cb72190c37af7c5
             self.save_dataframe()
 
             logging.info("Dataframes processing started")
