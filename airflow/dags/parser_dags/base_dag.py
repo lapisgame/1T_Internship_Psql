@@ -58,7 +58,6 @@ class BaseDags:
 
     def dml_core_update(self, dfs):
         manager = DataManager(conn, engine, dfs, pd.DataFrame(), pd.DataFrame())
-        manager.delete_archive_core_data()
         manager.load_and_update_actual_data()
 
 
