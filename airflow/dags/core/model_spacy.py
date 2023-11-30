@@ -300,9 +300,9 @@ class DataPreprocessing:
         '''
 
         vectorizer = TfidfVectorizer()
-        vectorizer.fit(control_df['cleaner_descr'])
+        vectorizer.fit(control_df['cleaner_description'])
 
-        control_df['tfidf_vector'] = control_df['cleaner_descr'].apply(lambda x: (vectorizer.transform([x])).toarray()[0])
+        control_df['tfidf_vector'] = control_df['cleaner_description'].apply(lambda x: (vectorizer.transform([x])).toarray()[0])
 
         da_emb = []
         de_emb = []
