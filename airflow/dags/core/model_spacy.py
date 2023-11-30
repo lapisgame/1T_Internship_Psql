@@ -119,15 +119,15 @@ class DataPreprocessing:
         # self.new_data['company'] - new values to load
         # dict_dict['companies'] - dictionary from DB
         data = self.dataframe[['vacancy_id', 'company']].copy()
-        companies_in_db = pd.merge(data, dict_dict['companies'], left_on='company',
+        companies_in_db = pd.merge(data, dict_dict.get('companies'), left_on='company',
                                    right_on='title', how='inner').drop('title',  axis=1)
 
         self.companies = data[~data['company'].isin(companies_in_db['company'])].copy()
-        max_company_id = max(dict_dict['companies']['id'])
+        max_company_id = max(dict_dict.get('companies')['id'])
         for i in range(1, len(self.companies)):
             self.companies.loc[i, 'id'] = max_company_id + i
 
-        companies_dict = dict(zip(dict_dict['companies']['company'], dict_dict['companies']['id']))
+        companies_dict = dict(zip(dict_dict.get('companies')['company'], dict_dict.get('companies')['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
 
 
