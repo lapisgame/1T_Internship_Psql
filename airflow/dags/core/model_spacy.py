@@ -123,7 +123,10 @@ class DataPreprocessing:
                                    right_on='title', how='inner').drop('title',  axis=1)
 
         self.companies = data[~data['company'].isin(companies_in_db['company'])].copy()
-        max_company_id = max(dict_dict.get('companies_dict')['id'])
+        if not dict_dict.get('companies_dict').empty:
+            max_company_id = max(dict_dict.get('companies_dict')['id'])
+        else:
+            max_company_id = 0
         for i in range(1, len(self.companies)):
             self.companies.loc[i, 'id'] = max_company_id + i
 
