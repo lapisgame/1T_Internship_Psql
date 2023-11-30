@@ -73,7 +73,7 @@ def update_call_all_func():
     worker.update_dicts()
     worker.archiving(worker.dataframe_to_closed)
     worker.model(worker.dataframe_to_update)
-    worker.dml_core_update_and_archivate(worker.dfs)
+    worker.dml_core_update(worker.dfs)
 
 
 with DAG(
