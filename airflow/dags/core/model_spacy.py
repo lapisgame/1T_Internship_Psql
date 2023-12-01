@@ -77,8 +77,9 @@ class DataPreprocessing:
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
-        for i in range(current_id, len(new_data) + current_id):
-            new_data.loc[i, 'id'] = i + 1
+        for i in range(len(new_data)):
+            current_id += 1
+            new_data.loc[i, 'id'] = current_id
         # new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False, ignore_index=True)
         self.dataframe = self.dataframe.reset_index()
@@ -118,31 +119,47 @@ class DataPreprocessing:
     def find_company(self):
         # self.dataframe[['vacancy_id', 'company']] - values to init load or update
         # dict_dict['companies_dict'] - dictionary from DB
-        data = self.dataframe[['vacancy_id', 'company']].copy()
-        companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
-                                   right_on='title', how='inner').drop('title',  axis=1)
 
-        companies = data[~data['company'].isin(companies_in_db['company'])].copy()
-        if not dict_dict.get('companies_dict').empty:
-            max_company_id = max(dict_dict.get('companies_dict')['id'])
-        else:
-            max_company_id = 0
-        for i in range(len(companies)):
-            companies.loc[i, 'id'] = max_company_id + i + 1
+        companies_df = dict_dict.get('companies_dict')
+        new_companies = set(self.dataframe['company'])
+        max_company_id = max(dict_dict.get('companies_dict')['id'])
+        for company in new_companies:
+            max_company_id += 1
+            companies_df.loc[max_company_id, 'company'] = company
 
-        companies.drop('vacancy_id', axis=1)
-        companies.rename(columns={'company': 'title'}, inplace=True)
-        self.companies = companies[['id', 'title']].copy()
-        all_companies = pd.concat([self.companies, dict_dict['companies_dict']], ignore_index=True)
-        print(self.companies)
+        self.companies = companies_df.rename({'company': 'title'}, axis=1)
+        companies_dictionary = dict([companies_df['company'], companies_df['id']])
 
-        all_companies.rename(columns={'title': 'company'}, inplace=True)
-        companies_dict = dict(zip(all_companies['company'], all_companies['id']))
-        self.dataframe['company_1'] = self.dataframe['company'].replace(companies_dict)
-        self.dataframe['company'] = self.dataframe['company_1']
-        self.dataframe.drop('company_1', axis=1, inplace=True)
+        self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
 
-        print(self.dataframe)
+        # data = self.dataframe[['vacancy_id', 'company']].copy()
+        # companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
+        #                            right_on='title', how='inner').drop('title',  axis=1)
+        #
+        # companies = data[~data['company'].isin(companies_in_db['company'])].copy()
+        # if not dict_dict.get('companies_dict').empty:
+        #     max_company_id = max(dict_dict.get('companies_dict')['id'])
+        # else:
+        #     max_company_id = 0
+        # for i in range(len(companies)):
+        #     companies.loc[i, 'id'] = max_company_id + i + 1
+        #
+        # companies.drop('vacancy_id', axis=1)
+        # companies.rename(columns={'company': 'title'}, inplace=True)
+        # self.companies = companies[['id', 'title']].copy()
+        # all_companies = pd.concat([self.companies, dict_dict['companies_dict']], ignore_index=True)
+        # print(self.companies)
+        #
+        # all_companies.rename(columns={'title': 'company'}, inplace=True)
+        # companies_dict = dict(zip(all_companies['company'], all_companies['id']))
+        # self.dataframe['company_1'] = self.dataframe['company'].replace(companies_dict)
+        # self.dataframe['company'] = self.dataframe['company_1']
+        # self.dataframe.drop('company_1', axis=1, inplace=True)
+        #
+        # print(self.dataframe)
+
+    # def find_experience(self):
+    #     for i in range(len(self.dataframe)):
 
     def description_lemmatization(self, text):
         '''
