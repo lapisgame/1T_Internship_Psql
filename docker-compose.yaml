@@ -7,12 +7,12 @@ x-airflow-common:
     PYTHONPATH: "/opt/airflow/dags"
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__WEBSERVER__SECRET_KEY: airflow
-#    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-#    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
 #    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
 #    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres:5432/airflow
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:password@postgres_db_dev/vacancy
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://admin:password@postgres_db_dev/vacancy
+#    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:password@postgres_db_dev/vacancy
+#    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://admin:password@postgres_db_dev/vacancy
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
