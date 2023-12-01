@@ -132,13 +132,15 @@ class DataPreprocessing:
 
         companies.drop('vacancy_id', axis=1)
         companies.rename(columns={'company': 'title'}, inplace=True)
-        self.companies = pd.concat([companies[['id, title']], self.companies[['id', 'title']]], ignore_index=True)
+        self.companies = companies[['id', 'title']].copy()
+        all_companies = pd.concat([self.companies, dict_dict['companies_dict']], ignore_index=True)
         print(self.companies)
 
-        dict_dict['companies_dict'].rename(columns={'title': 'company'}, inplace=True)
-        companies_dict = dict(zip(dict_dict.get('companies_dict')['company'],
-                                  dict_dict.get('companies_dict')['id']))
-        self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
+        all_companies.rename(columns={'title': 'company'}, inplace=True)
+        companies_dict = dict(zip(all_companies['id'], all_companies['title']))
+        self.dataframe['company_1'] = self.dataframe['company'].replace(companies_dict)
+        self.dataframe['company'] = self.dataframe['company_1']
+        self.dataframe.drop('company_1', axis=1, inplace=True)
 
         print(self.dataframe)
 
