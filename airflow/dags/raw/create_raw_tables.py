@@ -51,6 +51,9 @@ class DatabaseManager:
                    company VARCHAR(255),
                    salary_from DECIMAL(10, 2),
                    salary_to DECIMAL(10, 2),
+                   currency_id VARCHAR(5),
+                   сurr_salary_from DECIMAL(10, 2),
+                   сurr_salary_to DECIMAL(10, 2),
                    exp_from DECIMAL(2, 1),
                    exp_to DECIMAL(2, 1),
                    description TEXT,
@@ -74,6 +77,28 @@ class DatabaseManager:
         except Exception as e:
             self.log.error(f'Ошибка при создании таблицы {self.schema}.{table_name}: {e}')
             self.conn.rollback()
+
+    def create_currency_directory(self):
+        try:
+            table_name = 'currency_directory'
+            drop_table_query = f"DROP TABLE IF EXISTS {self.schema}.{table_name};"
+            self.cur.execute(drop_table_query)
+            self.log.info(f'Удалена таблица {table_name}')
+            create_table_query = f"""                
+            CREATE TABLE IF NOT EXISTS {self.schema}.{table_name}(
+            exchange_rate_date DATE NOT NULL,
+            usd_rate DECIMAL(4, 4),
+            eur_rate DECIMAL(4, 4),
+            kzt_rate DECIMAL(4, 4), 
+            PRIMARY KEY(exchange_rate_date)
+            );
+            """
+            self.cur.execute(create_table_query)
+            self.log.info(f'Таблица {self.schema}.{table_name} создана в базе данных.')
+            self.conn.commit()
+        except Exception as e:
+            self.log.error(f'Ошибка при создании таблицы {self.schema}.{table_name}: {e}')
+            self.conn.rollback()
         finally:
             # закрываем курсор и соединение с базой данных
             self.cur.close()
@@ -82,7 +107,7 @@ class DatabaseManager:
 db_manager = DatabaseManager(conn=conn)
 
 # Define the tasks and DAG
-start_date = datetime(2023, 11, 24)
+start_date = datetime(2023, 12, 2)
 
 default_dag_args = {
     "owner": "admin_1T",
@@ -107,8 +132,14 @@ with DAG(
         provide_context=True,
     )
 
+    create_currency_directory = PythonOperator(
+        task_id='create_currency_directory',
+        python_callable=db_manager.create_currency_directory,
+        provide_context=True,
+    )
+
     end_task = DummyOperator(
         task_id="end_task",
     )
 
-    create_raw_schema >> create_raw_tables >> end_task
+    create_raw_schema >> create_raw_tables >> create_currency_directory >> end_task

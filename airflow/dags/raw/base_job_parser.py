@@ -1,18 +1,17 @@
 import time
 import pandas as pd
-from selenium import webdriver
 import psycopg2
 from psycopg2.extensions import register_adapter, AsIs
 import sys
 import numpy as np
 from datetime import datetime
-from airflow.utils.log.logging_mixin import LoggingMixin
 from psycopg2.extras import execute_values
 import logging as log
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, profs
+
 
 raw_tables = variables['raw_tables']
 schemes = variables["schemes"]
