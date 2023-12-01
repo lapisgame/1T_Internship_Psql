@@ -84,7 +84,7 @@ class DataPreprocessing:
         self.dataframe = self.dataframe.reset_index()
         self.dataframe.rename(columns={'id': 'vacancy_id'}, inplace=True)
         # self.dataframe['vacancy_id'] = self.dataframe['id'] # not copy, but rename
-        self.dataframe.drop('id', axis=1)
+        # self.dataframe.drop('id', axis=1)
         print(self.dataframe.columns)
         print(self.dataframe)
 
