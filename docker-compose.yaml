@@ -380,7 +380,9 @@ services:
 
   selenium-event-bus:
     image: selenium/event-bus:latest
-    container_name: selenium-event-bus_psql
+    container_name: selenium-event-bus
+    networks:
+      - airflow_postgres
     ports:
       - "4442:4442"
       - "4443:4443"
@@ -391,9 +393,11 @@ services:
     image: selenium/sessions:latest
     container_name: selenium-sessions_psql
     ports:
-      - "10156:5556"
+      - "10116:5556"
     depends_on:
       - selenium-event-bus
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
@@ -401,9 +405,11 @@ services:
 
   selenium-session-queue:
     image: selenium/session-queue:latest
-    container_name: selenium-session-queue_psql
+    container_name: selenium-session-queue
+    networks:
+      - airflow_postgres
     ports:
-      - "10128:5559"
+      - "10118:5559"
 
   selenium-distributor:
     image: selenium/distributor:latest
@@ -414,6 +420,8 @@ services:
       - selenium-event-bus
       - selenium-sessions
       - selenium-session-queue
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
@@ -426,6 +434,8 @@ services:
   selenium-router:
     image: selenium/router:latest
     container_name: selenium-router_psql
+    networks:
+      - airflow_postgres
     ports:
       - "10144:4444"
     depends_on:
@@ -445,6 +455,8 @@ services:
     shm_size: 2gb
     depends_on:
       - selenium-event-bus
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
