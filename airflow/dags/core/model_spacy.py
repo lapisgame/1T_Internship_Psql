@@ -138,38 +138,13 @@ class DataPreprocessing:
             companies_df.loc[max_company_id, 'id'] = max_company_id
             companies_df.loc[max_company_id, 'title'] = company
 
-        self.companies = companies_df
+        self.companies = companies_df.copy()
         companies_df['company'] = companies_df['title'].copy()
         companies_df.drop('title', axis=1)
+        print(companies_df.columns)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dictionary)
 
-        # self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
-
-        # data = self.dataframe[['vacancy_id', 'company']].copy()
-        # companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
-        #                            right_on='title', how='inner').drop('title',  axis=1)
-        #
-        # companies = data[~data['company'].isin(companies_in_db['company'])].copy()
-        # if not dict_dict.get('companies_dict').empty:
-        #     max_company_id = max(dict_dict.get('companies_dict')['id'])
-        # else:
-        #     max_company_id = 0
-        # for i in range(len(companies)):
-        #     companies.loc[i, 'id'] = max_company_id + i + 1
-        #
-        # companies.drop('vacancy_id', axis=1)
-        # companies.rename(columns={'company': 'title'}, inplace=True)
-        # self.companies = companies[['id', 'title']].copy()
-        # all_companies = pd.concat([self.companies, dict_dict['companies_dict']], ignore_index=True)
-        # print(self.companies)
-        #
-        # all_companies.rename(columns={'title': 'company'}, inplace=True)
-        # companies_dict = dict(zip(all_companies['company'], all_companies['id']))
-        # self.dataframe['company_1'] = self.dataframe['company'].replace(companies_dict)
-        # self.dataframe['company'] = self.dataframe['company_1']
-        # self.dataframe.drop('company_1', axis=1, inplace=True)
-        #
         # print(self.dataframe)
 
     # def find_experience(self):
