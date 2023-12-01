@@ -65,7 +65,7 @@ class CurrencyDirectory():
         self.exchange_rate['exchange_rate_date'] = datetime.now().date()
         self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
         self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
-        self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value']
+        self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value'] / 100
 
     def adapt_numpy_null(self):
         """
