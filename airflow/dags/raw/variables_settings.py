@@ -32,6 +32,7 @@ variables = {
         {"raw_tables_name": "raw_zarplata"},
         {"raw_tables_name": "raw_hh"},
         {"raw_tables_name": "raw_careerspace"},
+        {"raw_tables_name": "raw_vseti"},
     ]
 }
 
