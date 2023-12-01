@@ -138,10 +138,11 @@ class DataPreprocessing:
             companies_df.loc[max_company_id, 'title'] = company
 
         self.companies = companies_df
-        companies_df.rename({'title': 'company'}, axis=1)
+        companies_df['company'] = companies_df['title'].copy()
+        companies_df.drop('title', axis=1)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dictionary)
-        
+
         # self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
 
         # data = self.dataframe[['vacancy_id', 'company']].copy()
