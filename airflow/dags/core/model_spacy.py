@@ -139,8 +139,8 @@ class DataPreprocessing:
 
         self.companies = companies_df.rename({'company': 'title'}, axis=1)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
-
-        self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
+        self.dataframe['company'] = self.dataframe['company'].map(companies_dictionary)
+        # self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
 
         # data = self.dataframe[['vacancy_id', 'company']].copy()
         # companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
