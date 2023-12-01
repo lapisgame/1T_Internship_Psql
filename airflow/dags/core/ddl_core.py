@@ -48,7 +48,7 @@ class DatabaseManager:
             """
             self.cur.execute(tech_schema_query)
             self.conn.commit()
-            self.cur.execute(f"""INSERT INTO vacancies_max_id(max_id) VALUES(0);""")
+            self.cur.execute(f"""INSERT INTO {self.schema}.vacancies_max_id(max_id) VALUES(0);""")
             self.conn.commit()
             logging.info(f"Max id table created successfully in {self.schema}")
         except Exception as e:
