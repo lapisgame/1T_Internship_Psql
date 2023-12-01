@@ -138,7 +138,7 @@ class DataPreprocessing:
             companies_df.loc[max_company_id, 'company'] = company
 
         self.companies = companies_df.rename({'company': 'title'}, axis=1)
-        companies_dictionary = dict([companies_df['company'], companies_df['id']])
+        companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
 
         self.dataframe = self.dataframe.replace({'company': {companies_dictionary}})
 
