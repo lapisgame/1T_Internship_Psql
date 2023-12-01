@@ -135,6 +135,7 @@ class DataPreprocessing:
             max_company_id = 0
         for company in new_companies:
             max_company_id += 1
+            companies_df.loc[max_company_id, 'id'] = max_company_id
             companies_df.loc[max_company_id, 'title'] = company
 
         self.companies = companies_df
