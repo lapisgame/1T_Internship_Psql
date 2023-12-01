@@ -48,11 +48,11 @@ for name in static_dictionaries_lst:
 cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
 current_id = cur.fetchone()
 
-if current_id[0] is None:
-    current_id = 0
-else:
-    current_id = int(current_id[0])
-    logging.info(f"{current_id, type(current_id)}")
+# if current_id[0] is None:
+#     current_id = 0
+# else:
+#     current_id = int(current_id[0])
+#     logging.info(f"{current_id, type(current_id)}")
 
 query = f""" SELECT id, url FROM inside_core_schema.vacancies"""
 cur.execute(query)
@@ -69,6 +69,13 @@ class DataPreprocessing:
         towns_vacancies, ds_search, experience_vacancies, specialities_skills.
         Adding post id from core
         """
+        cur.execute("SELECT max_id FROM inside_core_schema.vacancies_max_id LIMIT 1")
+        self.current_id = cur.fetchone()
+
+        if self.current_id[0] is None:
+            self.current_id = 0
+        else:
+            self.current_id = int(self.current_id[0])
 
         # Loading dataframe from raw
         df = dataframe
@@ -78,8 +85,8 @@ class DataPreprocessing:
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
         for i in range(len(new_data)):
-            current_id += 1
-            new_data.loc[i, 'id'] = current_id
+            self.current_id += 1
+            new_data.loc[i, 'id'] = self.current_id
         # new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
         self.dataframe = pd.concat([updating_data, new_data], sort=False, ignore_index=True)
         self.dataframe = self.dataframe.reset_index()
