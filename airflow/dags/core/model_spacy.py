@@ -122,20 +122,24 @@ class DataPreprocessing:
         companies_in_db = pd.merge(data, dict_dict.get('companies_dict'), left_on='company',
                                    right_on='title', how='inner').drop('title',  axis=1)
 
-        self.companies = data[~data['company'].isin(companies_in_db['company'])].copy()
+        companies = data[~data['company'].isin(companies_in_db['company'])].copy()
         if not dict_dict.get('companies_dict').empty:
             max_company_id = max(dict_dict.get('companies_dict')['id'])
         else:
             max_company_id = 0
-        for i in range(len(self.companies)):
-            self.companies.loc[i, 'id'] = max_company_id + i + 1
+        for i in range(len(companies)):
+            companies.loc[i, 'id'] = max_company_id + i + 1
 
+        companies.drop('vacancy_id', axis=1)
+        companies.rename(columns={'company': 'title'}, inplace=True)
+        self.companies = self.companies.append(companies, ignore_index=True)
         print(self.companies)
 
         dict_dict['companies_dict'].rename(columns={'title': 'company'}, inplace=True)
         companies_dict = dict(zip(dict_dict.get('companies_dict')['company'],
                                   dict_dict.get('companies_dict')['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
+
         print(self.dataframe)
 
     def description_lemmatization(self, text):
