@@ -14,7 +14,8 @@ import logging as log
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, conn, base_exchange_rates
+from raw.variables_settings import variables, base_exchange_rates
+from raw.connect_settings import conn
 
 schemes = variables["schemes"]
 
