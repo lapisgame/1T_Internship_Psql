@@ -132,7 +132,7 @@ class DataPreprocessing:
 
         companies.drop('vacancy_id', axis=1)
         companies.rename(columns={'company': 'title'}, inplace=True)
-        self.companies = self.companies.append(companies, ignore_index=True)
+        self.companies = pd.concat([companies[['id, title']], self.companies[['id', 'title']]], ignore_index=True)
         print(self.companies)
 
         dict_dict['companies_dict'].rename(columns={'title': 'company'}, inplace=True)
