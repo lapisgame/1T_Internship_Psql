@@ -131,8 +131,9 @@ class DataPreprocessing:
             self.companies.loc[i, 'id'] = max_company_id + i
 
         print(self.companies)
-        companies_dict = dict(zip(dict_dict.get('companies_dict')['title'].rename(columns={'title': 'company'},
-                                                                                  inplace=True),
+
+        dict_dict['companies_dict'].rename(columns={'title': 'company'}, inplace=True)
+        companies_dict = dict(zip(dict_dict.get('companies_dict')['company'],
                                   dict_dict.get('companies_dict')['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dict)
         print(self.dataframe)
