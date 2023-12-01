@@ -129,7 +129,10 @@ class DataPreprocessing:
 
         companies_df = dict_dict.get('companies_dict')
         new_companies = set(self.dataframe['company'])
-        max_company_id = max(dict_dict.get('companies_dict')['id'])
+        if not dict_dict.get('companies_dict')['id'].empty:
+            max_company_id = max(dict_dict.get('companies_dict')['id'])
+        else:
+            max_company_id = 0
         for company in new_companies:
             max_company_id += 1
             companies_df.loc[max_company_id, 'company'] = company
