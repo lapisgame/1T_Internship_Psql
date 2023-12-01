@@ -138,12 +138,14 @@ class DataPreprocessing:
             companies_df.loc[max_company_id, 'id'] = max_company_id
             companies_df.loc[max_company_id, 'title'] = company
 
-        self.companies = companies_df.copy()
-        companies_df['company'] = companies_df['title'].copy()
-        companies_df.drop('title', axis=1)
+        self.companies = companies_df[['id', 'title']].copy()
+        print(self.companies)
+        companies_df['company'] = companies_df['title']
+        # companies_df.drop('title', axis=1)
         print(companies_df.columns)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
         self.dataframe['company'] = self.dataframe['company'].map(companies_dictionary)
+        print(self.dataframe)
 
         # print(self.dataframe)
 
