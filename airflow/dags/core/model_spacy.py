@@ -137,7 +137,7 @@ class DataPreprocessing:
         print(self.companies)
 
         all_companies.rename(columns={'title': 'company'}, inplace=True)
-        companies_dict = dict(zip(all_companies['id'], all_companies['title']))
+        companies_dict = dict(zip(all_companies['id'], all_companies['company']))
         self.dataframe['company_1'] = self.dataframe['company'].replace(companies_dict)
         self.dataframe['company'] = self.dataframe['company_1']
         self.dataframe.drop('company_1', axis=1, inplace=True)
