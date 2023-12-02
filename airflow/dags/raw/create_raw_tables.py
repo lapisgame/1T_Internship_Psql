@@ -16,7 +16,23 @@ conn.autocommit = False
 
 class DatabaseManager:
     """
-    Class for creating the schema "raw" and tables
+    A class that manages the creation of database schema and tables.
+
+    Args:
+        conn: The connection object to the database.
+
+    Attributes:
+        conn (object): The connection object to the database.
+        cur (object): The cursor object for executing SQL queries.
+        log (object): The logging mixin object for logging messages.
+        schema (str): The name of the database schema.
+        raw_tables (list): A list of raw table definitions.
+
+    Methods:
+        create_raw_schema: Creates the raw database schema.
+        create_raw_tables: Creates the raw tables in the database.
+        create_currency_directory: Creates the currency directory table in the database.
+
     """
     def __init__(self, conn):
         self.conn = conn
@@ -26,6 +42,13 @@ class DatabaseManager:
         self.raw_tables = raw_tables
 
     def create_raw_schema(self):
+        """
+        Creates the raw database schema if it does not already exist.
+
+        Raises:
+            Exception: If there is an error during schema creation.
+
+        """
         try:
             schema_query = f"CREATE SCHEMA IF NOT EXISTS {self.schema}"
             self.cur.execute(schema_query)
@@ -36,6 +59,13 @@ class DatabaseManager:
             self.conn.rollback()
 
     def create_raw_tables(self):
+        """
+        Creates the raw tables in the database.
+
+        Raises:
+            Exception: If there is an error during table creation.
+
+        """
         try:
             for raw_table in self.raw_tables:
                 table_name = raw_table['raw_tables_name']
@@ -79,6 +109,13 @@ class DatabaseManager:
             self.conn.rollback()
 
     def create_currency_directory(self):
+        """
+        Creates the currency directory table in the database.
+
+        Raises:
+            Exception: If there is an error during table creation.
+
+        """
         try:
             table_name = 'currency_directory'
             drop_table_query = f"DROP TABLE IF EXISTS {self.schema}.{table_name};"

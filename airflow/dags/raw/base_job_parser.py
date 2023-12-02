@@ -31,7 +31,7 @@ class BaseJobParser:
         self.df = pd.DataFrame(columns=columns)
         self.dataframe_to_closed = pd.DataFrame(columns=columns)
         self.dataframe_to_update = pd.DataFrame(columns=columns)
-        self.log.info("Созданы DataFrame's для записи вакансий")
+        self.log.info("DataFrames for storing vacancies are created")
         self.url = url
         time.sleep(2)
         self.profs = profs
@@ -89,7 +89,19 @@ class BaseJobParser:
         self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
 
     def save_df(self):
-        self.log.info(f"Осуществляем загрузку данных в БД")
+        """
+        This method saves the DataFrame to a database table. It inserts the data into the table,
+        and in case of a conflict (when a record with the same vacancy_url and version_vac already exists),
+        it updates the existing record with the new values.
+
+        The method performs the following steps:
+        1. Checks if the DataFrame is empty.
+        2. Converts the DataFrame into a list of tuples.
+        3. Constructs the SQL query for inserting the data into the table.
+        4. Executes the query using the `execute_values` method.
+        5. Commits the changes to the database.
+        """
+        self.log.info(f"Loading data into the database")
         try:
             if not self.df.empty:
                 data = [tuple(x) for x in self.df.to_records(index=False)]
@@ -120,25 +132,42 @@ class BaseJobParser:
                     date_closed = EXCLUDED.date_closed, 
                     version_vac = EXCLUDED.version_vac, 
                     actual = EXCLUDED.actual;"""
-                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Insert query: {query}")
                 print(self.df.head())
                 self.log.info(self.df.head())
                 execute_values(self.cur, query, data)
                 self.conn.commit()
-                self.log.info("Общее количество загруженных в БД вакансий: " + str(len(self.df)) + "\n")
+                self.log.info("Total number of loaded vacancies in the database: " + str(len(self.df)) + "\n")
         except Exception as e:
-            self.log.error(f"Произошла ошибка при сохранении данных в функции 'save_df': {e}")
+            self.log.error(f"An error occurred while saving data in the 'save_df' function: {e}")
             raise
 
     def generating_dataframes(self):
         """
-        Method for generating dataframes for data updates
+        This method generates dataframes for further comparison and updating of vacancy records.
+
+        It performs the following steps:
+        1. Checks the data types in the DataFrame.
+        2. Retrieves distinct vacancy URLs from the specified schema and table.
+        3. Compares the vacancy URLs in the database with the parsed data and identifies the URLs to close.
+        4. Creates a dataframe called 'dataframe_to_closed' for the records to be closed.
+        5. If there are URLs to close, retrieves the relevant records from the database and adds them to 'dataframe_to_closed'.
+        6. Assigns status to each record in the parsed data based on its presence in the database.
+        7. Retrieves the most recent record for each URL from the database.
+        8. Compares the attributes of the most recent record with the parsed data.
+        9. If the record is new, adds it to 'dataframe_to_update' with a status of 'existing'.
+        10. If the record is existing and has changed, adds it to 'dataframe_to_update' with a status of 'existing'.
+        11. If the record is closed but has reappeared in the parsed data, adds it to 'dataframe_to_update' with a status of 'new'.
+        12. If the URL is not present in the database, adds the record to 'dataframe_to_update' with a status of 'new'.
+
+        Raises:
+            Exception: If there is an error during the execution of the method.
         """
         try:
             if not self.df.empty:
-                self.log.info(f"Проверка типов данных в DataFrame: \n {self.df.dtypes}")
+                self.log.info(f"Checking data types in DataFrame: \n {self.df.dtypes}")
 
-                self.log.info('Собираем вакансии для сравнения')
+                self.log.info('Collecting vacancies for comparison')
                 query = f"""SELECT DISTINCT vacancy_url FROM {self.schema}.{self.table_name}"""
                 self.cur.execute(query)
                 links_in_db = self.cur.fetchall()
@@ -146,7 +175,7 @@ class BaseJobParser:
                 links_in_parsed = set(self.df['vacancy_url'])
                 links_to_close = links_in_db_set - links_in_parsed
 
-                self.log.info('Создаем датафрейм dataframe_to_closed')
+                self.log.info('Creating dataframe dataframe_to_closed')
                 if links_to_close:
                     for link in links_to_close:
                         query = f"""
@@ -181,11 +210,11 @@ class BaseJobParser:
                                 }
                                 self.dataframe_to_closed = pd.concat([self.dataframe_to_closed,
                                                                       pd.DataFrame(data_to_close, index=[0])])
-                    self.log.info('Датафрейм dataframe_to_closed создан')
+                        self.log.info('Dataframe dataframe_to_closed created')
                 else:
-                    self.log.info('Список links_to_close пуст')
+                    self.log.info('The links_to_close list is empty')
 
-                self.log.info('Присваиваем статусы изменений')
+                self.log.info('Assigning change statuses')
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 for record in data:
                     link = record[0]
@@ -270,46 +299,52 @@ class BaseJobParser:
                         )
 
         except Exception as e:
-            self.log.error(f"Ошибка при работе метода 'generating_dataframes': {e}")
+            self.log.error(f"Error in 'generating_dataframes' method: {e}")
             raise
 
     def update_database_queries(self):
         """
         Method for performing data update in the database
+
+        This method updates the data in the database by inserting new rows or marking existing rows as 'closed'.
+        It takes the data from the `dataframe_to_update` and `dataframe_to_closed` DataFrames and inserts them into
+        the specified table in the database.
+        Raises:
+            Exception: If an error occurs during the data update process.
         """
-        self.log.info('Старт обновления данных в БД')
+        self.log.info('Start updating data in the database.')
         try:
             if not self.dataframe_to_update.empty:
                 data_tuples_to_insert = [tuple(x) for x in self.dataframe_to_update.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_update.columns)
-                self.log.info(f'Обновляем таблицу {self.table_name}.')
+                self.log.info(f'Updating table {self.table_name}.')
                 query = f"""INSERT INTO {self.schema}.{self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 
                             len(self.dataframe_to_update.columns))})"""
-                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Insert query: {query}")
                 self.cur.executemany(query, data_tuples_to_insert)
-                self.log.info(f"Количество строк вставлено в {self.schema}.{self.table_name}: "
-                              f"{len(data_tuples_to_insert)}, обновлена таблица {self.schema}.{self.table_name} "
-                              f"в БД.")
+                self.log.info(f"Number of rows inserted into {self.schema}.{self.table_name}: "
+                              f"{len(data_tuples_to_insert)}, {self.schema}.{self.table_name} table updated in the database.")
 
             if not self.dataframe_to_closed.empty:
-                self.log.info(f'Добавляем строки удаленных вакансий в таблицу {self.table_name}.')
+                self.log.info(f'Adding closed vacancies rows to the {self.table_name} table.')
                 data_tuples_to_closed = [tuple(x) for x in self.dataframe_to_closed.to_records(index=False)]
                 cols = ",".join(self.dataframe_to_closed.columns)
                 query = f"""INSERT INTO {self.schema}.{self.table_name} ({cols}) VALUES ({", ".join(["%s"] * 
                             len(self.dataframe_to_closed.columns))})"""
-                self.log.info(f"Запрос вставки данных: {query}")
+                self.log.info(f"Insert query: {query}")
                 self.cur.executemany(query, data_tuples_to_closed)
-                self.log.info(f"Количество строк помечено как 'closed' в {self.schema}.{self.table_name}: "
-                              f"{len(data_tuples_to_closed)}, обновлена таблица {self.schema}.{self.table_name} в БД.")
+                self.log.info(f"Number of rows marked as 'closed' in {self.schema}.{self.table_name}: "
+                              f"{len(data_tuples_to_closed)}, {self.schema}.{self.table_name} table updated in the database.")
             else:
-                self.log.info(f"dataframe_to_closed пуст.")
+                self.log.info(f"dataframe_to_closed is empty.")
 
             self.conn.commit()
-            self.log.info(f"Операции успешно выполнены. Изменения сохранены в таблицах.")
+            self.log.info(f"Operations completed successfully. Changes saved in the tables.")
         except Exception as e:
             self.conn.rollback()
-            self.log.error(f"Произошла ошибка: {str(e)}")
+            self.log.error(f"An error occurred: {str(e)}")
         finally:
             self.cur.close()
+
 
 

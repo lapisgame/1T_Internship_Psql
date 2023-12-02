@@ -1,12 +1,8 @@
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
 from airflow.utils.task_group import TaskGroup
 import logging
-from logging import handlers
 from datetime import datetime, timedelta
 from airflow.utils.dates import days_ago
 import pandas as pd
-import numpy as np
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -28,7 +24,6 @@ logging.basicConfig(
 
 log = logging
 
-# Параметры по умолчанию
 default_args = {
     "owner": "admin_1T",
     'start_date': days_ago(1)
@@ -36,136 +31,122 @@ default_args = {
 
 class CareerspaceJobParser(BaseJobParser):
     def find_vacancies(self):
+        """
+        This method parses job vacancies from the Careerspace website.
+        It iterates through different pages and job levels to retrieve job details such as company name, vacancy name,
+        vacancy URL, job format, salary range, date created, date of download, source of vacancy, status, version of vacancy,
+        actual status, description, towns, and level of experience.
+        The parsed data is stored in a pandas DataFrame.
+
+        Returns:
+            None
+        """
         HEADERS = {
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",}       
-        url_template = 'https://careerspace.app/api/v2/jobs/filters?skip={i}&take=8&sortBy=new-desc&functions=8%2C13%2C14%2C9&jobLevel%5B0%5D={o}&currencyCode=RUR' 
-        # i - это номер страницы, o - это уровень опыта
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
+        }
+        url_template = 'https://careerspace.app/api/v2/jobs/filters?skip={i}&take=8&sortBy=new-desc&functions=8%2C13%2C14%2C9&jobLevel%5B0%5D={o}&currencyCode=RUR'
+        # i - page number, o - experience level
         on = ['intern', 'specialist', 'manager', 'head', 'director']
-    
-        self.log.info(f'Создаем пустой список')
+
+        self.log.info(f'Creating an empty list')
         self.all_items = []
         self.unique_items = []
         self.items = []
         seen_ids = set()
-        self.log.info(f'Парсим данные')
-        
-        # Парсим линки вакансий с каждой страницы    
-    
+        self.log.info(f'Parsing data')
+
+        # Parse job links from each page
         for o in on:
             page = 1
-            # Пока страницы есть
+            # Iterate until there are pages
             while True:
-                i = page * 8  # 8 - это кол-во вакансий на странице (по-умолчанию)
-                url = base_careerspace.format(i=i, o=o)  # Обновляем URL на каждой итерации
+                i = page * 8  # 8 - number of vacancies per page (default)
+                url = base_careerspace.format(i=i, o=o)  # Update URL on each iteration
                 r = requests.get(url)
 
-                # Проверяем успешность запроса
+                # Check if the request was successful
                 if r.status_code == 200:
-                    # Парсим JSON-ответ
+                    # Parse JSON response
                     data = r.json()
-                    # Извлекаем ссылки из JSON
+                    # Extract links from JSON
                     for job in data.get('jobs', []):
                         full_url = 'https://careerspace.app/job/' + str(job.get('job_id'))
-                        
-                        # получаем зарплату из JSON 
+
+                        # Get salary from JSON
                         if job.get('job_salary_currency') == 'RUB':
                             salary_from = job.get('job_salary_from')
-                            salary_to = job.get('job_salary_to') 
-                        else: 
+                            salary_to = job.get('job_salary_to')
+                        else:
                             salary_from = salary_to = None
-                            
-                        # получаем города и страны из JSON 
+
+                        # Get cities and countries from JSON
                         locations = job.get("locations", {})
                         cities_list = locations.get("cities", [])
                         countries_list = locations.get("countries", [])
 
-                        # Проверяем наличие городов в JSON перед итерацией
+                        # Check for cities in JSON before iteration
                         towns = ", ".join(city["name"] for city in cities_list) if isinstance(cities_list, list) else None
 
-                        # Проверяем наличие стран в JSON перед итерацией
+                        # Check for countries in JSON before iteration
                         countries = ", ".join(country["name"] for country in countries_list) if isinstance(countries_list, list) else None
 
-                        # Объединяем города и страны в одну строку через запятую
+                        # Combine cities and countries into a single string separated by commas
                         towns = ", ".join(filter(None, [towns, countries]))
-                        
-                        # Gолучаем формат работы из JSON 
+
+                        # Get job format from JSON
                         formatted_job_format = job.get('job_format')
                         job_format = ", ".join(map(str, formatted_job_format)) if formatted_job_format else None
-                        
-                        # Gереходим на страницу вакансии и парсим описание вакансии 
+
+                        # Go to the job vacancy page and parse the job description
                         resp = requests.get(full_url, headers=HEADERS)
                         vac = BeautifulSoup(resp.content, 'lxml')
                         description = vac.find('div', {'class': 'j-d-desc'}).text.strip()
-                        
-                        date_created = date_of_download = datetime.now().date()   
-                        
-                        # Задаем значения для уровня опыта
+
+                        date_created = date_of_download = datetime.now().date()
+
+                        # Set values for experience level
                         if o == 'intern':
-                            level = 'Менее 1 года'
+                            level = 'Less than 1 year'
                         elif o == 'specialist':
-                            level = '1-3 года'
+                            level = '1-3 years'
                         elif o == 'manager':
-                            level = '3-5 лет'    
+                            level = '3-5 years'
                         elif o == 'head':
-                            level = '5-10 лет'    
+                            level = '5-10 years'
                         else:
-                            level = 'Более 10 лет'            
+                            level = 'More than 10 years'
 
                         item = {
-                                "company": job.get('company', {}).get('company_name'),
-                                "vacancy_name": job.get('job_name'),
-                                "vacancy_url": full_url,
-                                "job_format": job_format,
-                                "salary_from": salary_from,
-                                "salary_to": salary_to,
-                                "date_created": date_created,
-                                "date_of_download": date_of_download,
-                                "source_vac": 3,
-                                "status": 'existing',
-                                "version_vac": '1',
-                                "actual": '1',
-                                "description": description,
-                                "towns": towns,
-                                "level": level,
-                                }
+                            "company": job.get('company', {}).get('company_name'),
+                            "vacancy_name": job.get('job_name'),
+                            "vacancy_url": full_url,
+                            "job_format": job_format,
+                            "salary_from": salary_from,
+                            "salary_to": salary_to,
+                            "date_created": date_created,
+                            "date_of_download": date_of_download,
+                            "source_vac": 3,
+                            "status": 'existing',
+                            "version_vac": '1',
+                            "actual": '1',
+                            "description": description,
+                            "towns": towns,
+                            "level": level,
+                        }
                         print(f"Adding item: {item}")
                         self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
                         time.sleep(3)
 
-                   # Проверяем, есть ли следующая страница
+                    # Check if there is a next page
                     if not data.get('jobs'):
-                        break  # Если следующая страница пустая, выходим из цикла
+                        break  # If the next page is empty, exit the loop
 
-                    page += 1  # Переходим на следующую страницу
+                    page += 1  # Move to the next page
                 else:
                     print(f"Failed to fetch data for {o}. Status code: {r.status_code}")
-                    break  # Прерываем цикл при ошибке запрос
+                    break  # Break the loop on request error
             self.all_items.extend(self.items)
 
         self.df = self.df.drop_duplicates()
-        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
-
-
-# # Создаем объект CareerspaceJobParser
-# get_match_parser = CareerspaceJobParser(conn=conn, log=log)
-#
-# def init_run_careerspace_parser():
-#     log.info('Запуск парсера Careerspace')
-#     parser = CareerspaceJobParser(conn, log)
-#     items = parser.find_vacancies()
-#     log.info('Парсер Get Match успешно провел работу')
-#     parser.save_df(cursor=conn.cursor(), connection=conn)
-#
-#
-# with DAG(dag_id = "parse_careerspace_jobs", schedule_interval = '@daily', tags=['admin_1T'],
-#     default_args = default_args, catchup = False) as dag:
-#
-#
-#         parse_careerspace_jobs = PythonOperator(
-#             task_id='parse_careerspace_jobs',
-#             python_callable=init_run_careerspace_parser,
-#              provide_context=True)
-#
-#
-# parse_careerspace_jobs
+        self.log.info("Total number of found vacancies after removing duplicates: " + str(len(self.df)) + "\n")
