@@ -1,7 +1,15 @@
 from airflow.utils.task_group import TaskGroup
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.common.keys import Keys
+from fake_useragent import UserAgent
 import logging
 import time
 from datetime import datetime
+import dateparser
 from airflow.utils.dates import days_ago
 from selenium.webdriver.common.by import By
 import numpy as np
@@ -21,6 +29,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 log = logging
+options = ChromeOptions()
 
 # Default parameters
 default_args = {
@@ -77,64 +86,96 @@ class RemoteJobParser(BaseJobParserSelenium):
             vacancy_data['salary_to'] = salary_to
             self.url_l.append(vacancy_data)
 
-    def all_vacs_parser(self):
-        """
-        Метод для нахождения вакансий с Tinkoff
-        """
-        try:
-            self.browser.implicitly_wait(3)
-
-            vacs = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')
-            for vac in vacs:
-                try:
-                    vac_info = {}
-                    vac_info['vacancy_url'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
-                    data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
-                    vac_info['vacancy_name'] = data[0].text
-                    vac_info['level'] = data[1].text
-                    vac_info['towns'] = data[2].text
-                    self.df.loc[len(self.df)] = vac_info
-                except Exception as e:
-                    log.error(f"Произошла ошибка: {e}, ссылка на вакансию: {vac_info['vacancy_url']}")
-
-            self.df = self.df.drop_duplicates()
-            self.log.info("Общее количество найденных вакансий после удаления дубликатов: "
-                          + str(len(self.df)) + "\n")
-            self.df['company'] = 'Тинькофф'
-            self.df['date_created'] = datetime.now().date()
-            self.df['date_of_download'] = datetime.now().date()
-            self.df['source_vac'] = 8
-            self.df['description'] = None
-            self.df['status'] = 'existing'
-            self.df['actual'] = 1
-            self.df['version_vac'] = 1
-
-            self.log.info(
-                f"Парсер завершил работу. Обработано {len(self.df)} вакансий. Оставлены только уникальные записи. "
-                f"Записи обновлены данными о компании, дате создания и загрузки.")
-
-        except Exception as e:
-            self.log.error(f"Произошла ошибка: {e}")
-
     def find_vacancies_description(self):
-        """
-        Метод для парсинга описаний вакансий для TinkoffJobParser.
-        """
-        if not self.df.empty:
-            for descr in self.df.index:
-                try:
-                    vacancy_url = self.df.loc[descr, 'vacancy_url']
-                    self.browser.get(vacancy_url)
-                    self.browser.delete_all_cookies()
-                    self.browser.implicitly_wait(3)
-                    desc = str(self.browser.find_element(By.CLASS_NAME, 'dyzaXu').text)
-                    desc = desc.replace(';', '')
-                    self.df.loc[descr, 'description'] = desc
+        # инициализация главного словаря с данными
+        for vacancy in self.url_l:
+            # self.log.info(f'URL {vacancy["vacancy_link"]}')
+            self.browser.get(vacancy["vacancy_link"])
+            try:
+                date_created = dateparser.parse(
+                    self.wait.until(EC.presence_of_element_located((By.XPATH, "//*[@class='text-left']"))).text.strip(),
+                    languages=['ru']).date()
+            except:
+                date_created = datetime.now().date()
 
-                    self.log.info(f"Описание успешно добавлено для вакансии {descr + 1}")
+            try:
+                text_tag = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="row p-y-3"]')))
+                text = "\n".join((text_tag.text.strip().split("\n")[2:])).replace('\r', '')
+                description = text[:text.find('Откликнуться на вакансию')].strip().replace(
+                    'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой отклик на эту вакансию.',
+                    '')
+            except TimeoutException:
+                # Если исключение вызвано, пропустить текущую итерацию и перейти к следующей вакансии.
+                self.log.error(
+                    f"Не удалось найти текстовый элемент на странице {vacancy['vacancy_link']}. Страница будет пропущена.")
+                continue
 
-                except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
-                    pass
-        else:
-            self.log.info(f"Нет описания вакансий для парсинга")
+            self.df['vacancy_url'].append(vacancy["vacancy_link"])
+            self.df['vacancy_name'].append(vacancy["vacancy_name"])
+            self.df['company'].append(vacancy["company"])
+            self.df['salary_from'].append(vacancy["salary_from"])
+            self.df['salary_to'].append(vacancy["salary_to"])
+            self.df['description'].append(description)
+            self.df['job_format'].append('Удаленная работа')
+            self.df['source_vac'].append('https://remote-job.ru/')
+            self.df['date_created'].append(date_created)
+            self.df['date_of_download'].append(datetime.now().date())
+            self.df['status'].append('existing')
+            self.df['version_vac'].append(1)
+            self.df['actual'].append(1)
+            time.sleep(3)
+
+    def find_vacancies(self):
+        self.wait = WebDriverWait(self.browser, 10)
+        self.url_l = []
+        self.df = {'vacancy_url': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
+                   'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
+                   'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
+                   }
+        options.add_argument('--headless')
+        ua = UserAgent().chrome
+        self.headers = {'User-Agent': ua}
+        options.add_argument(f'--user-agent={ua}')
+
+        self.log.info('Старт парсинга вакансий Remote-Job ...')
+
+        for prof in self.profs:
+            prof_name = prof['fullName']
+            self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
+            try:
+                self.browser.get(self.url)
+                time.sleep(10)
+                # операции поиска и обработки вакансий
+            except Exception as e:
+                self.log.error(f"Ошибка при обработке вакансии {prof_name}: {e}")
+                continue
+            try:
+                search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
+                search.send_keys(prof_name)
+                search.send_keys(Keys.ENTER)
+            except NoSuchElementException:
+                self.log.error(f"No such element: Unable to locate element: for profession {prof_name}")
+                continue
+
+            if self.browser.find_element(By.CSS_SELECTOR, '.h2, h2').text == 'Vacancies not found':
+                continue
+            try:
+                last_page = int(self.browser.find_element(By.CLASS_NAME, 'pagination').text.split('\n')[-2])
+            except NoSuchElementException:
+                last_page = 2
+
+            vacancy_url = self.browser.current_url
+
+            self.log.info(f'Страниц для обработки: {last_page}')
+
+            for i in range(1, last_page + 1):
+                self.log.info(f'Обрабатывается страница {i}/{last_page}.')
+                vacancy_url_for_page = f'{vacancy_url}&page={i}'
+                self.main_page(vacancy_url_for_page)
+                self.find_vacancies_description()
+                self.url_l = []
+                self.log.info(f'Страница {i} обработана!')
+
+            # Добавляем обновление браузера для каждой новой вакансии
+            self.browser.refresh()
+            time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
