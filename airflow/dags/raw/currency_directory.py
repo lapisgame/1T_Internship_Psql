@@ -63,11 +63,12 @@ class CurrencyDirectory():
         and stored in the `exchange_rate` DataFrame.
         """
         try:
-            data = requests.get(f'"{base_exchange_rates}"').json()
+            data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
             self.exchange_rate['exchange_rate_date'] = datetime.now().date()
             self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
             self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
             self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value'] / 100
+            self.log.info(self.exchange_rate)
 
         except Exception as e:
             self.log.error(f"An error occurred: {e}.")
