@@ -75,7 +75,7 @@ class VKJobParser(BaseJobParserSelenium):
                 print(f"Произошла ошибка: {e}")
 
         self.df = self.df.drop_duplicates()
-        self.log.info("Общее количество найденных вакансий в Yandex после удаления дубликатов: " +
+        self.log.info("Общее количество найденных вакансий в vk после удаления дубликатов: " +
                       str(len(self.df)) + "\n")
         self.df['date_created'] = datetime.now().date()
         self.df['date_of_download'] = datetime.now().date()
@@ -87,7 +87,7 @@ class VKJobParser(BaseJobParserSelenium):
 
     def find_vacancies_description(self):
         """
-        Метод для парсинга описаний вакансий для YandJobParser.
+        Метод для парсинга описаний вакансий для VkJobParser.
         """
         if not self.df.empty:
             self.log.info('Старт парсинга описаний вакансий')
@@ -97,7 +97,7 @@ class VKJobParser(BaseJobParserSelenium):
                     self.browser.get(vacancy_url)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(5)
-                    if isinstance(self, YandJobParser):
+                    if isinstance(self, vkJobParser):
                         desc = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-mvp__description').text
                         desc = desc.replace(';', '')
                         self.df.loc[descr, 'description'] = str(desc)
