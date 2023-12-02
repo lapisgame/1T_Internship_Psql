@@ -77,7 +77,8 @@ class CurrencyDirectory:
             for currency in self.currencies:
                 value = data['Valute'][currency]['Value']
                 if currency == 'KZT':
-                    value = round((value / 100), 4)
+                    value = value / 100
+                value = round(value, 4)
                 self.exchange_rate.at[0, currency.lower() + '_rate'] = value
 
         except Exception as e:
