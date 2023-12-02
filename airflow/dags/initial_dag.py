@@ -32,9 +32,13 @@ import pandas as pd
 import numpy as np
 import os
 
+import sys
+sys.path.insert(0, '/opt/airflow/dags/')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Connections settings
 # Загружаем данные подключений из JSON файла
-with open('raw/opt/airflow/dags/', 'r') as conn_file:
+with open('/opt/airflow/dags/config_connections.json', 'r') as conn_file:
     connections_config = json.load(conn_file)
 
 # Получаем данные конфигурации подключения и создаем конфиг для клиента
