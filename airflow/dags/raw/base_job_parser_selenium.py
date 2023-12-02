@@ -20,6 +20,7 @@ options = ChromeOptions()
 raw_tables = variables['raw_tables']
 schemes = variables["schemes"]
 
+
 class BaseJobParserSelenium:
     """
     Base class for parsing job vacancies
