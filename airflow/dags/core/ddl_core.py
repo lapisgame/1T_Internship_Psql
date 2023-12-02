@@ -1,8 +1,10 @@
 import logging
-from raw.connect_settings import conn, engine
+
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from connect_settings import conn, engine
 
 # logging configuration parameters
 logging.basicConfig(

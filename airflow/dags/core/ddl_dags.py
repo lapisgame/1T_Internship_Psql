@@ -1,4 +1,4 @@
-from raw.connect_settings import conn, engine
+from connect_settings import conn, engine
 
 conn.autocommit = False
 from core.ddl_core import DatabaseManager
