@@ -4,8 +4,6 @@ import time
 from datetime import datetime
 from airflow.utils.dates import days_ago
 from selenium.webdriver.common.by import By
-import pandas as pd
-import dateparser
 
 import sys
 import os

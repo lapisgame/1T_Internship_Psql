@@ -1,4 +1,4 @@
-from raw.connect_settings import conn, engine
+from connect_settings import conn, engine
 conn.autocommit = False
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -8,10 +8,11 @@ from datetime import datetime, timedelta
 
 import sys
 import os
+sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.get_match import GetMatchJobParser, table_name
-from raw.variables_settings import variables, base_getmatch, profs
+from variables_settings import variables, base_getmatch, profs
 from parser_dags.base_dag import BaseDags
 
 

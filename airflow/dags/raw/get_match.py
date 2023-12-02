@@ -15,7 +15,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, base_getmatch
+from variables_settings import variables, base_getmatch
 from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][6]['raw_tables_name']

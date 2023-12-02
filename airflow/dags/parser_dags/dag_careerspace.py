@@ -1,5 +1,5 @@
 import json
-from raw.connect_settings import conn, engine
+from connect_settings import conn, engine
 conn.autocommit = False
 import psycopg2
 from airflow import DAG
@@ -7,11 +7,14 @@ from airflow.operators.python_operator import PythonOperator
 import logging as log
 from datetime import datetime, timedelta
 import sys
+
+sys.path.insert(0, '/opt/airflow/dags/')
+import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.careerspace import CareerspaceJobParser, table_name
-from raw.variables_settings import variables, base_careerspace, profs
+from variables_settings import variables, base_careerspace, profs
 from parser_dags.base_dag import BaseDags
 
 

@@ -1,5 +1,5 @@
 from raw.base_job_parser import BaseJobParser
-from raw.variables_settings import variables, base_zarplata, profs
+from variables_settings import variables, base_zarplata, profs
 
 import re
 import pandas as pd

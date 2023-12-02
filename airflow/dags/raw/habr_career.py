@@ -1,43 +1,18 @@
 import dateparser
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import csv, json
-import psycopg2
-from airflow import settings
-from psycopg2.extras import execute_values
-from psycopg2.extensions import register_adapter, AsIs
-from airflow import settings
-from sqlalchemy import create_engine
-from airflow import DAG
-from selenium.common.exceptions import NoSuchElementException
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.utils.log.logging_mixin import LoggingMixin
-from typing import Callable
-from airflow.utils.task_group import TaskGroup
-import logging
-from logging import handlers
-from airflow import models
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.hooks.base_hook import BaseHook
-from airflow.models import Variable
 import time
 from datetime import datetime, timedelta
 import logging as log
 import pandas as pd
-import numpy as np
-import os
 import requests
 from bs4 import BeautifulSoup
-from airflow.utils.dates import days_ago
 import re
+
 import sys
 import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.connect_settings import conn
-from raw.variables_settings import variables, base_habr
+from variables_settings import variables, base_habr
 from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][5]['raw_tables_name']

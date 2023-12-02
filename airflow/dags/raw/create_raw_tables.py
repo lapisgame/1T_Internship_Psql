@@ -9,8 +9,8 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from raw.connect_settings import conn
-from raw.variables_settings import raw_tables, schemes
+from connect_settings import conn
+from variables_settings import raw_tables, schemes
 
 conn.autocommit = False
 
