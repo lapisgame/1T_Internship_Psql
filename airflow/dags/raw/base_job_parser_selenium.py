@@ -14,7 +14,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, profs
+from variables_settings import variables, profs
 
 options = ChromeOptions()
 raw_tables = variables['raw_tables']
