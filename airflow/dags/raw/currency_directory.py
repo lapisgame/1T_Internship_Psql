@@ -49,10 +49,12 @@ class CurrencyDirectory():
         self.conn = conn
         self.cur = conn.cursor()
         self.url = base_exchange_rates
-        self.exchange_rate = pd.DataFrame()
         self.schema = schemes['raw']
         self.table_name = 'currency_directory'
         self.log = log
+
+        columns = ['exchange_rate_date', 'usd_rate', 'eur_rate', 'kzt_rate']
+        self.exchange_rate = pd.DataFrame(columns=columns)
 
     def obtaining_currency(self):
         """
