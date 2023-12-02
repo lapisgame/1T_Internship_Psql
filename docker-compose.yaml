@@ -350,6 +350,8 @@ services:
       - flower
     ports:
       - 5555:5555
+    networks:
+      - airflow_postgres
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
       interval: 10s
@@ -381,8 +383,8 @@ services:
   selenium-event-bus:
     image: selenium/event-bus:latest
     container_name: selenium-event-bus
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     ports:
       - "4442:4442"
       - "4443:4443"
@@ -396,8 +398,8 @@ services:
       - "10116:5556"
     depends_on:
       - selenium-event-bus
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
@@ -406,8 +408,8 @@ services:
   selenium-session-queue:
     image: selenium/session-queue:latest
     container_name: selenium-session-queue
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     ports:
       - "10118:5559"
 
@@ -420,8 +422,8 @@ services:
       - selenium-event-bus
       - selenium-sessions
       - selenium-session-queue
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
@@ -434,8 +436,8 @@ services:
   selenium-router:
     image: selenium/router:latest
     container_name: selenium-router
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     ports:
       - "10144:4444"
     depends_on:
@@ -455,8 +457,8 @@ services:
     shm_size: 2gb
     depends_on:
       - selenium-event-bus
-#    networks:
-#      - airflow_postgres
+    networks:
+      - airflow_postgres
     environment:
       - SE_EVENT_BUS_HOST=selenium-event-bus
       - SE_EVENT_BUS_PUBLISH_PORT=4442
