@@ -8,10 +8,11 @@ from datetime import datetime, timedelta
 
 import sys
 import os
+sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.tinkoff_parser import TinkoffJobParser, table_name
-from raw.variables_settings import variables, base_tin, profs
+from variables_settings import variables, base_tin, profs
 from parser_dags.base_dag import BaseDags
 
 

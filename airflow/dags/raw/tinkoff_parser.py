@@ -12,7 +12,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables
+from variables_settings import variables
 from raw.base_job_parser_selenium import BaseJobParserSelenium
 
 table_name = variables['raw_tables'][2]['raw_tables_name']
@@ -39,7 +39,7 @@ class TinkoffJobParser(BaseJobParserSelenium):
         elements = self.browser.find_elements(By.CLASS_NAME, 'fuBQPo')
         for element in elements:
             element.click()
-        self.log.info('Aункция open_all_pages успешно завершена')
+        self.log.info('Функция open_all_pages успешно завершена')
 
     def all_vacs_parser(self):
         """
