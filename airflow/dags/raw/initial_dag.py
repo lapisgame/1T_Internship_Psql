@@ -743,21 +743,21 @@ class YandJobParser(BaseJobParser):
 
 db_manager = DatabaseManager(conn=conn)
 
-def init_run_vk_parser(**context):
-    """
-    Основной вид задачи для запуска парсера для вакансий VK
-    """
-    log = context['ti'].log
-    log.info('Запуск парсера ВК')
-    try:
-        parser = VKJobParser(base_vk, profs, log, conn)
-        parser.find_vacancies()
-        parser.find_vacancies_description()
-        parser.save_df()
-        parser.stop()
-        log.info('Парсер ВК успешно провел работу')
-    except Exception as e:
-        log.error(f'Ошибка во время работы парсера ВК: {e}')
+# def init_run_vk_parser(**context):
+#     """
+#     Основной вид задачи для запуска парсера для вакансий VK
+#     """
+#     log = context['ti'].log
+#     log.info('Запуск парсера ВК')
+#     try:
+#         parser = VKJobParser(base_vk, profs, log, conn)
+#         parser.find_vacancies()
+#         parser.find_vacancies_description()
+#         parser.save_df()
+#         parser.stop()
+#         log.info('Парсер ВК успешно провел работу')
+#     except Exception as e:
+#         log.error(f'Ошибка во время работы парсера ВК: {e}')
 
 def init_run_sber_parser(**context):
     """
@@ -891,19 +891,20 @@ with DAG(
         )
 
         with TaskGroup('parsers_group') as parsers_group:
-            parse_vkjobs_task = generate_parser_task('parse_vkjobs', init_run_vk_parser)
+            # parse_vkjobs_task = generate_parser_task('parse_vkjobs', init_run_vk_parser)
             parse_sber_task = generate_parser_task('parse_sber', init_run_sber_parser)
             parse_tink_task = generate_parser_task('parse_tink', init_run_tin_parser)
             parse_yand_task = generate_parser_task('parse_yand', init_run_yand_parser)
 
             # Определение порядка выполнения задач внутри группы задач
-            parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task
+            # parse_vkjobs_task >> parse_sber_task >> parse_tink_task >> parse_yand_task
+            parse_sber_task >> parse_tink_task >> parse_yand_task
 
         hello_bash_task >> create_raw_tables >> parsers_group >> create_core_fact_table >> end_task
 
 # Создаем отдельные DAG для каждой задачи парсинга
-initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs',
-                                      init_run_vk_parser, start_date)
+# initial_dag_vk = generate_parsing_dag('initial_vk_parsing_dag', 'initial_parse_vkjobs',
+#                                       init_run_vk_parser, start_date)
 initial_dag_sber = generate_parsing_dag('initial_sber_parsing_dag', 'initial_parse_sber',
                                         init_run_sber_parser, start_date)
 initial_dag_tink = generate_parsing_dag('initial_tink_parsing_dag', 'initial_parse_tink',
@@ -913,7 +914,7 @@ initial_dag_yand = generate_parsing_dag('initial_yand_parsing_dag', 'initial_par
 
 # Делаем DAG's глобально доступными
 globals()[initial_common_dag_id] = initial_common_dag
-globals()[initial_dag_vk.dag_id] = initial_dag_vk
+# globals()[initial_dag_vk.dag_id] = initial_dag_vk
 globals()[initial_dag_sber.dag_id] = initial_dag_sber
 globals()[initial_dag_tink.dag_id] = initial_dag_tink
 globals()[initial_dag_yand.dag_id] = initial_dag_yand
