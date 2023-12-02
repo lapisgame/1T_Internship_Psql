@@ -288,7 +288,7 @@ class VKJobParser(BaseJobParser):
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
         self.df['date_created'] = datetime.now().date()
         self.df['date_of_download'] = datetime.now().date()
-        self.df['source_vac'] = url_vk
+        self.df['source_vac'] = 9
         self.df['status'] = 'existing'
         self.df['version_vac'] = 1
         self.df['actual'] = 1
@@ -413,7 +413,7 @@ class SberJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: "
                       + str(len(self.df)) + "\n")
-        self.df['source_vac'] = url_sber
+        self.df['source_vac'] = 7
         self.df['date_created'] = self.df['date_created'].apply(lambda x: dateparser.parse(x, languages=['ru']))
         self.df['date_created'] = pd.to_datetime(self.df['date_created']).dt.to_pydatetime()
         self.df['date_of_download'] = datetime.now().date()
@@ -542,7 +542,7 @@ class TinkoffJobParser(BaseJobParser):
             self.df['company'] = 'Тинькофф'
             self.df['date_created'] = datetime.now().date()
             self.df['date_of_download'] = datetime.now().date()
-            self.df['source_vac'] = url_tin
+            self.df['source_vac'] = 8
             self.df['description'] = None
             self.df['status'] = 'existing'
             self.df['actual'] = 1
@@ -666,7 +666,7 @@ class YandJobParser(BaseJobParser):
                       str(len(self.df)) + "\n")
         self.df['date_created'] = datetime.now().date()
         self.df['date_of_download'] = datetime.now().date()
-        self.df['source_vac'] = url_yand
+        self.df['source_vac'] = 10
         self.df['description'] = None
         self.df['status'] = 'existing'
         self.df['actual'] = 1
@@ -752,7 +752,7 @@ def init_run_vk_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера ВК')
     try:
-        parser = VKJobParser(url_vk, profs, log, conn)
+        parser = VKJobParser(base_vk, profs, log, conn)
         parser.find_vacancies()
         parser.find_vacancies_description()
         parser.save_df()
@@ -768,7 +768,7 @@ def init_run_sber_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Сбербанка')
     try:
-        parser = SberJobParser(url_sber, profs, log, conn)
+        parser = SberJobParser(base_sber, profs, log, conn)
         parser.find_vacancies()
         parser.find_vacancies_description()
         parser.save_df()
@@ -784,7 +784,7 @@ def init_run_tin_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Тинькофф')
     try:
-        parser = TinkoffJobParser(url_tin, profs, log, conn)
+        parser = TinkoffJobParser(base_tin, profs, log, conn)
         parser.open_all_pages()
         parser.all_vacs_parser()
         parser.find_vacancies_description()
@@ -802,7 +802,7 @@ def init_run_yand_parser(**context):
     log = context['ti'].log
     log.info('Запуск парсера Yandex')
     try:
-        parser = YandJobParser(url_yand, profs, log, conn)
+        parser = YandJobParser(base_yand, profs, log, conn)
         parser.find_vacancies()
         parser.find_vacancies_description()
         parser.save_df()
