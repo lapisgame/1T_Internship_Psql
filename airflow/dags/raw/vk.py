@@ -40,7 +40,7 @@ class VKJobParser(BaseJobParserSelenium):
             # Enter search query
             input_button = self.browser.find_element(By.XPATH,
                                                      '/html/body/div/div[1]/div[1]/div/form/div[1]/div[4]/div/div/div/div/input')
-            input_button.send_keys(prof['fullName'])
+            input_button.send_keys(prof)
 
             # Click search button
             click_button = self.browser.find_element(By.XPATH,
@@ -56,7 +56,7 @@ class VKJobParser(BaseJobParserSelenium):
                 vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
                 vacs = vacs_bar.find_elements(By.CLASS_NAME, 'result-item')
                 vacs = [div for div in vacs if 'result-item' in str(div.get_attribute('class'))]
-                self.log.info(f"Parsing vacancies for query: {prof['fullName']}")
+                self.log.info(f"Parsing vacancies for query: {prof}")
                 self.log.info(f"Number of vacancies: " + str(len(vacs)) + "\n")
 
                 for vac in vacs:
