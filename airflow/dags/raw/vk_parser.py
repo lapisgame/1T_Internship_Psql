@@ -87,28 +87,21 @@ class VKJobParser(BaseJobParserSelenium):
 
     def find_vacancies_description(self):
         """
-        Метод для парсинга описаний вакансий для VkJobParser.
+        Метод для парсинга вакансий, должен быть дополнен в наследниках
         """
-        if not self.df.empty:
-            self.log.info('Старт парсинга описаний вакансий')
+        if len(self.df) > 0:
             for descr in self.df.index:
                 try:
-                    vacancy_url = self.df.loc[descr, 'vacancy_url']
-                    self.browser.get(vacancy_url)
+                    link = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(link)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(5)
-                    if isinstance(self, vkJobParser):
-                        desc = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-mvp__description').text
+                    if isinstance(self, VKJobParser):
+                        desc = self.browser.find_element(By.CLASS_NAME, 'section').text
                         desc = desc.replace(';', '')
-                        self.df.loc[descr, 'description'] = str(desc)
-                        skills = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-tags-block').text
-                        self.df.loc[descr, 'skills'] = str(skills)
-                        header = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-content-header')
-                        vacancy_name = header.find_element(By.CLASS_NAME, 'lc-styled-text__text').text
-                        self.df.loc[descr, 'vacancy_name'] = str(vacancy_name)
-
+                        self.df.loc[desc, 'description'] = str(desc)
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
+                    print(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
                     pass
         else:
-            self.log.info(f"Нет вакансий для парсинга")
+            print("Нет вакансий для парсинга")
