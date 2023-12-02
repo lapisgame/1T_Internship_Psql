@@ -62,11 +62,15 @@ class CurrencyDirectory():
         The response is expected to be in JSON format, and the exchange rates are extracted
         and stored in the `exchange_rate` DataFrame.
         """
-        data = requests.get(f'{base_exchange_rates}').json()
-        self.exchange_rate['exchange_rate_date'] = datetime.now().date()
-        self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
-        self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
-        self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value'] / 100
+        try:
+            data = requests.get(f'{base_exchange_rates}').json()
+            self.exchange_rate['exchange_rate_date'] = datetime.now().date()
+            self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
+            self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
+            self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value'] / 100
+
+        except Exception as e:
+            self.log.error(f"An error occurred: {e}.")
 
     def adapt_numpy_null(self):
         """
