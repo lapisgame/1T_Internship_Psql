@@ -345,6 +345,3 @@ class BaseJobParser:
             self.log.error(f"An error occurred: {str(e)}")
         finally:
             self.cur.close()
-
-
-
