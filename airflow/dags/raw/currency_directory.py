@@ -45,13 +45,14 @@ class CurrencyDirectory():
     - save_exchange_rate: Saves the exchange rates in the database table.
     """
 
-    def __init__(self, conn, log, base_exchange_rates, schemes):
+    def __init__(self, conn, log, base_exchange_rates, schemes, currencies):
         self.conn = conn
         self.cur = conn.cursor()
         self.url = base_exchange_rates
         self.schema = schemes['raw']
         self.table_name = 'currency_directory'
         self.log = log
+        self.currencies = currencies
 
         self.columns = ['exchange_rate_date', 'usd_rate', 'eur_rate', 'kzt_rate']
         self.exchange_rate = pd.DataFrame(columns=self.columns)
@@ -68,7 +69,7 @@ class CurrencyDirectory():
             data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
             self.exchange_rate['exchange_rate_date'] = datetime.now().date()
             for column in self.columns:
-                for currency in currencies:
+                for currency in self.currencies:
                     if currency != 'KZT':
                         self.exchange_rate.loc[:, column] = data['Valute'][currency]['Value']
                         print(self.exchange_rate[column])
