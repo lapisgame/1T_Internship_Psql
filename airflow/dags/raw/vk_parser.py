@@ -51,7 +51,6 @@ class VKJobParser(BaseJobParserSelenium):
             self.scroll_down_page()
 
             try:
-                # vacs_bar = self.browser.find_element(By.XPATH, '/html/body/div/div[1]/div[2]/div/div')
                 vacs = self.browser.find_elements(By.CLASS_NAME, 'vacancy_vacancyItem__jrNqL')
                 vacs = [div for div in vacs if 'vacancy_vacancyItem__jrNqL' in str(div.get_attribute('class'))]
                 print(f"Парсим вакансии по запросу: {prof}")
@@ -89,17 +88,16 @@ class VKJobParser(BaseJobParserSelenium):
         """
         Метод для парсинга вакансий, должен быть дополнен в наследниках
         """
-        if len(self.df) > 0:
+        if not self.df.empty:
             for descr in self.df.index:
                 try:
                     link = self.df.loc[descr, 'vacancy_url']
                     self.browser.get(link)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(5)
-                    if isinstance(self, VKJobParser):
-                        desc = self.browser.find_element(By.CLASS_NAME, 'section').text
-                        desc = desc.replace(';', '')
-                        self.df.loc[desc, 'description'] = str(desc)
+                    desc = self.browser.find_element(By.CLASS_NAME, 'section').text
+                    desc = desc.replace(';', '')
+                    self.df.loc[descr, 'description'] = str(desc)
                 except Exception as e:
                     print(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
                     pass
