@@ -40,10 +40,10 @@ variables = {
 profs = [
     # "Data engineer",
     # "Data analyst",
-    # "Data scientist",
+    "Data scientist",
     # "System analyst",
     # "Business analyst",
-    "Project manager",
+    # "Project manager",
     # "Product manager",
     # "Backend developer",
     # "Frontend developer",
