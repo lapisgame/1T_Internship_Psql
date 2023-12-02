@@ -47,6 +47,7 @@ class TinkoffJobParser(BaseJobParserSelenium):
         """
         try:
             self.browser.implicitly_wait(3)
+
             vacs = self.browser.find_elements(By.CLASS_NAME, 'eM3bvP')
             for vac in vacs:
                 try:
