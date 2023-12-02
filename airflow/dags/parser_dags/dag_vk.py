@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.vk import VKJobParser, table_name
+from raw.vk_parser import VKJobParser, table_name
 from variables_settings import variables, base_vk, profs
 from parser_dags.base_dag import BaseDags
 
