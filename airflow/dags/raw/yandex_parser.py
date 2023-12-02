@@ -36,13 +36,10 @@ class YandJobParser(BaseJobParserSelenium):
 
     def find_vacancies(self):
         self.log.info('Старт парсинга вакансий Yandex')
-        self.df = pd.DataFrame(columns=['vacancy_url', 'vacancy_name', 'company', 'skills', 'source_vac', 'date_created',
-                                        'date_of_download', 'status', 'version_vac', 'actual', 'description'])
-        self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(3)
         # Поиск и запись вакансий на поисковой странице
         for prof in self.profs:
-            text_str = self.url + '?text=' + str(prof['fullName'].replace(' ', '+')).lower()
+            text_str = self.url + '?text=' + str(prof.replace(' ', '+')).lower()
             self.browser.get(text_str)
             self.browser.maximize_window()
             self.browser.delete_all_cookies()
@@ -56,7 +53,7 @@ class YandJobParser(BaseJobParserSelenium):
                 self.browser.implicitly_wait(60)
                 vacs_bar = self.browser.find_element(By.CLASS_NAME, 'lc-jobs-vacancies-list')
                 vacs = vacs_bar.find_elements(By.CLASS_NAME, 'lc-jobs-vacancy-card')
-                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
+                self.log.info(f"Парсим вакансии по запросу: {prof}")
                 self.log.info(f"Количество: " + str(len(vacs)) + "\n")
 
                 for vac in vacs:
