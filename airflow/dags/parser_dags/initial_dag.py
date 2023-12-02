@@ -355,6 +355,7 @@ class VKJobParser(BaseJobParser):
             self.cur.close()
             self.conn.close()
 
+
 class SberJobParser(BaseJobParser):
     """
     Парсер для вакансий с сайта Sberbank, наследованный от BaseJobParser
