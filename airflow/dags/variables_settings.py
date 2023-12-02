@@ -20,6 +20,7 @@ variables = {
     "base_careerspace": "https://careerspace.app/api/v2/jobs/filters?skip={i}&take=8&sortBy=new-desc&functions=8%2C13%2C14%2C9&jobLevel%5B0%5D={o}&currencyCode=RUR",
     "base_hh": "https://api.hh.ru/vacancies",
     "base_zarplata": "https://api.zarplata.ru/vacancies",
+    "base_vseti": "https://www.vseti.app/jobs?1cd4ffac_page={i}",
     "base_exchange_rates": "https://www.cbr-xml-daily.ru/daily_json.js",
     "raw_tables": [
         {"raw_tables_name": "raw_vk"},
