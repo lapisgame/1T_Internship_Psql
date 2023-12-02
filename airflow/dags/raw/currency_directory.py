@@ -77,14 +77,14 @@ class CurrencyDirectory:
             for currency in self.currencies:
                 value = data['Valute'][currency]['Value']
                 if currency == 'KZT':
-                    value = value / 100
+                    value = round((value / 100), 4)
                 self.exchange_rate.at[0, currency.lower() + '_rate'] = value
 
         except Exception as e:
             self.log.error(f"An error occurred while obtaining currency exchange rates: {e}")
             raise
 
-        self.exchange_rate.reset_index(drop=True, inplace=True)
+        # self.exchange_rate.reset_index(drop=True, inplace=True)
 
     def adapt_numpy_null(self):
         """
