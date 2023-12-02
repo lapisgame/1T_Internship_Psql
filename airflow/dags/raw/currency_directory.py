@@ -20,7 +20,7 @@ from raw.connect_settings import conn
 schemes = variables["schemes"]
 
 
-class CurrencyDirectory():
+class CurrencyDirectory:
     """
     This class represents a currency directory and provides methods to obtain currency exchange rates
     and save them in a database table.
