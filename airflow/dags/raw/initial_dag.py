@@ -72,8 +72,6 @@ raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex', 'del_vacancy_co
 
 options = ChromeOptions()
 
-profs = dag_variables.get('professions')
-
 logging_level = os.environ.get('LOGGING_LEVEL', 'DEBUG').upper()
 logging.basicConfig(level=logging_level)
 log = logging.getLogger(__name__)
