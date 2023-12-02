@@ -101,7 +101,7 @@ class VKJobParser(BaseJobParserSelenium):
                         desc = desc.replace(';', '')
                         self.df.loc[desc, 'description'] = str(desc)
                 except Exception as e:
-                    print(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'link']}")
+                    print(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
                     pass
         else:
             print("Нет вакансий для парсинга")
