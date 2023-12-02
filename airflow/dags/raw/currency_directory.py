@@ -122,7 +122,7 @@ class CurrencyDirectory():
         finally:
             self.cur.close()
 
-def exchange_rates(self):
+def exchange_rates():
     """
     Main function for running the currency exchange rates parser
     """
