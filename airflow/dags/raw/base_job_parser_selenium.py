@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, profs
 
+options = ChromeOptions()
 raw_tables = variables['raw_tables']
 schemes = variables["schemes"]
 
@@ -31,7 +32,7 @@ class BaseJobParserSelenium:
         self.raw_tables = raw_tables
         self.conn = conn
         self.cur = conn.cursor()
-        self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=ChromeOptions)
+        self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
         self.browser.get(self.url)
         self.browser.maximize_window()
         self.browser.delete_all_cookies()
