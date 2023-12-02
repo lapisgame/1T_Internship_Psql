@@ -27,8 +27,10 @@ class CurrencyDirectory:
 
     Parameters:
     - conn: The connection object to the database.
+    - log: The log object for logging messages.
     - base_exchange_rates: The base URL for obtaining exchange rates.
     - schemes: A dictionary containing schema information.
+    - currencies: A list of currencies to obtain exchange rates for.
 
     Attributes:
     - conn: The connection object to the database.
@@ -37,6 +39,9 @@ class CurrencyDirectory:
     - exchange_rate: A Pandas DataFrame to store the exchange rates.
     - schema: The schema for the raw exchange rate data.
     - table_name: The name of the currency directory table.
+    - log: The log object for logging messages.
+    - currencies: A list of currencies to obtain exchange rates for.
+    - columns: The columns of the exchange_rate DataFrame.
 
     Methods:
     - obtaining_currency: Obtains the currency exchange rates from the given URL and stores them in the DataFrame.
@@ -66,21 +71,15 @@ class CurrencyDirectory:
         and stored in the `exchange_rate` DataFrame.
         """
         try:
-            data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
+            data = requests.get(self.url).json()
             self.exchange_rate['exchange_rate_date'] = datetime.now().date()
-            for column in self.columns:
-                for currency in self.currencies:
-                    if currency != 'KZT':
-                        self.exchange_rate.loc[:, column] = data['Valute'][currency]['Value']
-                        print(self.exchange_rate[column])
-                    else:
-                        self.exchange_rate.loc[:, column] = data['Valute'][currency]['Value'] / 100
-                        print(self.exchange_rate[column])
-
-            self.log.info(self.exchange_rate)
+            for currency in self.currencies:
+                value = data['Valute'][currency]['Value']
+                self.exchange_rate[currency.lower() + '_rate'] = value
 
         except Exception as e:
-            self.log.error(f"An error occurred: {e}.")
+            self.log.error(f"An error occurred while obtaining currency exchange rates: {e}")
+            raise
 
     def adapt_numpy_null(self):
         """
@@ -143,6 +142,7 @@ def exchange_rates():
     """
     log.info('Starting currency exchange rates parser')
     try:
+        # Assuming conn, log, base_exchange_rates, schemes are defined somewhere
         parser = CurrencyDirectory(conn, log, base_exchange_rates, schemes, currencies)
         parser.obtaining_currency()
         parser.adapt_numpy_null()
@@ -166,7 +166,7 @@ with DAG(
     parse_get_match_jobs = PythonOperator(
         task_id='upd_exchange_rates_task',
         python_callable=exchange_rates,
-        # provide_context=True
+        provide_context=True
     )
 
 
