@@ -143,7 +143,7 @@ def exchange_rates():
     """
     log.info('Starting currency exchange rates parser')
     try:
-        parser = CurrencyDirectory(conn, log, base_exchange_rates, schemes)
+        parser = CurrencyDirectory(conn, log, base_exchange_rates, schemes, currencies)
         parser.obtaining_currency()
         parser.adapt_numpy_null()
         parser.save_exchange_rate()
