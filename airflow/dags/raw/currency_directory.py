@@ -70,11 +70,11 @@ class CurrencyDirectory():
             for column in self.columns:
                 for currency in currencies:
                     if currency != 'KZT':
-                        self.exchange_rate[f'{column}'] = data['Valute'][f'{currency}']['Value']
-                        print(self.exchange_rate[f'{column}'])
+                        self.exchange_rate.loc[:, column] = data['Valute'][currency]['Value']
+                        print(self.exchange_rate[column])
                     else:
-                        self.exchange_rate[f'{column}'] = data['Valute'][f'{currency}']['Value'] / 100
-                        print(self.exchange_rate[f'{column}'])
+                        self.exchange_rate.loc[:, column] = data['Valute'][currency]['Value'] / 100
+                        print(self.exchange_rate[column])
 
             self.log.info(self.exchange_rate)
 
