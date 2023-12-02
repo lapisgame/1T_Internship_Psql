@@ -45,13 +45,14 @@ class CurrencyDirectory():
     - save_exchange_rate: Saves the exchange rates in the database table.
     """
 
-    def __init__(self, conn, base_exchange_rates, schemes):
+    def __init__(self, conn, log, base_exchange_rates, schemes):
         self.conn = conn
         self.cur = conn.cursor()
         self.url = base_exchange_rates
         self.exchange_rate = pd.DataFrame()
         self.schema = schemes['raw']
         self.table_name = 'currency_directory'
+        self.log = log
 
     def obtaining_currency(self):
         """
@@ -128,7 +129,7 @@ def exchange_rates():
     """
     log.info('Starting currency exchange rates parser')
     try:
-        parser = CurrencyDirectory(conn, base_exchange_rates, schemes)
+        parser = CurrencyDirectory(conn, log, base_exchange_rates, schemes)
         parser.obtaining_currency()
         parser.adapt_numpy_null()
         parser.save_exchange_rate()
