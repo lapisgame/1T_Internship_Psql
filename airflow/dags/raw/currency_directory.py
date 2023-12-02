@@ -14,7 +14,7 @@ import logging as log
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, base_exchange_rates
+from raw.variables_settings import variables, base_exchange_rates, currencies
 from raw.connect_settings import conn
 
 schemes = variables["schemes"]
@@ -53,8 +53,8 @@ class CurrencyDirectory():
         self.table_name = 'currency_directory'
         self.log = log
 
-        columns = ['exchange_rate_date', 'usd_rate', 'eur_rate', 'kzt_rate']
-        self.exchange_rate = pd.DataFrame(columns=columns)
+        self.columns = ['exchange_rate_date', 'usd_rate', 'eur_rate', 'kzt_rate']
+        self.exchange_rate = pd.DataFrame(columns=self.columns)
 
     def obtaining_currency(self):
         """
@@ -67,9 +67,15 @@ class CurrencyDirectory():
         try:
             data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
             self.exchange_rate['exchange_rate_date'] = datetime.now().date()
-            self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
-            self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
-            self.exchange_rate['kzt_rate'] = data['Valute']['KZT']['Value'] / 100
+            for column in self.columns:
+                for currency in currencies:
+                    if currency != 'KZT':
+                        self.exchange_rate[f'{column}'] = data['Valute'][f'{currency}']['Value']
+                        print(self.exchange_rate[f'{column}'])
+                    else:
+                        self.exchange_rate[f'{column}'] = data['Valute'][f'{currency}']['Value'] / 100
+                        print(self.exchange_rate[f'{column}'])
+
             self.log.info(self.exchange_rate)
 
         except Exception as e:

@@ -55,6 +55,12 @@ profs = [
     # "DevOps"
 ]
 
+currencies = [
+    'USD',
+    'EUR',
+    'KZT'
+]
+
 schemes = variables.get('schemes')
 raw_tables = variables.get('raw_tables')
 
