@@ -30,11 +30,26 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling Tinkoff parser DAGs.
+
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_tinkoff_parser: Runs the initial Tinkoff parser workflow.
+    - run_update_tinkoff: Runs the update Tinkoff parser workflow.
+    """
     def run_init_tinkoff_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий vacancy_url
+        Runs the initial Tinkoff parser workflow.
+
+        This method initializes and runs the TinkoffJobParser to find and process vacancies from Tinkoff.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the Tinkoff parser workflow.
         """
-        log.info('Запуск парсера tinkoff')
+        log.info('Starting Tinkoff parser')
         try:
             parser = TinkoffJobParser(base_tin, profs, log, conn, table_name)
             parser.open_all_pages()
@@ -43,16 +58,22 @@ class Dags(BaseDags):
             parser.addapt_numpy_null()
             parser.save_df()
             parser.stop()
-            log.info('Парсер tinkoff успешно провел работу')
+            log.info('Tinkoff parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера tinkoff: {e}')
+            log.error(f'Error occurred during the Tinkoff parser workflow: {e}')
 
     def run_update_tinkoff(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the update Tinkoff parser workflow.
+
+        This method initializes and runs the TinkoffJobParser to find and process updated vacancies from Tinkoff.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the Tinkoff parser workflow.
         """
-        log.info('Запуск парсера tinkoff')
+        log.info('Starting Tinkoff parser')
         try:
             parser = TinkoffJobParser(base_tin, profs, log, conn, table_name)
             parser.open_all_pages()
@@ -61,11 +82,11 @@ class Dags(BaseDags):
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
-            log.info('Парсер tinkoff успешно провел работу')
+            log.info('Tinkoff parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера tinkoff: {e}')
+            log.error(f'Error occurred during the Tinkoff parser workflow: {e}')
 
 def init_call_all_func():
     worker = Dags()
@@ -89,6 +110,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_initial_tinkoff:
+
     parse_tinkoff_jobs = PythonOperator(
         task_id='init_tinkoff_task',
         python_callable=init_call_all_func,
@@ -101,6 +123,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as tinkoff_update_dag:
+
     parse_delta_tinkoff_jobs = PythonOperator(
         task_id='update_tinkoff_task',
         python_callable=update_call_all_func,

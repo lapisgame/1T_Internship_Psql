@@ -28,37 +28,58 @@ default_args = {
 }
 
 class Dags(BaseDags):
+    """
+    Custom class for handling GetMatch parser DAGs.
+
+    Inherits from the HeadHunter class.
+
+    Methods:
+    - run_init_hh_parser: Runs the initial HeadHunter parser workflow.
+    - run_update_hh: Runs the update HeadHunter parser workflow.
+    """
     def run_init_hh_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий HeadHunter
+        Runs the initial HeadHunter parser workflow.
+
+        This method initializes and runs the HHJobParser to find and process vacancies from HeadHunter.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the HeadHunter parser workflow.
         """
-        log.info('Запуск парсера HeadHunter')
+        log.info('Starting HeadHunter parser')
         try:
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер HeadHunter успешно провел работу')
+            log.info('HeadHunter parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера HeadHunter: {e}')
+            log.error(f'Error occurred during the HeadHunter parser workflow: {e}')
 
     def run_update_hh(self):
         """
-        Основной вид задачи для запуска парсера для обновления вакансий HeadHunter
+        Runs the update HeadHunter parser workflow.
+
+        This method initializes and runs the HHJobParser to find and process updated vacancies from HeadHunter.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the HeadHunter parser workflow.
         """
-        log.info('Запуск парсера HeadHunter')
+        log.info('Starting HeadHunter parser')
         try:
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
-            log.info('Парсер HeadHunter успешно провел работу')
+            log.info('HeadHunter parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера HeadHunter: {e}')
+            log.error(f'Error occurred during the HeadHunter parser workflow: {e}')
 
 
 def init_call_all_func():

@@ -29,11 +29,26 @@ default_args = {
 }
 
 class Dags(BaseDags):
+    """
+    Custom class for handling VK parser DAGs.
+
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_vk_parser: Runs the initial VK parser workflow.
+    - run_update_vk: Runs the update VK parser workflow.
+    """
     def run_init_vk_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the initial VK parser workflow.
+
+        This method initializes and runs the VKJobParser to find and process vacancies from VK.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the VK parser workflow.
         """
-        log.info('Запуск парсера VK')
+        log.info('Starting VK parser')
         try:
             parser = VKJobParser(base_vk, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -41,16 +56,22 @@ class Dags(BaseDags):
             parser.addapt_numpy_null()
             parser.save_df()
             parser.stop()
-            log.info('Парсер VK успешно провел работу')
+            log.info('VK parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера VK: {e}')
+            log.error(f'Error occurred during the VK parser workflow: {e}')
 
     def run_update_vk(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the update VK parser workflow.
+
+        This method initializes and runs the VKJobParser to find and process updated vacancies from VK.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the VK parser workflow.
         """
-        log.info('Запуск парсера VK')
+        log.info('Starting VK parser')
         try:
             parser = VKJobParser(base_vk, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -58,11 +79,11 @@ class Dags(BaseDags):
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
-            log.info('Парсер VK успешно провел работу')
+            log.info('VK parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера VK: {e}')
+            log.error(f'Error occurred during the VK parser workflow: {e}')
 
 def init_call_all_func():
     worker = Dags()

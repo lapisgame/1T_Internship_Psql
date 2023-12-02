@@ -29,27 +29,47 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling HabrCareer parser DAGs.
 
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_habrcareer_parser: Runs the initial HabrCareer parser workflow.
+    - run_update_habr: Runs the update HabrCareer parser workflow.
+    """
     def run_init_habrcareer_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий HabrCareer
+        Runs the initial HabrCareer parser workflow.
+
+        This method initializes and runs the HabrJobParser to find and process vacancies from HabrCareer.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the HabrCareer parser workflow.
         """
-        log.info('Запуск парсера HabrCareer')
+        log.info('Starting HabrCareer parser')
         try:
             parser = HabrJobParser(base_habr, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер HabrCareer успешно провел работу')
+            log.info('HabrCareer parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
+            log.error(f'Error occurred during the HabrCareer parser workflow: {e}')
 
     def run_update_habr(self):
         """
-        Основной вид задачи для запуска парсера для вакансий HabrCareer
+        Runs the update HabrCareer parser workflow.
+
+        This method initializes and runs the HabrJobParser to find and process updated vacancies from HabrCareer.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the HabrCareer parser workflow.
         """
-        log.info('Запуск парсера HabrCareer')
+        log.info('Starting HabrCareer parser')
         try:
             parser = HabrJobParser(base_habr, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -59,7 +79,7 @@ class Dags(BaseDags):
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
+            log.error(f'Error occurred during the HabrCareer parser workflow: {e}')
 
 
 def init_call_all_func():
@@ -97,6 +117,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as habr_update_dag:
+
     parse_delta_habr_jobs = PythonOperator(
         task_id='update_habrcareer_task',
         python_callable=update_call_all_func,

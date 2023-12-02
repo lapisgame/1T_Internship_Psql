@@ -30,40 +30,61 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling Yandex parser DAGs.
+
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_yandex_parser: Runs the initial Yandex parser workflow.
+    - run_update_yandex: Runs the update Yandex parser workflow.
+    """
     def run_init_yandex_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий vacancy_url
+        Runs the initial Yandex parser workflow.
+
+        This method initializes and runs the YandexJobParser to find and process vacancies from Yandex.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the Yandex parser workflow.
         """
-        log.info('Запуск парсера yandex')
+        log.info('Starting Yandex parser')
         try:
             parser = YandJobParser(base_yand, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.find_vacancies_description()
-            parser.addapt_numpy_null()
+            parser.adapt_numpy_null()
             parser.save_df()
             parser.stop()
-            log.info('Парсер yandex успешно провел работу')
+            log.info('Yandex parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера yandex: {e}')
+            log.error(f'Error occurred during the Yandex parser workflow: {e}')
 
     def run_update_yandex(self):
         """
-        Основной вид задачи для запуска парсера для вакансий yandex
+        Runs the update Yandex parser workflow.
+
+        This method initializes and runs the YandexJobParser to find and process updated vacancies from Yandex.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the Yandex parser workflow.
         """
-        log.info('Запуск парсера yandex')
+        log.info('Starting Yandex parser')
         try:
             parser = YandJobParser(base_yand, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.find_vacancies_description()
             parser.generating_dataframes()
-            parser.addapt_numpy_null()
+            parser.adapt_numpy_null()
             parser.update_database_queries()
-            log.info('Парсер yandex успешно провел работу')
+            log.info('Yandex parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера yandex: {e}')
+            log.error(f'Error occurred during the Yandex parser workflow: {e}')
 
 def init_call_all_func():
     worker = Dags()

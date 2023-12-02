@@ -30,11 +30,26 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling Sber parser DAGs.
+
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_sber_parser: Runs the initial Sber parser workflow.
+    - run_update_sber: Runs the update Sber parser workflow.
+    """
     def run_init_sber_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий vacancy_url
+        Runs the initial Sber parser workflow.
+
+        This method initializes and runs the SberJobParser to find and process vacancies from Sber.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the Sber parser workflow.
         """
-        log.info('Запуск парсера sber')
+        log.info('Starting Sber parser')
         try:
             parser = SberJobParser(base_sber, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -42,16 +57,22 @@ class Dags(BaseDags):
             parser.addapt_numpy_null()
             parser.save_df()
             parser.stop()
-            log.info('Парсер sber успешно провел работу')
+            log.info('Sber parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера sber: {e}')
+            log.error(f'Error occurred during the Sber parser workflow: {e}')
 
     def run_update_sber(self):
         """
-        Основной вид задачи для запуска парсера для вакансий Sber
+        Runs the update Sber parser workflow.
+
+        This method initializes and runs the SberJobParser to find and process updated vacancies from Sber.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the Sber parser workflow.
         """
-        log.info('Запуск парсера sber')
+        log.info('Starting Sber parser')
         try:
             parser = SberJobParser(base_sber, profs, log, conn, table_name)
             parser.find_vacancies()
@@ -59,11 +80,11 @@ class Dags(BaseDags):
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
-            log.info('Парсер sber успешно провел работу')
+            log.info('Sber parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера sber: {e}')
+            log.error(f'Error occurred during the Sber parser workflow: {e}')
 
 def init_call_all_func():
     worker = Dags()
@@ -87,6 +108,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_initial_sber:
+
     parse_sber_jobs = PythonOperator(
         task_id='init_sber_task',
         python_callable=init_call_all_func,
@@ -99,6 +121,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as sber_update_dag:
+
     parse_delta_sber_jobs = PythonOperator(
         task_id='update_sber_task',
         python_callable=update_call_all_func,

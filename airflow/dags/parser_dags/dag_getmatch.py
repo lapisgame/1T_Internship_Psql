@@ -30,36 +30,58 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling GetMatch parser DAGs.
+
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_getmatch_parser: Runs the initial GetMatch parser workflow.
+    - run_update_getmatch: Runs the update GetMatch parser workflow.
+    """
     def run_init_getmatch_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the initial GetMatch parser workflow.
+
+        This method initializes and runs the GetMatchJobParser to find and process vacancies from GetMatch.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the GetMatch parser workflow.
         """
-        log.info('Запуск парсера GetMatch')
+        log.info('Starting GetMatch parser')
         try:
             parser = GetMatchJobParser(base_getmatch, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер GetMatch успешно провел работу')
+            log.info('GetMatch parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера GetMatch: {e}')
+            log.error(f'Error occurred during the GetMatch parser workflow: {e}')
 
     def run_update_getmatch(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the update GetMatch parser workflow.
+
+        This method initializes and runs the GetMatchJobParser to find and process updated vacancies from GetMatch.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the GetMatch parser workflow.
         """
-        log.info('Запуск парсера GetMatch')
+        log.info('Starting GetMatch parser')
         try:
             parser = GetMatchJobParser(base_getmatch, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
+            log.info('GetMatch parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера GetMatch: {e}')
+            log.error(f'Error occurred during the GetMatch parser workflow: {e}')
 
 def init_call_all_func():
     worker = Dags()
@@ -83,6 +105,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_initial:
+
     parse_get_match_jobs = PythonOperator(
         task_id='init_getmatch_task',
         python_callable=init_call_all_func,
@@ -95,61 +118,9 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as getmatch_update_dag:
+
     parse_delta_getmatch_jobs = PythonOperator(
         task_id='update_getmatch_task',
         python_callable=update_call_all_func,
         provide_context=True
     )
-
-
-# ddl_dag = DAG(dag_id='core_ddl_dag',
-#               tags=['admin_1T'],
-#               start_date=datetime(2023, 11, 25),
-#               schedule_interval=None,
-#               default_args=default_args
-#               )
-#
-# dml_init_dag = DAG(dag_id='core_dml_init_dag',
-#               tags=['admin_1T'],
-#               start_date=datetime(2023, 11, 25),
-#               schedule_interval=None,
-#               default_args=default_args
-#               )
-#
-# hello_bash_task = BashOperator(
-#     task_id='hello_task',
-#     bash_command='echo "Удачи"'
-# )
-#
-# end_task = DummyOperator(
-#     task_id="end_task"
-# )
-#
-# create_golden_core = PythonOperator(
-#     task_id='create_core_tables',
-#     python_callable=ddl_core,
-#     provide_context=True,
-#     dag=ddl_dag
-# )
-#
-# init_golden_core = PythonOperator(
-#     task_id='create_core_tables',
-#     python_callable=dml_core,
-#     provide_context=True,
-#     dag=dml_init_dag
-# )
-#
-# hello_bash_task >> create_golden_core >> end_task
-# init_golden_core
-#
-#
-# with DAG(dag_id="initial_getmatch_parser",
-#          schedule_interval=None, tags=['admin_1T'],
-#          default_args=default_args,
-#          catchup=False) as dag_initial_getmatch_parser:
-#     parse_get_match_jobs = PythonOperator(
-#         task_id='init_run_getmatch_parser_task',
-#         python_callable=run_init_getmatch_parser,
-#         provide_context=True)
-#
-# parse_get_match_jobs

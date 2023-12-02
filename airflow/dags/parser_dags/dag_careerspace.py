@@ -33,42 +33,70 @@ default_args = {
 
 
 class Dags(BaseDags):
+    """
+    Custom class for handling CareerSpace parser DAGs.
 
-    def run_init_habrcareer_parser(self):
+    Inherits from the BaseDags class.
+
+    Methods:
+    - run_init_careerspace_parser: Runs the initial CareerSpace parser workflow.
+    - run_update_careerspace: Runs the update CareerSpace parser workflow.
+    """
+    def run_init_careerspace_parser(self):
         """
-        Основной вид задачи для запуска парсера для вакансий GetMatch
+        Runs the initial CareerSpace parser workflow.
+
+        This method initializes and runs the CareerspaceJobParser to find and process vacancies from CareerSpace.
+        It handles the parsing, data manipulation, and saving of the parsed data.
+
+        Raises:
+        - Exception: If an error occurs during the CareerSpace parser workflow.
         """
-        log.info('Запуск парсера HabrCareer')
+        log.info('Starting CareerSpace parser')
         try:
             parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
-            log.info('Парсер HabrCareer успешно провел работу')
+            log.info('CareerSpace parser successfully completed the job')
             self.df = parser.df
         except Exception as e:
-            log.error(f'Ошибка во время работы парсера HabrCareer: {e}')
+            log.error(f'Error occurred during the CareerSpace parser workflow: {e}')
 
-    def run_update_habr(self):
-        parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
-        parser.find_vacancies()
-        parser.generating_dataframes()
-        parser.addapt_numpy_null()
-        parser.update_database_queries()
-        self.dataframe_to_update = parser.dataframe_to_update
-        self.dataframe_to_closed = parser.dataframe_to_closed
+    def run_update_careerspace(self):
+        """
+        Runs the update CareerSpace parser workflow.
+
+        This method initializes and runs the CareerspaceJobParser to find and process updated vacancies from CareerSpace.
+        It handles the parsing, data manipulation, and updating of the existing database with the updated data.
+
+        Raises:
+        - Exception: If an error occurs during the CareerSpace parser workflow.
+        """
+        log.info('Starting CareerSpace parser')
+        try:
+            parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
+            parser.find_vacancies()
+            parser.generating_dataframes()
+            parser.addapt_numpy_null()
+            parser.update_database_queries()
+            log.info('CareerSpace parser successfully completed the job')
+            self.dataframe_to_update = parser.dataframe_to_update
+            self.dataframe_to_closed = parser.dataframe_to_closed
+        except Exception as e:
+            log.error(f'Error occurred during the CareerSpace parser workflow: {e}')
 
 
 def init_call_all_func():
     worker = Dags()
-    worker.run_init_habrcareer_parser()
+    worker.run_init_careerspace_parser()
     worker.update_dicts()
     worker.model(worker.df)
     worker.dml_core_init(worker.dfs)
 
 def update_call_all_func():
     worker = Dags()
-    worker.run_update_getmatch()
+    worker.run_update_careerspace()
     worker.update_dicts()
     worker.archiving(worker.dataframe_to_closed)
     worker.model(worker.dataframe_to_update)
