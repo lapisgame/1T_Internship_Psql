@@ -62,10 +62,11 @@ if not Variable.get("shares_variable", default_var=None):
 
 dag_variables = Variable.get("shares_variable", deserialize_json=True)
 
-url_sber = dag_variables.get('base_sber')
-url_yand = dag_variables.get('base_yand')
-url_vk = dag_variables.get('base_vk')
-url_tin = dag_variables.get('base_tin')
+from raw.variables_settings import variables, base_sber, base_yand, base_vk, base_tin, profs
+# url_sber = dag_variables.get('base_sber')
+# url_yand = dag_variables.get('base_yand')
+# url_vk = dag_variables.get('base_vk')
+# url_tin = dag_variables.get('base_tin')
 
 raw_tables = ['raw_vk', 'raw_sber', 'raw_tinkoff', 'raw_yandex', 'del_vacancy_core']
 
