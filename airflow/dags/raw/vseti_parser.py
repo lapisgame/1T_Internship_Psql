@@ -6,7 +6,6 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import re
-
 import sys
 import os
 sys.path.insert(0, '/opt/airflow/dags/')
