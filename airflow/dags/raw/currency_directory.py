@@ -75,9 +75,9 @@ class CurrencyDirectory:
             self.exchange_rate = pd.concat(
                 [self.exchange_rate, pd.DataFrame({'exchange_rate_date': [datetime.now().date()]})], ignore_index=True)
             for currency in self.currencies:
-                value = data['Valute'][currency]['Value']
+                value = float(data['Valute'][currency]['Value'])
                 if currency == 'KZT':
-                    value = float(value / 100)
+                    value = value / 100
                 value = round(value, 4)
                 self.exchange_rate.at[0, currency.lower() + '_rate'] = value
 
