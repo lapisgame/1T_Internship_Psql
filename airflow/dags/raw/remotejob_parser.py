@@ -128,10 +128,10 @@ class RemoteJobParser(BaseJobParserSelenium):
     def find_vacancies(self):
         self.wait = WebDriverWait(self.browser, 10)
         self.url_l = []
-        self.df = {'vacancy_url': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
-                   'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
-                   'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
-                   }
+        # self.df = {'vacancy_url': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
+        #            'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
+        #            'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
+        #            }
         options.add_argument('--headless')
         ua = UserAgent().chrome
         self.headers = {'User-Agent': ua}
