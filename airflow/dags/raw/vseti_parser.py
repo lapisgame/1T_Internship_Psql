@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from variables_settings import variables, base_vseti
 from raw.base_job_parser import BaseJobParser
 
-table_name = variables['raw_tables'][11]['raw_tables_name']
+table_name = variables['raw_tables'][10]['raw_tables_name']
 
 
 class VsetiJobParser(BaseJobParser):
