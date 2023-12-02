@@ -101,7 +101,7 @@ class DatabaseManager:
                 self.log.info(f'Удалена таблица {table_name}')
                 create_table_query = f"""                
                 CREATE TABLE {table_name}(
-                   vacancy_id VARCHAR(2083) NOT NULL,
+                   vacancy_url VARCHAR(2083) NOT NULL,
                    vacancy_name VARCHAR(255),
                    towns VARCHAR(255),
                    level VARCHAR(255),
@@ -122,7 +122,7 @@ class DatabaseManager:
                    date_closed DATE,
                    version_vac INTEGER NOT NULL,
                    actual SMALLINT,
-                   PRIMARY KEY(vacancy_id, version_vac)
+                   PRIMARY KEY(vacancy_url, version_vac)
                 );
                 """
                 self.cur.execute(create_table_query)
@@ -140,7 +140,7 @@ class DatabaseManager:
             self.log.info(f'Удалена таблица {table_name}')
             create_core_fact_table = f"""
             CREATE TABLE {table_name} (
-                vacancy_id VARCHAR(2083) NOT NULL,
+                vacancy_url VARCHAR(2083) NOT NULL,
                 vacancy_name VARCHAR(255),
                 towns VARCHAR(255),
                 level VARCHAR(255),
@@ -161,28 +161,28 @@ class DatabaseManager:
                 date_closed DATE,
                 version_vac INTEGER NOT NULL,
                 actual SMALLINT,
-                PRIMARY KEY(vacancy_id)
+                PRIMARY KEY(vacancy_url)
             );"""
             self.cur.execute(create_core_fact_table)
 
             insert_query = f"""
             INSERT INTO {table_name}
-                (SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                (SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
                     description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
                     status, date_closed, version_vac, actual
                 FROM raw_vk
                 UNION ALL
-                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
                     description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
                     status, date_closed, version_vac, actual
                 FROM raw_sber
                 UNION ALL
-                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
                     description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
                     status, date_closed, version_vac, actual
                 FROM raw_tinkoff
                 UNION ALL
-                SELECT vacancy_id, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
+                SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to,
                     description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download,
                     status, date_closed, version_vac, actual
                 FROM raw_yandex);
@@ -247,7 +247,7 @@ class VKJobParser(BaseJobParser):
         Метод для нахождения вакансий с VK
         """
         self.cur = self.conn.cursor()
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
+        self.df = pd.DataFrame(columns=['vacancy_url', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(3)
@@ -273,7 +273,7 @@ class VKJobParser(BaseJobParser):
 
                 for vac in vacs:
                     vac_info = {}
-                    vac_info['vacancy_id'] = str(vac.get_attribute('href'))
+                    vac_info['vacancy_url'] = str(vac.get_attribute('href'))
                     vac_info['vacancy_name'] = str(vac.find_element(By.CLASS_NAME, 'title-block').text)
                     vac_info['towns'] = str(vac.find_element(By.CLASS_NAME, 'result-item-place').text)
                     vac_info['company'] = str(vac.find_element(By.CLASS_NAME, 'result-item-unit').text)
@@ -300,8 +300,8 @@ class VKJobParser(BaseJobParser):
         if not self.df.empty:
             for descr in self.df.index:
                 try:
-                    vacancy_id = self.df.loc[descr, 'vacancy_id']
-                    self.browser.get(vacancy_id)
+                    vacancy_url = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(vacancy_url)
                     self.browser.delete_all_cookies()
                     time.sleep(3)
                     desc = self.browser.find_element(By.CLASS_NAME, 'section').text
@@ -309,7 +309,7 @@ class VKJobParser(BaseJobParser):
                     self.df.loc[descr, 'description'] = str(desc)
 
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
                     pass
         else:
             self.log.info(f"Нет вакансий для парсинга")
@@ -336,7 +336,7 @@ class VKJobParser(BaseJobParser):
                 # данные, которые вставляются в таблицу PosqtgreSQL
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 # формируем строку запроса с плейсхолдерами для значений
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, company, source_vac, " \
+                query = f"INSERT INTO {table_name} (vacancy_url, vacancy_name, towns, company, source_vac, " \
                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
                 # исполняем запрос с использованием execute_values
                 self.log.info(f"Запрос вставки данных: {query}")
@@ -364,7 +364,7 @@ class SberJobParser(BaseJobParser):
         Метод для нахождения вакансий с Sberbank
         """
         self.cur = self.conn.cursor()
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
+        self.df = pd.DataFrame(columns=['vacancy_url', 'vacancy_name', 'towns', 'company', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(1)
@@ -396,7 +396,7 @@ class SberJobParser(BaseJobParser):
 
                 for vac in vacs:
                     vac_info = {}
-                    vac_info['vacancy_id'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                    vac_info['vacancy_url'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
                     data = vac.find_elements(By.CLASS_NAME, 'Text-sc-36c35j-0')
                     vac_info['vacancy_name'] = data[0].text
                     vac_info['towns'] = data[2].text
@@ -429,8 +429,8 @@ class SberJobParser(BaseJobParser):
             self.log.info('Старт парсинга описаний вакансий')
             for descr in self.df.index:
                 try:
-                    vacancy_id = self.df.loc[descr, 'vacancy_id']
-                    self.browser.get(vacancy_id)
+                    vacancy_url = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(vacancy_url)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(10)
                     desc = self.browser.find_element(By.XPATH, '/html/body/div[1]/div/div[2]/div[3]'
@@ -439,7 +439,7 @@ class SberJobParser(BaseJobParser):
                     self.df.loc[descr, 'description'] = str(desc)
 
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
         else:
             self.log.info(f"Нет описаний вакансий для парсинга")
 
@@ -468,7 +468,7 @@ class SberJobParser(BaseJobParser):
                 # данные, которые вставляются в таблицу PosqtgreSQL
                 data = [tuple(x) for x in self.df.to_records(index=False)]
 
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, company, source_vac, " \
+                query = f"INSERT INTO {table_name} (vacancy_url, vacancy_name, towns, company, source_vac, " \
                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
                 # исполняем запрос с использованием execute_values
                 self.log.info(f"Запрос вставки данных: {query}")
@@ -507,7 +507,7 @@ class TinkoffJobParser(BaseJobParser):
         self.cur = self.conn.cursor()
 
         self.df = pd.DataFrame(
-            columns=['vacancy_id', 'vacancy_name', 'towns', 'level', 'company', 'source_vac', 'date_created',
+            columns=['vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'source_vac', 'date_created',
                      'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
 
@@ -526,14 +526,14 @@ class TinkoffJobParser(BaseJobParser):
             for vac in vacs:
                 try:
                     vac_info = {}
-                    vac_info['vacancy_id'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                    vac_info['vacancy_url'] = vac.find_element(By.TAG_NAME, 'a').get_attribute('href')
                     data = vac.find_elements(By.CLASS_NAME, 'gM3bvP')
                     vac_info['vacancy_name'] = data[0].text
                     vac_info['level'] = data[1].text
                     vac_info['towns'] = data[2].text
                     self.df.loc[len(self.df)] = vac_info
                 except Exception as e:
-                    log.error(f"Произошла ошибка: {e}, ссылка на вакансию: {vac_info['vacancy_id']}")
+                    log.error(f"Произошла ошибка: {e}, ссылка на вакансию: {vac_info['vacancy_url']}")
 
             self.df = self.df.drop_duplicates()
             self.log.info("Общее количество найденных вакансий после удаления дубликатов: "
@@ -561,8 +561,8 @@ class TinkoffJobParser(BaseJobParser):
         if not self.df.empty:
             for descr in self.df.index:
                 try:
-                    vacancy_id = self.df.loc[descr, 'vacancy_id']
-                    self.browser.get(vacancy_id)
+                    vacancy_url = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(vacancy_url)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(3)
                     desc = str(self.browser.find_element(By.CLASS_NAME, 'dyzaXu').text)
@@ -572,7 +572,7 @@ class TinkoffJobParser(BaseJobParser):
                     self.log.info(f"Описание успешно добавлено для вакансии {descr + 1}")
 
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
                     pass
         else:
             self.log.info(f"Нет описания вакансий для парсинга")
@@ -600,7 +600,7 @@ class TinkoffJobParser(BaseJobParser):
                 table_name = raw_tables[2]
                 data = [tuple(x) for x in self.df.to_records(index=False)]
 
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, towns, level, company, source_vac, " \
+                query = f"INSERT INTO {table_name} (vacancy_url, vacancy_name, towns, level, company, source_vac, " \
                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
                 # исполняем запрос с использованием execute_values
                 self.log.info(f"Запрос вставки данных: {query}")
@@ -622,7 +622,7 @@ class TinkoffJobParser(BaseJobParser):
 class YandJobParser(BaseJobParser):
     def find_vacancies(self):
         self.log.info('Старт парсинга вакансий Yandex')
-        self.df = pd.DataFrame(columns=['vacancy_id', 'vacancy_name', 'company', 'skills', 'source_vac', 'date_created',
+        self.df = pd.DataFrame(columns=['vacancy_url', 'vacancy_name', 'company', 'skills', 'source_vac', 'date_created',
                                         'date_of_download', 'status', 'version_vac', 'actual', 'description'])
         self.log.info("Создан DataFrame для записи вакансий")
         self.browser.implicitly_wait(3)
@@ -648,8 +648,8 @@ class YandJobParser(BaseJobParser):
                 for vac in vacs:
                     try:
                         vac_info = {}
-                        find_vacancy_id = vac.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-card__link')
-                        vac_info['vacancy_id'] = find_vacancy_id.get_attribute('href')
+                        find_vacancy_url = vac.find_element(By.CLASS_NAME, 'lc-jobs-vacancy-card__link')
+                        vac_info['vacancy_url'] = find_vacancy_url.get_attribute('href')
                         vac_info['company'] = vac.find_elements(By.CLASS_NAME, 'lc-styled-text')[0].text
                         self.df.loc[len(self.df)] = vac_info
 
@@ -679,8 +679,8 @@ class YandJobParser(BaseJobParser):
             self.log.info('Старт парсинга описаний вакансий')
             for descr in self.df.index:
                 try:
-                    vacancy_id = self.df.loc[descr, 'vacancy_id']
-                    self.browser.get(vacancy_id)
+                    vacancy_url = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(vacancy_url)
                     self.browser.delete_all_cookies()
                     self.browser.implicitly_wait(5)
                     if isinstance(self, YandJobParser):
@@ -694,7 +694,7 @@ class YandJobParser(BaseJobParser):
                         self.df.loc[descr, 'vacancy_name'] = str(vacancy_name)
 
                 except Exception as e:
-                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_id']}")
+                    self.log.error(f"Произошла ошибка: {e}, ссылка {self.df.loc[descr, 'vacancy_url']}")
                     pass
         else:
             self.log.info(f"Нет вакансий для парсинга")
@@ -722,7 +722,7 @@ class YandJobParser(BaseJobParser):
                 # данные, которые вставляются в таблицу PosqtgreSQL
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 # формируем строку запроса с плейсхолдерами для значений
-                query = f"INSERT INTO {table_name} (vacancy_id, vacancy_name, company, skills, source_vac, " \
+                query = f"INSERT INTO {table_name} (vacancy_url, vacancy_name, company, skills, source_vac, " \
                         f"date_created, date_of_download, status, version_vac, actual, description) VALUES %s"
                 # исполняем запрос с использованием execute_values
                 self.log.info(f"Запрос вставки данных: {query}")
