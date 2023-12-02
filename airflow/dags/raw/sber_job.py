@@ -102,7 +102,7 @@ class SberJobParser(BaseJobParserSelenium):
                     self.browser.get(link)
                     self.browser.delete_all_cookies()
                     time.sleep(3)
-                    desc = self.browser.find_element(By.CLASS_NAME, 'section').text
+                    desc = self.browser.find_element(By.CLASS_NAME, 'Box-sc-159i47a-0.styled__ContentColumn-sc-vj1fq3-1.eBiZdk').text
                     desc = desc.replace(';', '')
                     self.df.loc[descr, 'description'] = str(desc)
 
