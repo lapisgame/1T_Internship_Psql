@@ -87,9 +87,9 @@ class DatabaseManager:
             create_table_query = f"""                
             CREATE TABLE IF NOT EXISTS {self.schema}.{table_name}(
             exchange_rate_date DATE NOT NULL,
-            usd_rate DECIMAL(4, 4),
-            eur_rate DECIMAL(4, 4),
-            kzt_rate DECIMAL(4, 4), 
+            usd_rate DECIMAL(8, 4),
+            eur_rate DECIMAL(8, 4),
+            kzt_rate DECIMAL(8, 4), 
             PRIMARY KEY(exchange_rate_date)
             );
             """
