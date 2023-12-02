@@ -76,11 +76,15 @@ class CurrencyDirectory:
                 [self.exchange_rate, pd.DataFrame({'exchange_rate_date': [datetime.now().date()]})], ignore_index=True)
             for currency in self.currencies:
                 value = data['Valute'][currency]['Value']
+                if currency == 'KZT':
+                    value = value / 100
                 self.exchange_rate.at[0, currency.lower() + '_rate'] = value
 
         except Exception as e:
             self.log.error(f"An error occurred while obtaining currency exchange rates: {e}")
             raise
+
+        self.exchange_rate.reset_index(drop=True, inplace=True)
 
     def adapt_numpy_null(self):
         """
