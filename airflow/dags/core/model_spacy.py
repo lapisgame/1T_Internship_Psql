@@ -145,7 +145,7 @@ class DataPreprocessing:
         # companies_df.drop('title', axis=1)
         print(companies_df.columns)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
-        self.dataframe['company'] = self.dataframe['company'].map(companies_dictionary)
+        self.dataframe['company_id'] = self.dataframe['company'].map(companies_dictionary)
         print(self.dataframe)
 
         # print(self.dataframe)
@@ -416,7 +416,7 @@ class DataPreprocessing:
                                  'experience_from': (self.dataframe.loc[num, 'exp_from']),
                                  'experience_to': (self.dataframe.loc[num, 'exp_to']),
                                  'company_id': (self.dataframe.loc[num, 'company_id']),
-                                 'source_id': (self.dataframe.loc[num, 'source_id']),
+                                 'source_id': (self.dataframe.loc[num, 'source_vac']),
                                  'publicated_at': self.dataframe.loc[num, 'date_created']}
 
             self.vacancies = self.vacancies._append(str_for_vacancies, ignore_index=True)
