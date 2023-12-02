@@ -52,7 +52,7 @@ conn = psycopg2.connect(**config)
 
 # Variables settings
 # Загружаем переменные из JSON файла
-with open('/opt/airflow/dags/raw/config_connections.json', 'r') as config_file:
+with open('/opt/airflow/dags/raw/config_variables.json', 'r') as config_file:
     my_variables = json.load(config_file)
 
 # Проверяем, существует ли переменная с данным ключом
