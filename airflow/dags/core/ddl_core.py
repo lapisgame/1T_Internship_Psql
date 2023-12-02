@@ -100,7 +100,7 @@ class DatabaseManager:
 
             CREATE TABLE IF NOT EXISTS {0}.companies(
             id SERIAL PRIMARY KEY,
-            title VARCHAR(50)
+            title VARCHAR(255)
             );
             
             CREATE TABLE IF NOT EXISTS {0}.experience(
@@ -162,7 +162,7 @@ class DatabaseManager:
 
             CREATE TABLE IF NOT EXISTS {0}.companies(
             id SERIAL PRIMARY KEY,
-            title VARCHAR(50)
+            title VARCHAR(255)
             );
             
             CREATE TABLE IF NOT EXISTS {0}.experience(
