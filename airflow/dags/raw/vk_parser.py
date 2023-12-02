@@ -29,9 +29,9 @@ default_args = {
     'start_date': days_ago(1)
 }
 
-class YandJobParser(BaseJobParserSelenium):
+class VKJobParser(BaseJobParserSelenium):
     """
-    Парсер для вакансий с сайта Yandex, наследованный от BaseJobParser
+    Парсер для вакансий с сайта VK, наследованный от BaseJobParser
     """
     def find_vacancies(self):
         """
