@@ -86,7 +86,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_initial_sber:
-    parse_get_match_jobs = PythonOperator(
+    parse_sber_jobs = PythonOperator(
         task_id='init_sber_task',
         python_callable=init_call_all_func,
         provide_context=True
