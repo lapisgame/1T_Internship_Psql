@@ -415,6 +415,8 @@ class DataPreprocessing:
                                  'salary_to': (self.dataframe.loc[num, 'salary_to']),
                                  'experience_from': (self.dataframe.loc[num, 'exp_from']),
                                  'experience_to': (self.dataframe.loc[num, 'exp_to']),
+                                 'company_id': (self.dataframe.loc[num, 'company_id']),
+                                 'source_id': (self.dataframe.loc[num, 'source_id']),
                                  'publicated_at': self.dataframe.loc[num, 'date_created']}
 
             self.vacancies = self.vacancies._append(str_for_vacancies, ignore_index=True)
