@@ -8,7 +8,10 @@ from datetime import datetime
 from psycopg2.extras import execute_values
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+
+import sys
 import os
+sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from raw.variables_settings import variables, profs
