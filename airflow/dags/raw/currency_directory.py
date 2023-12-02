@@ -1,4 +1,3 @@
-import time
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -169,6 +168,7 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag_exchange_rates:
+
     parse_get_match_jobs = PythonOperator(
         task_id='upd_exchange_rates_task',
         python_callable=exchange_rates,
