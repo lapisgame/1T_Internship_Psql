@@ -1,0 +1,105 @@
+from raw.connect_settings import conn, engine
+conn.autocommit = False
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+import logging as log
+
+from datetime import datetime, timedelta
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from raw.get_match import VKJobParser, table_name
+from raw.variables_settings import variables, base_vk, profs
+from parser_dags.base_dag import BaseDags
+
+
+log.basicConfig(
+    format='%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=log.INFO
+)
+
+# Default dag arguments
+default_args = {
+    "owner": "admin_1T",
+    'start_date': datetime(2023, 11, 26),
+    'retry_delay': timedelta(minutes=5),
+}
+
+
+class Dags(BaseDags):
+    def run_init_vk_parser(self):
+        """
+        Основной вид задачи для запуска парсера для вакансий GetMatch
+        """
+        log.info('Запуск парсера VK')
+        try:
+            parser = VKJobParser(base_vk, profs, log, conn, table_name)
+            parser.find_vacancies()
+            parser.find_vacancies_description()
+            parser.addapt_numpy_null()
+            parser.save_df()
+            parser.stop()
+            log.info('Парсер VK успешно провел работу')
+            self.df = parser.df
+        except Exception as e:
+            log.error(f'Ошибка во время работы парсера VK: {e}')
+
+    def run_update_vk(self):
+        """
+        Основной вид задачи для запуска парсера для вакансий GetMatch
+        """
+        log.info('Запуск парсера VK')
+        try:
+            parser = VKJobParser(base_vk, profs, log, conn, table_name)
+            parser.find_vacancies()
+            parser.find_vacancies_description()
+            parser.generating_dataframes()
+            parser.addapt_numpy_null()
+            parser.update_database_queries()
+            log.info('Парсер VK успешно провел работу')
+            self.dataframe_to_update = parser.dataframe_to_update
+            self.dataframe_to_closed = parser.dataframe_to_closed
+        except Exception as e:
+            log.error(f'Ошибка во время работы парсера VK: {e}')
+
+def init_call_all_func():
+    worker = Dags()
+    worker.run_init_vk_parser()
+    worker.update_dicts()
+    worker.model(worker.df)
+    worker.dml_core_init(worker.dfs)
+
+def update_call_all_func():
+    worker = Dags()
+    worker.run_update_vk()
+    worker.update_dicts()
+    worker.archiving(worker.dataframe_to_closed)
+    worker.model(worker.dataframe_to_update)
+    worker.dml_core_update(worker.dfs)
+
+
+with DAG(
+        dag_id="init_vk_parser",
+        schedule_interval=None, tags=['admin_1T'],
+        default_args=default_args,
+        catchup=False
+) as dag_initial_vk:
+    parse_get_match_jobs = PythonOperator(
+        task_id='init_vk_task',
+        python_callable=init_call_all_func,
+        provide_context=True
+    )
+
+with DAG(
+        dag_id="update_vk_parser",
+        schedule_interval=None, tags=['admin_1T'],
+        default_args=default_args,
+        catchup=False
+) as vk_update_dag:
+    parse_delta_getmatch_jobs = PythonOperator(
+        task_id='update_vk_task',
+        python_callable=update_call_all_func,
+        provide_context=True
+    )

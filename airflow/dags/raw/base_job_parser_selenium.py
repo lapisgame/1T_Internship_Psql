@@ -6,7 +6,8 @@ import sys
 import numpy as np
 from datetime import datetime
 from psycopg2.extras import execute_values
-import logging as log
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,13 +16,26 @@ from raw.variables_settings import variables, profs
 raw_tables = variables['raw_tables']
 schemes = variables["schemes"]
 
-class BaseJobParser:
+class BaseJobParserSelenium:
     """
     Base class for parsing job vacancies
     """
     def __init__(self, url, profs, log, conn, table_name):
+
         self.log = log
         self.table_name = table_name
+        self.url = url
+        time.sleep(2)
+        self.profs = profs
+        self.schema = schemes['raw']
+        self.raw_tables = raw_tables
+        self.conn = conn
+        self.cur = conn.cursor()
+        self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=ChromeOptions)
+        self.browser.get(self.url)
+        self.browser.maximize_window()
+        self.browser.delete_all_cookies()
+
         columns = [
             'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from',
             'salary_to', 'exp_from', 'exp_to', 'description', 'job_type', 'job_format',
@@ -32,29 +46,22 @@ class BaseJobParser:
         self.dataframe_to_closed = pd.DataFrame(columns=columns)
         self.dataframe_to_update = pd.DataFrame(columns=columns)
         self.log.info("Созданы DataFrame's для записи вакансий")
-        self.url = url
-        time.sleep(2)
-        self.profs = profs
-        self.schema = schemes['raw']
-        self.raw_tables = raw_tables
-        self.conn = conn
-        self.cur = conn.cursor()
 
     def scroll_down_page(self, page_height=0):
         """
         Method for scrolling down the page
         """
-        # self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        # time.sleep(2)
-        # new_page_height = self.browser.execute_script('return document.body.scrollHeight')
-        # if new_page_height > page_height:
-        #     self.scroll_down_page(new_page_height)
+        self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
+        new_page_height = self.browser.execute_script('return document.body.scrollHeight')
+        if new_page_height > page_height:
+            self.scroll_down_page(new_page_height)
 
     def stop(self):
         """
         Method to exit Selenium Webdriver
         """
-        # self.browser.quit()
+        self.browser.quit()
 
     def find_vacancies(self):
         """

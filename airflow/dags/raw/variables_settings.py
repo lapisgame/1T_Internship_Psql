@@ -36,7 +36,6 @@ variables = {
     ]
 }
 
-
 profs = [
     "Data engineer",
     # "Data analyst",
