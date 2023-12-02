@@ -53,7 +53,6 @@ class Dags(BaseDags):
         try:
             parser = RemoteJobParser(base_remote, profs, log, conn, table_name)
             parser.find_vacancies()
-            parser.find_vacancies_description()
             parser.addapt_numpy_null()
             parser.save_df()
             parser.stop()
@@ -76,7 +75,6 @@ class Dags(BaseDags):
         try:
             parser = RemoteJobParser(base_remote, profs, log, conn, table_name)
             parser.find_vacancies()
-            parser.find_vacancies_description()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()

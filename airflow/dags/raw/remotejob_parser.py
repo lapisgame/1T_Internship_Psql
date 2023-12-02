@@ -38,6 +38,8 @@ default_args = {
 }
 
 class RemoteJobParser(BaseJobParserSelenium):
+    def __init__(self, url, profs, log, conn, table_name):
+        super().__init__(url, profs, log, conn, table_name)
     """
     Парсер вакансий с сайта RemoteJob, наследованный от BaseJobParserSelenium
     """
@@ -117,7 +119,7 @@ class RemoteJobParser(BaseJobParserSelenium):
             self.df['salary_to'].append(vacancy["salary_to"])
             self.df['description'].append(description)
             self.df['job_format'].append('Удаленная работа')
-            self.df['source_vac'].append('https://remote-job.ru/')
+            self.df['source_vac'].append(6)
             self.df['date_created'].append(date_created)
             self.df['date_of_download'].append(datetime.now().date())
             self.df['status'].append('existing')
