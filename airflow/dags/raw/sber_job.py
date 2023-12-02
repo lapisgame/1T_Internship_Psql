@@ -98,8 +98,8 @@ class SberJobParser(BaseJobParserSelenium):
         if not self.df.empty:
             for descr in self.df.index:
                 try:
-                    vacancy_url = self.df.loc[descr, 'vacancy_url']
-                    self.browser.get(vacancy_url)
+                    link = self.df.loc[descr, 'vacancy_url']
+                    self.browser.get(link)
                     self.browser.delete_all_cookies()
                     time.sleep(3)
                     desc = self.browser.find_element(By.CLASS_NAME, 'section').text
