@@ -76,6 +76,7 @@ class Dags(BaseDags):
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
+            log.info('VSeti parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
             self.dataframe_to_closed = parser.dataframe_to_closed
         except Exception as e:

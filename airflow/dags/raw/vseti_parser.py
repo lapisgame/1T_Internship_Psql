@@ -19,6 +19,7 @@ table_name = variables['raw_tables'][11]['raw_tables_name']
 
 
 class VsetiJobParser(BaseJobParser):
+
     def find_vacancies(self):
         HEADERS = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
