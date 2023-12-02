@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.yandex.parser import YandJobParser, table_name
+from raw.yandex_parser import YandJobParser, table_name
 from variables_settings import variables, base_yand, profs
 from parser_dags.base_dag import BaseDags
 
