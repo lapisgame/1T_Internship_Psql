@@ -63,7 +63,7 @@ class CurrencyDirectory():
         and stored in the `exchange_rate` DataFrame.
         """
         try:
-            data = requests.get(f'{base_exchange_rates}').json()
+            data = requests.get(f'"{base_exchange_rates}"').json()
             self.exchange_rate['exchange_rate_date'] = datetime.now().date()
             self.exchange_rate['usd_rate'] = data['Valute']['USD']['Value']
             self.exchange_rate['eur_rate'] = data['Valute']['EUR']['Value']
