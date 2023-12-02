@@ -140,21 +140,20 @@ class RemoteJobParser(BaseJobParserSelenium):
         self.log.info('Старт парсинга вакансий Remote-Job ...')
 
         for prof in self.profs:
-            prof_name = prof['fullName']
-            self.log.info(f'Старт парсинга вакансии: "{prof_name}"')
+            self.log.info(f'Старт парсинга вакансии: "{prof}"')
             try:
                 self.browser.get(self.url)
                 time.sleep(10)
                 # операции поиска и обработки вакансий
             except Exception as e:
-                self.log.error(f"Ошибка при обработке вакансии {prof_name}: {e}")
+                self.log.error(f"Ошибка при обработке вакансии {prof}: {e}")
                 continue
             try:
                 search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
-                search.send_keys(prof_name)
+                search.send_keys(prof)
                 search.send_keys(Keys.ENTER)
             except NoSuchElementException:
-                self.log.error(f"No such element: Unable to locate element: for profession {prof_name}")
+                self.log.error(f"No such element: Unable to locate element: for profession {prof}")
                 continue
 
             if self.browser.find_element(By.CSS_SELECTOR, '.h2, h2').text == 'Vacancies not found':
