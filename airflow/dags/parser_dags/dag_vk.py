@@ -10,7 +10,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.get_match import VKJobParser, table_name
+from raw.vk import VKJobParser, table_name
 from raw.variables_settings import variables, base_vk, profs
 from parser_dags.base_dag import BaseDags
 
