@@ -12,7 +12,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables
+from raw.variables_settings import variables, profs
 from raw.base_job_parser_selenium import BaseJobParserSelenium
 
 table_name = variables['raw_tables'][1]['raw_tables_name']
@@ -42,7 +42,7 @@ class SberJobParser(BaseJobParserSelenium):
             input_str = self.browser.find_element(By.XPATH, '/html/body/div/div/div[2]/div[3]/div/div/div[2]'
                                                             '/div/div/div/div/input')
 
-            input_str.send_keys(f"{prof['fullName']}")
+            input_str.send_keys(f"{prof}")
             click_button = self.browser.find_element(By.XPATH, '/html/body/div/div/div[2]/div[3]'
                                                                '/div/div/div[2]/div/div/div/div/button')
             click_button.click()
@@ -59,7 +59,7 @@ class SberJobParser(BaseJobParserSelenium):
                 vacs = vacs_bar.find_elements(By.TAG_NAME, 'div')
 
                 vacs = [div for div in vacs if 'styled__Card-sc-192d1yv-1' in str(div.get_attribute('class'))]
-                self.log.info(f"Парсим вакансии по запросу: {prof['fullName']}")
+                self.log.info(f"Парсим вакансии по запросу: {prof}")
                 self.log.info(f"Количество: " + str(len(vacs)) + "\n")
 
                 for vac in vacs:
