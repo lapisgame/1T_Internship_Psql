@@ -29,7 +29,7 @@ default_args = {
 
 class Dags(BaseDags):
     """
-    Custom class for handling GetMatch parser DAGs.
+    Custom class for handling HeadHunter parser DAGs.
 
     Inherits from the HeadHunter class.
 
