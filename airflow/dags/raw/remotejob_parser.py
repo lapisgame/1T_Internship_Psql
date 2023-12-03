@@ -118,7 +118,7 @@ class RemoteJobParser(BaseJobParserSelenium):
                 'salary_from': [vacancy["salary_from"]],
                 'salary_to': [vacancy["salary_to"]],
                 'description': [description],
-                'job_format': ['Удаленная работа'],
+                'job_format': ['Удаленно'],
                 'source_vac': [6],
                 'date_created': [date_created],
                 'date_of_download': [datetime.now().date()],
