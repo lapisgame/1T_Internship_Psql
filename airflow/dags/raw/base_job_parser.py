@@ -224,9 +224,10 @@ class BaseJobParser:
                 if links_to_close:
                     for link in links_to_close:
                         query = f"""
-                            SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, date_closed, version_vac, actual
+                            SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, 
+                            currency_id, сurr_salary_from, сurr_salary_to, exp_from, exp_to, description, job_type, 
+                            job_format, languages, skills, source_vac, date_created, date_of_download, status, 
+                            date_closed, version_vac, actual
                             FROM {self.schema}.{self.table_name}
                             WHERE vacancy_url = '{link}'
                                 AND status != 'closed'
@@ -246,10 +247,11 @@ class BaseJobParser:
                                 data_to_close = {
                                     'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                    'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                    'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                    'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                    'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                    'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                    'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                    'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                    'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                    'date_created': record[18], 'date_of_download': datetime.now().date(),
                                     'status': 'closed', 'date_closed': datetime.now().date(),
                                     'version_vac': record[-2] + 1, 'actual': -1
                                 }
@@ -264,9 +266,10 @@ class BaseJobParser:
                 for record in data:
                     link = record[0]
                     query = f"""
-                        SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, date_closed, version_vac, actual
+                        SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, currency_id, 
+                            сurr_salary_from, сurr_salary_to, exp_from, exp_to, description, job_type, job_format, 
+                            languages, skills, source_vac, date_created, date_of_download, status, date_closed, 
+                            version_vac, actual
                         FROM {self.schema}.{self.table_name}
                         WHERE vacancy_url = '{link}'
                         ORDER BY date_of_download DESC, version_vac DESC
@@ -284,10 +287,11 @@ class BaseJobParser:
                                 data_new_vac = {
                                     'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                    'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                    'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                    'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                    'date_created': old_record[15], 'date_of_download': datetime.now().date(),
+                                    'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                    'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                    'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                    'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                    'date_created': old_record[18], 'date_of_download': datetime.now().date(),
                                     'status': 'existing', 'date_closed': old_record[-3], 'version_vac': next_version,
                                     'actual': 1
                                 }
@@ -303,10 +307,11 @@ class BaseJobParser:
                                     data_new_vac = {
                                         'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': old_record[15], 'date_of_download': datetime.now().date(),
+                                        'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                        'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                        'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                        'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                        'date_created': old_record[18], 'date_of_download': datetime.now().date(),
                                         'status': 'existing', 'date_closed': old_record[-3],
                                         'version_vac': next_version, 'actual': 1
                                     }
@@ -318,10 +323,11 @@ class BaseJobParser:
                                     data_clos_new = {
                                         'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                        'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                        'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                        'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                        'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                        'date_created': record[18], 'date_of_download': datetime.now().date(),
                                         'status': 'new', 'date_closed': record[-3], 'version_vac': next_version,
                                         'actual': 1
                                     }
@@ -332,10 +338,11 @@ class BaseJobParser:
                         data_full_new = {
                             'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                             'level': record[3], 'company': record[4], 'salary_from': record[5],
-                            'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                            'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                            'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                            'date_created': record[15], 'date_of_download': datetime.now().date(),
+                            'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                            'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                            'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                            'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                            'date_created': record[18], 'date_of_download': datetime.now().date(),
                             'status': 'new', 'date_closed': record[-3], 'version_vac': 1,
                             'actual': 1
                         }
