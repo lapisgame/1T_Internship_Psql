@@ -51,6 +51,7 @@ class Dags(BaseDags):
         try:
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
             log.info('HeadHunter parser successfully completed the job')

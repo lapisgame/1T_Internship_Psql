@@ -88,7 +88,7 @@ class BaseJobParser:
         self.dataframe_to_closed = self.dataframe_to_closed.fillna(psycopg2.extensions.AsIs('NULL'))
         self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
 
-    def calculate_currency_vacancy(self):
+    def calculate_currency_vacancies(self):
         try:
             if not self.df.empty:
                 self.log.info('Currency vacancies are calculated')
