@@ -122,11 +122,11 @@ class BaseJobParser:
                 self.df.loc[
                     ~self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
 
+                self.df['salary_from'] = self.df['salary_from'].astype(int)
+                self.df['salary_to'] = self.df['salary_to'].astype(int)
+
                 self.log.info('The values of currency vacancies have been successfully converted into rubles '
                               'and recorded in the Dataframe')
-
-            self.df['salary_from'] = self.df['salary_from'].astype(int)
-            self.df['salary_to'] = self.df['salary_to'].astype(int)
 
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
