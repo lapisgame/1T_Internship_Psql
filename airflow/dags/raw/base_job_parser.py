@@ -119,9 +119,9 @@ class BaseJobParser:
                     company = EXCLUDED.company,
                     salary_from = EXCLUDED.salary_from, 
                     salary_to = EXCLUDED.salary_to, 
-                    currency_id = EXCLUDED.currency_id
-                    сurr_salary_from = EXCLUDED.сurr_salary_from
-                    сurr_salary_to = EXCLUDED.сurr_salary_to
+                    currency_id = EXCLUDED.currency_id,
+                    сurr_salary_from = EXCLUDED.сurr_salary_from,
+                    сurr_salary_to = EXCLUDED.сurr_salary_to,
                     exp_from = EXCLUDED.exp_from, 
                     exp_to = EXCLUDED.exp_to,
                     description = EXCLUDED.description, 
