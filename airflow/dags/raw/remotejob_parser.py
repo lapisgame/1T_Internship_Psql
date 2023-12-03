@@ -38,8 +38,6 @@ default_args = {
 }
 
 class RemoteJobParser(BaseJobParserSelenium):
-    def __init__(self, url, profs, log, conn, table_name):
-        super().__init__(url, profs, log, conn, table_name)
     """
     Парсер вакансий с сайта RemoteJob, наследованный от BaseJobParserSelenium
     """
@@ -112,28 +110,26 @@ class RemoteJobParser(BaseJobParserSelenium):
                     f"Не удалось найти текстовый элемент на странице {vacancy['vacancy_link']}. Страница будет пропущена.")
                 continue
 
-            self.df['vacancy_url'].append(vacancy["vacancy_link"])
-            self.df['vacancy_name'].append(vacancy["vacancy_name"])
-            self.df['company'].append(vacancy["company"])
-            self.df['salary_from'].append(vacancy["salary_from"])
-            self.df['salary_to'].append(vacancy["salary_to"])
-            self.df['description'].append(description)
-            self.df['job_format'].append('Удаленная работа')
-            self.df['source_vac'].append(6)
-            self.df['date_created'].append(date_created)
-            self.df['date_of_download'].append(datetime.now().date())
-            self.df['status'].append('existing')
-            self.df['version_vac'].append(1)
-            self.df['actual'].append(1)
+            self.df = self.df.append({
+                'vacancy_url': vacancy["vacancy_link"],
+                'vacancy_name': vacancy["vacancy_name"],
+                'company': vacancy["company"],
+                'salary_from': vacancy["salary_from"],
+                'salary_to': vacancy["salary_to"],
+                'description': description,
+                'job_format': 'Удаленная работа',
+                'source_vac': 6,
+                'date_created': date_created,
+                'date_of_download': datetime.now().date(),
+                'status': 'existing',
+                'version_vac': 1,
+                'actual': 1
+            }, ignore_index=True)
             time.sleep(3)
 
     def find_vacancies(self):
         self.wait = WebDriverWait(self.browser, 10)
         self.url_l = []
-        # self.df = {'vacancy_url': [], 'vacancy_name': [], 'company': [], 'salary_from': [], 'salary_to': [],
-        #            'description': [], 'job_format': [], 'source_vac': [], 'date_created': [],
-        #            'date_of_download': [], 'status': [], 'version_vac': [], 'actual': []
-        #            }
         options.add_argument('--headless')
         ua = UserAgent().chrome
         self.headers = {'User-Agent': ua}
