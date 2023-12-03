@@ -8,6 +8,7 @@ import requests
 from datetime import date, datetime
 from airflow.utils.dates import days_ago
 import logging
+import numpy as np
 
 import sys
 import os
@@ -78,12 +79,12 @@ class HHJobParser(BaseJobParser):
                                         if item['salary']['from'] != None:
                                             res['salary_from'] = int(item['salary']['from'])
                                         else:
-                                            res['salary_from'] = None
+                                            res['salary_from'] = np.nan
 
                                         if item['salary']['to'] != None:
                                             res['salary_to'] = int(item['salary']['to'])
                                         else:
-                                            res['salary_to'] = None
+                                            res['salary_to'] = np.nan
 
                                     else:
                                         if item['salary']['currency'].isin(["USD", "EUR", "KZT"]):
@@ -93,12 +94,12 @@ class HHJobParser(BaseJobParser):
                                             if item['salary']['from'] != None:
                                                 res['сurr_salary_from'] = int(item['salary']['from'])
                                             else:
-                                                res['сurr_salary_from'] = None
+                                                res['сurr_salary_from'] = np.nan
 
                                             if item['salary']['to'] != None:
                                                 res['сurr_salary_to'] = int(item['salary']['to'])
                                             else:
-                                                res['сurr_salary_to'] = None
+                                                res['сurr_salary_to'] = np.nan
 
                                         else:
                                             self.log.info(f"A new currency has been found: "
