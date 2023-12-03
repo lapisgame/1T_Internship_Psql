@@ -108,19 +108,19 @@ class BaseJobParser:
                 rate = self.cur.fetchall()[0]
 
                 self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = (
-                            self.df['сurr_salary_from'] * rate[0]).round(0)
+                        self.df['сurr_salary_from'] * rate[0]).astype(int)
                 self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = (
-                            self.df['сurr_salary_to'] * rate[0]).round(0)
+                        self.df['сurr_salary_to'] * rate[0]).astype(int)
 
                 self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = (
-                            self.df['сurr_salary_from'] * rate[1]).round(0)
+                        self.df['сurr_salary_from'] * rate[1]).astype(int)
                 self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = (
-                            self.df['сurr_salary_to'] * rate[1]).round(0)
+                        self.df['сurr_salary_to'] * rate[1]).astype(int)
 
                 self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = (
-                            self.df['сurr_salary_from'] * rate[2]).round(0)
+                        self.df['сurr_salary_from'] * rate[2]).astype(int)
                 self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = (
-                            self.df['сurr_salary_to'] * rate[2]).round(0)
+                        self.df['сurr_salary_to'] * rate[2]).astype(int)
 
                 self.df.loc[
                     ~self.df['currency_id'].isin(["USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
