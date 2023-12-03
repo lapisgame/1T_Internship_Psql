@@ -30,7 +30,7 @@ default_args = {
     'start_date': days_ago(1)
 }
 
-class HHJobParser(BaseJobParser):
+class ZarplataJobParser(BaseJobParser):
     def find_vacancies(self):
         currencies = {}
         dictionaries = requests.get('https://api.hh.ru/dictionaries').json()
