@@ -119,10 +119,6 @@ class BaseJobParser:
                 self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = self.df['сurr_salary_from'] * rate[2]
                 self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = self.df['сurr_salary_to'] * rate[2]
 
-                self.df.loc[self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] \
-                    = self.df.loc[self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]),
-                    ['salary_from', 'salary_to']].astype(int)
-
                 self.df.loc[
                     ~self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
 
@@ -132,6 +128,10 @@ class BaseJobParser:
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
 
+        # self.df['salary_from'] = self.df['salary_from'].round(0)
+        # self.df['salary_to'] = self.df['salary_to'].round(0)
+        self.df['salary_from'] = self.df['salary_from'].astype(int)
+        self.df['salary_to'] = self.df['salary_to'].astype(int)
 
     def save_df(self):
         """
@@ -149,6 +149,8 @@ class BaseJobParser:
         self.log.info(f"Loading data into the database")
         try:
             if not self.df.empty:
+
+
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 query = f"""
                     INSERT INTO {self.schema}.{self.table_name} 
