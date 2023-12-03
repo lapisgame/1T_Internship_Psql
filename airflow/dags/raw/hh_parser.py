@@ -43,6 +43,7 @@ class HHJobParser(BaseJobParser):
         for index, vac_name in enumerate(self.profs):
             parsing = True
             page_number = 0
+            try_count = 0
             while parsing and page_number<max_page_count:
                 params = {
                     'text': f'{vac_name}',
@@ -52,8 +53,9 @@ class HHJobParser(BaseJobParser):
                     'negotiations_order': 'updated_at',
                     'vacancy_search_order': 'publication_time'
                 }
-
+                
                 try:
+                    try_count += 1
                     self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {vac_name}')
                     req = requests.get(f'{base_hh}', params=params).json()
 
@@ -62,9 +64,9 @@ class HHJobParser(BaseJobParser):
                             parsing = False
                         
                         for item in req['items']:
-                            item = requests.get(f'{base_hh}/{item["id"]}').json()
-                            res = {}
                             try:
+                                item = requests.get(f'{base_hh}/{item["id"]}').json()
+                                res = {}
                                 res['vacancy_url'] = f'https://hh.ru/vacancy/{item["id"]}'
                                 res['vacancy_name'] = item['name']
                                 res['towns'] = item['area']['name']
@@ -135,11 +137,15 @@ class HHJobParser(BaseJobParser):
 
                 except Exception as exp:
                     self.log.error(f'ERROR {vac_name} {exp}')
-                    time.sleep(5)
-                    continue
+                    if try_count < 3:
+                        time.sleep(10)
+                    else:
+                        try_count = 0
+                        page_number += 1
+                        time.sleep(5)
 
-                page_number += 1
+                
 
-        self.df.to_csv('/opt/airflow/files/hh.csv', index=False)
         self.df = self.df.drop_duplicates()
+        self.df.to_csv('/opt/airflow/files/hh.csv', index=False)
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
