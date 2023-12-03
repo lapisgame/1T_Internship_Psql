@@ -127,7 +127,6 @@ class VsetiJobParser(BaseJobParser):
                             date_str = vacancy_info.find('div', class_='div-block-234').text.strip()
                             date_created = datetime.strptime(date_str, '%d%B%Y').strftime('%d %B %Y')
                             date_of_download = datetime.now().date()
-                            url_source = 'https://www.vseti.app/jobs'
 
                             item = {
                                 "company": employer_name,
@@ -138,7 +137,7 @@ class VsetiJobParser(BaseJobParser):
                                 "salary_to": salary_to,
                                 "date_created": date_created,
                                 "date_of_download": date_of_download,
-                                "source_vac": url_source,
+                                "source_vac": '11',
                                 "status": 'existing',
                                 "version_vac": '1',
                                 "actual": '1',
