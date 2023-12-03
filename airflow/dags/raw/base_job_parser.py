@@ -23,10 +23,10 @@ class BaseJobParser:
         self.log = log
         self.table_name = table_name
         columns = [
-            'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from',
-            'salary_to', 'currency_id', 'сurr_salary_from', 'сurr_salary_to', 'exp_from',
-            'exp_to', 'description', 'job_type', 'job_format', 'languages', 'skills', 'source_vac',
-            'date_created', 'date_of_download', 'status', 'date_closed', 'version_vac', 'actual'
+            'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to', 'currency_id',
+            'сurr_salary_from', 'сurr_salary_to', 'exp_from', 'exp_to', 'description', 'job_type', 'job_format',
+            'languages', 'skills', 'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed',
+            'version_vac', 'actual'
             ]
         self.df = pd.DataFrame(columns=columns)
         self.dataframe_to_closed = pd.DataFrame(columns=columns)
@@ -119,6 +119,9 @@ class BaseJobParser:
                     company = EXCLUDED.company,
                     salary_from = EXCLUDED.salary_from, 
                     salary_to = EXCLUDED.salary_to, 
+                    currency_id = EXCLUDED.currency_id
+                    сurr_salary_from = EXCLUDED.сurr_salary_from
+                    сurr_salary_to = EXCLUDED.сurr_salary_to
                     exp_from = EXCLUDED.exp_from, 
                     exp_to = EXCLUDED.exp_to,
                     description = EXCLUDED.description, 
