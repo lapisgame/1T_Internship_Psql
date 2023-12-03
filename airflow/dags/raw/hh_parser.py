@@ -144,6 +144,7 @@ class HHJobParser(BaseJobParser):
                         page_number += 1
                         time.sleep(5)
 
+                page_number += 1
                 
 
         self.df = self.df.drop_duplicates()
