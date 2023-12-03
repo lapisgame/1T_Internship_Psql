@@ -37,11 +37,13 @@ class HHJobParser(BaseJobParser):
         for currency in dictionaries['currency']:
             currencies[currency['code']] = (1/currency['rate'])
 
-        self.max_page_count = 10
-        self.re_html_tag_remove = r'<[^>]+>'
+        max_page_count = 10
+        re_html_tag_remove = r'<[^>]+>'
 
         for index, vac_name in enumerate(self.profs):
-            for page_number in range(self.max_page_count):
+            parsing = True
+            page_number = 0
+            while parsing and page_number<max_page_count:
                 params = {
                     'text': f'{vac_name}',
                     'page': page_number,
@@ -56,6 +58,9 @@ class HHJobParser(BaseJobParser):
                     req = requests.get(f'{base_hh}', params=params).json()
 
                     if 'items' in req.keys():
+                        if len(req['items']) < 20:
+                            parsing = False
+                        
                         for item in req['items']:
                             item = requests.get(f'{base_hh}/{item["id"]}').json()
                             res = {}
@@ -68,17 +73,23 @@ class HHJobParser(BaseJobParser):
 
                                 if item['salary'] != None:
                                     if item['salary']['from'] != None:
-                                        res['salary_from'] = int(item['salary']['from']) * currencies[item['currency']]
+                                        res['сurr_salary_from'] = int(item['salary']['from'])
                                     else:
-                                        res['salary_from'] = None
+                                        res['сurr_salary_from'] = None
                                     
                                     if item['salary']['to'] != None:
-                                        res['salary_to'] = int(item['salary']['to']) * currencies[item['currency']]
+                                        res['сurr_salary_to'] = int(item['salary']['to'])
                                     else:
-                                        res['salary_to'] = None
+                                        res['сurr_salary_to'] = None
+
+                                    if item['salary']['currency'] == "RUR":
+                                        res['currency_id'] = "RUB"
+                                    else:
+                                        res['currency_id'] = item['salary']['currency']
                                 else:
-                                    item['salary_form'] = None
-                                    item['salary_to'] = None
+                                    res['salary_form'] = None
+                                    res['salary_to'] = None
+                                    res['currency_id'] = "RUB"
 
                                 if item['experience']['id'] == 'noExperience':
                                     res['exp_from'] = '0'
@@ -95,7 +106,7 @@ class HHJobParser(BaseJobParser):
                                     res['exp_from'] = '6'
                                     res['level'] = 'Lead'
 
-                                res['description'] = re.sub(self.re_html_tag_remove, '', item['description'])
+                                res['description'] = re.sub(re_html_tag_remove, '', item['description'])
 
                                 res['job_type'] = item['employment']['name']
                                 res['job_format'] = item['schedule']['name']
@@ -126,6 +137,8 @@ class HHJobParser(BaseJobParser):
                     self.log.error(f'ERROR {vac_name} {exp}')
                     time.sleep(5)
                     continue
+
+                page_number += 1
 
         # self.df = self.df.drop_duplicates()
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
