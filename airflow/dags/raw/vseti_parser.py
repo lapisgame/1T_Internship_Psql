@@ -126,7 +126,7 @@ class VsetiJobParser(BaseJobParser):
                             # другие параметры
                             date_str = vacancy_info.find('div', class_='div-block-234').text.strip()
                             # date_created = datetime.strptime(date_str, '%d%B%Y').strftime('%d %B %Y')
-                            date_created = datetime.strptime(date_str, '%d %B %Y').strftime('%Y-%m-%d')
+                            date_created = datetime.strptime(date_str, '%d%B%Y').strftime('%Y-%m-%d')
 
                             date_of_download = datetime.now().date()
 
