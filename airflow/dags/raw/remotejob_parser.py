@@ -13,6 +13,7 @@ import dateparser
 from airflow.utils.dates import days_ago
 from selenium.webdriver.common.by import By
 import numpy as np
+import pandas as pd
 
 import sys
 import os
@@ -39,10 +40,10 @@ default_args = {
 
 class RemoteJobParser(BaseJobParserSelenium):
     """
-    Парсер вакансий с сайта RemoteJob, наследованный от BaseJobParserSelenium
+    Parser for job vacancies from the RemoteJob website, inherited from BaseJobParserSelenium
     """
     def main_page(self, url):
-        self.log.info(f'Анализируется главная страница {url}')
+        self.log.info(f'Analyzing the main page {url}')
         self.browser.get(url)
         time.sleep(3)
         divs = self.browser.find_elements(By.CSS_SELECTOR, '.col-xs-10')
@@ -71,7 +72,7 @@ class RemoteJobParser(BaseJobParserSelenium):
                         salary_from = np.nan
                         salary_to = np.nan
                 except Exception as e:
-                    self.log.error(f"Ошибка при обработке информации о зарплате: {e}")
+                    self.log.error(f"Error processing salary information: {e}")
                     salary_from = np.nan
                     salary_to = np.nan
 
@@ -87,7 +88,7 @@ class RemoteJobParser(BaseJobParserSelenium):
             self.url_l.append(vacancy_data)
 
     def find_vacancies_description(self):
-        # инициализация главного словаря с данными
+        # initializing the main data dictionary
         for vacancy in self.url_l:
             # self.log.info(f'URL {vacancy["vacancy_link"]}')
             self.browser.get(vacancy["vacancy_link"])
@@ -105,26 +106,26 @@ class RemoteJobParser(BaseJobParserSelenium):
                     'Контактная информация работодателя станет доступна сразу после того, как вы оставите свой отклик на эту вакансию.',
                     '')
             except TimeoutException:
-                # Если исключение вызвано, пропустить текущую итерацию и перейти к следующей вакансии.
+                # If the exception is raised, skip the current iteration and move on to the next vacancy.
                 self.log.error(
-                    f"Не удалось найти текстовый элемент на странице {vacancy['vacancy_link']}. Страница будет пропущена.")
+                    f"Failed to find a text element on the page {vacancy['vacancy_link']}. The page will be skipped.")
                 continue
 
-            self.df = self.df.append({
-                'vacancy_url': vacancy["vacancy_link"],
-                'vacancy_name': vacancy["vacancy_name"],
-                'company': vacancy["company"],
-                'salary_from': vacancy["salary_from"],
-                'salary_to': vacancy["salary_to"],
-                'description': description,
-                'job_format': 'Удаленная работа',
-                'source_vac': 6,
-                'date_created': date_created,
-                'date_of_download': datetime.now().date(),
-                'status': 'existing',
-                'version_vac': 1,
-                'actual': 1
-            }, ignore_index=True)
+            self.df = pd.concat([self.df, pd.DataFrame({
+                'vacancy_url': [vacancy["vacancy_link"]],
+                'vacancy_name': [vacancy["vacancy_name"]],
+                'company': [vacancy["company"]],
+                'salary_from': [vacancy["salary_from"]],
+                'salary_to': [vacancy["salary_to"]],
+                'description': [description],
+                'job_format': ['Remote work'],
+                'source_vac': [6],
+                'date_created': [date_created],
+                'date_of_download': [datetime.now().date()],
+                'status': ['existing'],
+                'version_vac': [1],
+                'actual': [1]
+            })], ignore_index=True)
             time.sleep(3)
 
     def find_vacancies(self):
@@ -135,16 +136,16 @@ class RemoteJobParser(BaseJobParserSelenium):
         self.headers = {'User-Agent': ua}
         options.add_argument(f'--user-agent={ua}')
 
-        self.log.info('Старт парсинга вакансий Remote-Job ...')
+        self.log.info('Starting parsing job vacancies from Remote-Job...')
 
         for prof in self.profs:
-            self.log.info(f'Старт парсинга вакансии: "{prof}"')
+            self.log.info(f'Start parsing job vacancy: "{prof}"')
             try:
                 self.browser.get(self.url)
                 time.sleep(10)
-                # операции поиска и обработки вакансий
+                # search and process vacancies operations
             except Exception as e:
-                self.log.error(f"Ошибка при обработке вакансии {prof}: {e}")
+                self.log.error(f"Error processing job vacancy {prof}: {e}")
                 continue
             try:
                 search = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search_query"]')))
@@ -163,16 +164,16 @@ class RemoteJobParser(BaseJobParserSelenium):
 
             vacancy_url = self.browser.current_url
 
-            self.log.info(f'Страниц для обработки: {last_page}')
+            self.log.info(f'Pages to process: {last_page}')
 
             for i in range(1, last_page + 1):
-                self.log.info(f'Обрабатывается страница {i}/{last_page}.')
+                self.log.info(f'Processing page {i}/{last_page}.')
                 vacancy_url_for_page = f'{vacancy_url}&page={i}'
                 self.main_page(vacancy_url_for_page)
                 self.find_vacancies_description()
                 self.url_l = []
-                self.log.info(f'Страница {i} обработана!')
+                self.log.info(f'Page {i} processed!')
 
-            # Добавляем обновление браузера для каждой новой вакансии
+            # Add browser refresh for each new vacancy
             self.browser.refresh()
-            time.sleep(5)  # Пауза после обновления страницы для уверенности, что страница прогрузилась полностью
+            time.sleep(5)  # Pause after refreshing the page to ensure it is fully loaded
