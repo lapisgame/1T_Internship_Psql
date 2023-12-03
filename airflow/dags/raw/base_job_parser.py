@@ -107,9 +107,6 @@ class BaseJobParser:
                 self.cur.execute(query)
                 rate = self.cur.fetchall()[0]
 
-                self.df['salary_from'] = self.df['сurr_salary_from']
-                self.df['salary_to'] = self.df['сurr_salary_to']
-
                 self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = (
                             self.df['сurr_salary_from'] * rate[0]).astype(int)
                 self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = (
@@ -126,7 +123,7 @@ class BaseJobParser:
                             self.df['сurr_salary_to'] * rate[2]).astype(int)
 
                 self.df.loc[
-                    ~self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
+                    ~self.df['currency_id'].isin(["USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
 
                 self.log.info('The values of currency vacancies have been successfully converted into whole numbers '
                               'and recorded in the Dataframe')
@@ -205,13 +202,15 @@ class BaseJobParser:
         2. Retrieves distinct vacancy URLs from the specified schema and table.
         3. Compares the vacancy URLs in the database with the parsed data and identifies the URLs to close.
         4. Creates a dataframe called 'dataframe_to_closed' for the records to be closed.
-        5. If there are URLs to close, retrieves the relevant records from the database and adds them to 'dataframe_to_closed'.
+        5. If there are URLs to close, retrieves the relevant records from the database and adds them to
+            'dataframe_to_closed'.
         6. Assigns status to each record in the parsed data based on its presence in the database.
         7. Retrieves the most recent record for each URL from the database.
         8. Compares the attributes of the most recent record with the parsed data.
         9. If the record is new, adds it to 'dataframe_to_update' with a status of 'existing'.
         10. If the record is existing and has changed, adds it to 'dataframe_to_update' with a status of 'existing'.
-        11. If the record is closed but has reappeared in the parsed data, adds it to 'dataframe_to_update' with a status of 'new'.
+        11. If the record is closed but has reappeared in the parsed data, adds it to 'dataframe_to_update' with a
+            status of 'new'.
         12. If the URL is not present in the database, adds the record to 'dataframe_to_update' with a status of 'new'.
 
         Raises:

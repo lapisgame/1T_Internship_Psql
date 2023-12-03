@@ -74,6 +74,20 @@ class HHJobParser(BaseJobParser):
                                 res['company'] = item['employer']['name']
 
                                 if item['salary'] != None:
+                                    if item['salary']['currency'] == "RUR":
+                                        if item['salary']['from'] != None:
+                                            res['salary_from'] = int(item['salary']['from'])
+                                        else:
+                                            res['salary_from'] = None
+
+                                        if item['salary']['to'] != None:
+                                            res['salary_to'] = int(item['salary']['to'])
+                                        else:
+                                            res['salary_to'] = None
+
+                                    else:
+                                        res['currency_id'] = item['salary']['currency']
+
                                     if item['salary']['from'] != None:
                                         res['сurr_salary_from'] = int(item['salary']['from'])
                                     else:
@@ -84,14 +98,9 @@ class HHJobParser(BaseJobParser):
                                     else:
                                         res['сurr_salary_to'] = None
 
-                                    if item['salary']['currency'] == "RUR":
-                                        res['currency_id'] = "RUB"
-                                    else:
-                                        res['currency_id'] = item['salary']['currency']
                                 else:
                                     res['salary_from'] = None
                                     res['salary_to'] = None
-                                    res['currency_id'] = "RUB"
 
                                 if item['experience']['id'] == 'noExperience':
                                     res['exp_from'] = '0'
