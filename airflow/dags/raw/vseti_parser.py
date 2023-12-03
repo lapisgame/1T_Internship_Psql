@@ -75,15 +75,23 @@ class VsetiJobParser(BaseJobParser):
                                 match = re.search(r'от(\d+)до(\d+)', salary_find)
                                 if match:
                                     salary_from = int(match.group(1))
+                                    if salary_from > 99999999:
+                                        salary_from = None
                                     salary_to = int(match.group(2))
+                                    if salary_to > 99999999:
+                                        salary_to = None
                             elif 'от' in salary_find:
                                 match = re.search(r'от(\d+)', salary_find)
                                 if match:
                                     salary_from = int(match.group(1))
+                                    if salary_from > 99999999:
+                                        salary_from = None
                             elif 'до' in salary_find:
                                 match = re.search(r'до(\d+)', salary_find)
                                 if match:
                                     salary_to = int(match.group(1))
+                                    if salary_to > 99999999:
+                                        salary_to = None
                             # города и формат работы
                             towns_info = vacancy_info.find('div', class_='margin-16')
                             towns_text = towns_info.find_next('p',
