@@ -86,17 +86,25 @@ class HHJobParser(BaseJobParser):
                                             res['salary_to'] = None
 
                                     else:
-                                        res['currency_id'] = item['salary']['currency']
+                                        if item['salary']['currency'].isin(["USD", "EUR", "KZT"]):
 
-                                    if item['salary']['from'] != None:
-                                        res['сurr_salary_from'] = int(item['salary']['from'])
-                                    else:
-                                        res['сurr_salary_from'] = None
-                                    
-                                    if item['salary']['to'] != None:
-                                        res['сurr_salary_to'] = int(item['salary']['to'])
-                                    else:
-                                        res['сurr_salary_to'] = None
+                                            res['currency_id'] = item['salary']['currency']
+
+                                            if item['salary']['from'] != None:
+                                                res['сurr_salary_from'] = int(item['salary']['from'])
+                                            else:
+                                                res['сurr_salary_from'] = None
+
+                                            if item['salary']['to'] != None:
+                                                res['сurr_salary_to'] = int(item['salary']['to'])
+                                            else:
+                                                res['сurr_salary_to'] = None
+
+                                        else:
+                                            self.log.info(f"A new currency has been found: "
+                                                          f"{item['salary']['currency']}")
+                                            res['salary_from'] = None
+                                            res['salary_to'] = None
 
                                 else:
                                     res['salary_from'] = None
