@@ -111,14 +111,14 @@ class BaseJobParser:
                 mask_eur = self.df['currency_id'] == "EUR"
                 mask_kzt = self.df['currency_id'] == "KZT"
 
-                self.df.loc[mask_usd, 'salary_from'] = round(self.df.loc[mask_usd, 'сurr_salary_from'] * rate[0])
-                self.df.loc[mask_usd, 'salary_to'] = round(self.df.loc[mask_usd, 'сurr_salary_to'] * rate[0])
+                self.df.loc[mask_usd, 'salary_from'] = round(float(self.df.loc[mask_usd, 'сurr_salary_from']) * rate[0])
+                self.df.loc[mask_usd, 'salary_to'] = round(float(self.df.loc[mask_usd, 'сurr_salary_to']) * rate[0])
 
-                self.df.loc[mask_eur, 'salary_from'] = round(self.df.loc[mask_eur, 'сurr_salary_from'] * rate[1])
-                self.df.loc[mask_eur, 'salary_to'] = round(self.df.loc[mask_eur, 'сurr_salary_to'] * rate[1])
+                self.df.loc[mask_eur, 'salary_from'] = round(float(self.df.loc[mask_eur, 'сurr_salary_from']) * rate[1])
+                self.df.loc[mask_eur, 'salary_to'] = round(float(self.df.loc[mask_eur, 'сurr_salary_to']) * rate[1])
 
-                self.df.loc[mask_kzt, 'salary_from'] = round(self.df.loc[mask_kzt, 'сurr_salary_from'] * rate[2])
-                self.df.loc[mask_kzt, 'salary_to'] = round(self.df.loc[mask_kzt, 'сurr_salary_to'] * rate[2])
+                self.df.loc[mask_kzt, 'salary_from'] = round(float(self.df.loc[mask_kzt, 'сurr_salary_from']) * rate[2])
+                self.df.loc[mask_kzt, 'salary_to'] = round(float(self.df.loc[mask_kzt, 'сurr_salary_to']) * rate[2])
 
                 mask_other = ~self.df['currency_id'].isin(["USD", "EUR", "KZT"])
                 self.log.info(
