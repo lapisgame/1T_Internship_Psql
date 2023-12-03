@@ -88,6 +88,48 @@ class BaseJobParser:
         self.dataframe_to_closed = self.dataframe_to_closed.fillna(psycopg2.extensions.AsIs('NULL'))
         self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
 
+    def calculate_currency_vacancy(self):
+        try:
+            if not self.df.empty:
+                self.log.info('Currency vacancies are calculated')
+                query = f"""
+                        SELECT usd_rate, eur_rate, kzt_rate
+                        FROM {self.schema}.currency_directory
+                        WHERE exchange_rate_date = 
+                        (SELECT MAX(exchange_rate_date) FROM {self.schema}.currency_directory)
+                        """
+                self.cur.execute(query)
+                rate = self.cur.fetchall()
+
+                if self.df['currency_id'] == "RUB":
+                    self.df['salary_from'] = self.df['сurr_salary_from']
+                    self.df['salary_to'] = self.df['сurr_salary_to']
+
+                elif self.df['currency_id'] == "USD":
+                    self.df['salary_from'] = self.df['сurr_salary_from'] * rate[0]
+                    self.df['salary_to'] = self.df['сurr_salary_to'] * rate[0]
+
+                elif self.df['currency_id'] == "EUR":
+                    self.df['salary_from'] = self.df['сurr_salary_from'] * rate[1]
+                    self.df['salary_to'] = self.df['сurr_salary_to'] * rate[1]
+
+                elif self.df['currency_id'] == "KZT":
+                    self.df['salary_from'] = self.df['сurr_salary_from'] * rate[2]
+                    self.df['salary_to'] = self.df['сurr_salary_to'] * rate[2]
+
+                else:
+                    self.log.info(f'A new type of currency has been found: {self.df["currency_id"]}')
+                    self.df['salary_from'] = None
+                    self.df['salary_to'] = None
+
+                self.log.info('The values of currency vacancies have been successfully converted into rubles '
+                              'and recorded in the Dataframe')
+
+        except Exception as e:
+            self.log.error(f"Error in 'calculate_currency_vacancy' method: {e}")
+            raise
+
+
     def save_df(self):
         """
         This method saves the DataFrame to a database table. It inserts the data into the table,
@@ -142,6 +184,7 @@ class BaseJobParser:
                 execute_values(self.cur, query, data)
                 self.conn.commit()
                 self.log.info("Total number of loaded vacancies in the database: " + str(len(self.df)) + "\n")
+
         except Exception as e:
             self.log.error(f"An error occurred while saving data in the 'save_df' function: {e}")
             raise
