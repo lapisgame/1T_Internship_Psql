@@ -89,7 +89,7 @@ class HHJobParser(BaseJobParser):
                                     else:
                                         res['currency_id'] = item['salary']['currency']
                                 else:
-                                    res['salary_form'] = None
+                                    res['salary_from'] = None
                                     res['salary_to'] = None
                                     res['currency_id'] = "RUB"
 
