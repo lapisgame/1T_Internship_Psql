@@ -158,9 +158,9 @@ class VsetiJobParser(BaseJobParser):
 
             i += 1  # Переходим на следующую страницу
 
-        # self.df['date_created'] = self.df['date_created'].apply(lambda x: dateparser.parse(x, languages=['ru']))
-        # self.df['date_created'] = pd.to_datetime(self.df['date_created']).dt.to_pydatetime()
-        # self.df['date_created'] = self.df['date_created'].dt.date
+        self.df['date_created'] = self.df['date_created'].apply(lambda x: dateparser.parse(x, languages=['en']))
+        self.df['date_created'] = pd.to_datetime(self.df['date_created']).dt.to_pydatetime()
+        self.df['date_created'] = self.df['date_created'].dt.date
 
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
