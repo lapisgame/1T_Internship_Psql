@@ -107,36 +107,28 @@ class BaseJobParser:
                 self.cur.execute(query)
                 rate = self.cur.fetchall()[0]
 
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = (
-                    np.where(self.df['сurr_salary_from'].notnull(), self.df['сurr_salary_from'] * rate[0],
-                             self.df['сurr_salary_from'])).astype(int)
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = (
-                    np.where(self.df['сurr_salary_to'].notnull(), self.df['сurr_salary_to'] * rate[0],
-                             self.df['сurr_salary_to'])).astype(int)
+                mask_usd = self.df['currency_id'] == "USD"
+                mask_eur = self.df['currency_id'] == "EUR"
+                mask_kzt = self.df['currency_id'] == "KZT"
 
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = (
-                    np.where(self.df['сurr_salary_from'].notnull(), self.df['сurr_salary_from'] * rate[1],
-                             self.df['сurr_salary_from'])).astype(int)
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = (
-                    np.where(self.df['сurr_salary_to'].notnull(), self.df['сurr_salary_to'] * rate[1],
-                             self.df['сurr_salary_to'])).astype(int)
+                self.df.loc[mask_usd, 'salary_from'] = round(self.df.loc[mask_usd, 'сurr_salary_from'] * rate[0])
+                self.df.loc[mask_usd, 'salary_to'] = round(self.df.loc[mask_usd, 'сurr_salary_to'] * rate[0])
 
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = (
-                    np.where(self.df['сurr_salary_from'].notnull(), self.df['сurr_salary_from'] * rate[2],
-                             self.df['сurr_salary_from'])).astype(int)
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = (
-                    np.where(self.df['сurr_salary_to'].notnull(), self.df['сurr_salary_to'] * rate[2],
-                             self.df['сurr_salary_to'])).astype(int)
+                self.df.loc[mask_eur, 'salary_from'] = round(self.df.loc[mask_eur, 'сurr_salary_from'] * rate[1])
+                self.df.loc[mask_eur, 'salary_to'] = round(self.df.loc[mask_eur, 'сurr_salary_to'] * rate[1])
 
-                self.df.loc[
-                    ~self.df['currency_id'].isin(["USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
+                self.df.loc[mask_kzt, 'salary_from'] = round(self.df.loc[mask_kzt, 'сurr_salary_from'] * rate[2])
+                self.df.loc[mask_kzt, 'salary_to'] = round(self.df.loc[mask_kzt, 'сurr_salary_to'] * rate[2])
 
-                self.log.info('The values of currency vacancies have been successfully converted into whole numbers '
+                mask_other = ~self.df['currency_id'].isin(["USD", "EUR", "KZT"])
+                self.log.info(
+                    f'A new type of currency has been found: {self.df.loc[mask_other, "currency_id"].unique()}')
+                self.df.loc[mask_other, ['salary_from', 'salary_to']] = None
+
+                self.log.info('The values of currency vacancies have been successfully converted into rubles '
                               'and recorded in the Dataframe')
-
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
-
 
     def save_df(self):
         """

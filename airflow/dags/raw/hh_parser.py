@@ -79,27 +79,27 @@ class HHJobParser(BaseJobParser):
                                         if item['salary']['from'] != None:
                                             res['salary_from'] = int(item['salary']['from'])
                                         else:
-                                            res['salary_from'] = np.nan
+                                            res['salary_from'] = None
 
                                         if item['salary']['to'] != None:
                                             res['salary_to'] = int(item['salary']['to'])
                                         else:
-                                            res['salary_to'] = np.nan
+                                            res['salary_to'] = None
 
                                     else:
-                                        if item['salary']['currency'].isin(["USD", "EUR", "KZT"]):
+                                        if item['salary']['currency'] in ["USD", "EUR", "KZT"]:
 
                                             res['currency_id'] = item['salary']['currency']
 
                                             if item['salary']['from'] != None:
                                                 res['сurr_salary_from'] = int(item['salary']['from'])
                                             else:
-                                                res['сurr_salary_from'] = np.nan
+                                                res['сurr_salary_from'] = None
 
                                             if item['salary']['to'] != None:
                                                 res['сurr_salary_to'] = int(item['salary']['to'])
                                             else:
-                                                res['сurr_salary_to'] = np.nan
+                                                res['сurr_salary_to'] = None
 
                                         else:
                                             self.log.info(f"A new currency has been found: "
