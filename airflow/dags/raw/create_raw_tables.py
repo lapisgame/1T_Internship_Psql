@@ -69,9 +69,9 @@ class DatabaseManager:
         try:
             for raw_table in self.raw_tables:
                 table_name = raw_table['raw_tables_name']
-                drop_table_query = f"DROP TABLE IF EXISTS {self.schema}.{table_name};"
-                self.cur.execute(drop_table_query)
-                self.log.info(f'Удалена таблица {table_name}')
+                # drop_table_query = f"DROP TABLE IF EXISTS {self.schema}.{table_name};"
+                # self.cur.execute(drop_table_query)
+                # self.log.info(f'Удалена таблица {table_name}')
                 create_table_query = f"""                
                 CREATE TABLE IF NOT EXISTS {self.schema}.{table_name}(
                    vacancy_url VARCHAR(2083) NOT NULL,
