@@ -128,10 +128,10 @@ class BaseJobParser:
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
 
-        # self.df['salary_from'] = self.df['salary_from'].round(0)
-        # self.df['salary_to'] = self.df['salary_to'].round(0)
-        self.df['salary_from'] = self.df['salary_from'].astype(int)
-        self.df['salary_to'] = self.df['salary_to'].astype(int)
+        self.df['salary_from'] = self.df['salary_from'].round(0)
+        self.df['salary_to'] = self.df['salary_to'].round(0)
+        # self.df['salary_from'] = self.df['salary_from'].astype(int)
+        # self.df['salary_to'] = self.df['salary_to'].astype(int)
 
     def save_df(self):
         """
