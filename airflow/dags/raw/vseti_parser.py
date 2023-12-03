@@ -169,5 +169,5 @@ class VsetiJobParser(BaseJobParser):
             i += 1  # Переходим на следующую страницу
 
         self.df = self.df.drop_duplicates()
-        self.df.to_csv('/opt/airflow/files/vseti.csv', index=False)
+        # self.df.to_csv('/opt/airflow/files/vseti.csv', index=False)
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
