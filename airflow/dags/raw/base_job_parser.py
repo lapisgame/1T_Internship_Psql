@@ -89,6 +89,12 @@ class BaseJobParser:
         self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
 
     def calculate_currency_vacancies(self):
+        """
+        Converts currency vacancies into rubles based on the latest exchange rates.
+
+        Raises:
+            Exception: If there is an error in calculating currency vacancies.
+        """
         try:
             if not self.df.empty:
                 self.log.info('Currency vacancies are calculated')
@@ -104,14 +110,14 @@ class BaseJobParser:
                 self.df['salary_from'] = self.df['сurr_salary_from']
                 self.df['salary_to'] = self.df['сurr_salary_to']
 
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = self.df['сurr_salary_from'] * rate[0]
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = self.df['сurr_salary_to'] * rate[0]
+                self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = int(self.df['сurr_salary_from'] * rate[0])
+                self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = int(self.df['сurr_salary_to'] * rate[0])
 
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = self.df['сurr_salary_from'] * rate[1]
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = self.df['сurr_salary_to'] * rate[1]
+                self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = int(self.df['сurr_salary_from'] * rate[1])
+                self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = int(self.df['сurr_salary_to'] * rate[1])
 
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = self.df['сurr_salary_from'] * rate[2]
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = self.df['сurr_salary_to'] * rate[2]
+                self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = int(self.df['сurr_salary_from'] * rate[2])
+                self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = int(self.df['сurr_salary_to'] * rate[2])
 
                 self.df.loc[
                     ~self.df['currency_id'].isin(["RUB", "USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
