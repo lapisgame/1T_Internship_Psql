@@ -74,11 +74,15 @@ class CareerspaceJobParser(BaseJobParser):
                         full_url = 'https://careerspace.app/job/' + str(job.get('job_id'))
 
                         # Get salary from JSON
-                        if job.get('job_salary_currency') == 'RUB':
-                            salary_from = job.get('job_salary_from')
-                            salary_to = job.get('job_salary_to')
+                        salary_currency = job.get('job_salary_currency')
+                        сurr_salary_from = сurr_salary_to = salary_from = salary_to = None
+                        if 'RUB' in salary_currency:
+                            сurr_salary_from = job.get('job_salary_from')
+                            сurr_salary_to = job.get('job_salary_to')
+                            salary_currency = 'RUR'
                         else:
-                            salary_from = salary_to = None
+                            сurr_salary_from = job.get('job_salary_from')
+                            сurr_salary_to = job.get('job_salary_to')
 
                         # Get cities and countries from JSON
                         locations = job.get("locations", {})
@@ -124,6 +128,9 @@ class CareerspaceJobParser(BaseJobParser):
                             "job_format": job_format,
                             "salary_from": salary_from,
                             "salary_to": salary_to,
+                            "currency_id": salary_currency,
+                            "сurr_salary_from": сurr_salary_from,
+                            "сurr_salary_to": сurr_salary_to,
                             "date_created": date_created,
                             "date_of_download": date_of_download,
                             "source_vac": 3,

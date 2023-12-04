@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+from decimal import Decimal
 import psycopg2
 from psycopg2.extensions import register_adapter, AsIs
 import numpy as np
@@ -41,10 +42,10 @@ class BaseJobParserSelenium:
         self.browser.delete_all_cookies()
 
         columns = [
-            'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from',
-            'salary_to', 'exp_from', 'exp_to', 'description', 'job_type', 'job_format',
-            'languages', 'skills', 'source_vac', 'date_created', 'date_of_download',
-            'status', 'date_closed', 'version_vac', 'actual'
+            'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to', 'currency_id',
+            'сurr_salary_from', 'сurr_salary_to', 'exp_from', 'exp_to', 'description', 'job_type', 'job_format',
+            'languages', 'skills', 'source_vac', 'date_created', 'date_of_download', 'status', 'date_closed',
+            'version_vac', 'actual'
         ]
         self.df = pd.DataFrame(columns=columns)
         self.dataframe_to_closed = pd.DataFrame(columns=columns)
@@ -173,12 +174,14 @@ class BaseJobParserSelenium:
         self.log.info(f"Loading data into the database")
         try:
             if not self.df.empty:
+
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 query = f"""
                     INSERT INTO {self.schema}.{self.table_name} 
-                       (vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, exp_to, 
-                       description, job_type, job_format, languages, skills, source_vac, date_created, date_of_download, 
-                       status, date_closed, version_vac, actual)
+                       (vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, currency_id, 
+                        сurr_salary_from, сurr_salary_to, exp_from, exp_to, description, job_type, job_format, 
+                        languages, skills, source_vac, date_created, date_of_download, status, date_closed, 
+                        version_vac, actual)
                     VALUES %s 
                     ON CONFLICT (vacancy_url, version_vac) DO UPDATE SET 
                     vacancy_name = EXCLUDED.vacancy_name, 
@@ -187,6 +190,9 @@ class BaseJobParserSelenium:
                     company = EXCLUDED.company,
                     salary_from = EXCLUDED.salary_from, 
                     salary_to = EXCLUDED.salary_to, 
+                    currency_id = EXCLUDED.currency_id,
+                    сurr_salary_from = EXCLUDED.сurr_salary_from,
+                    сurr_salary_to = EXCLUDED.сurr_salary_to,
                     exp_from = EXCLUDED.exp_from, 
                     exp_to = EXCLUDED.exp_to,
                     description = EXCLUDED.description, 
@@ -207,6 +213,7 @@ class BaseJobParserSelenium:
                 execute_values(self.cur, query, data)
                 self.conn.commit()
                 self.log.info("Total number of loaded vacancies in the database: " + str(len(self.df)) + "\n")
+
         except Exception as e:
             self.log.error(f"An error occurred while saving data in the 'save_df' function: {e}")
             raise
@@ -220,13 +227,15 @@ class BaseJobParserSelenium:
         2. Retrieves distinct vacancy URLs from the specified schema and table.
         3. Compares the vacancy URLs in the database with the parsed data and identifies the URLs to close.
         4. Creates a dataframe called 'dataframe_to_closed' for the records to be closed.
-        5. If there are URLs to close, retrieves the relevant records from the database and adds them to 'dataframe_to_closed'.
+        5. If there are URLs to close, retrieves the relevant records from the database and adds them to
+            'dataframe_to_closed'.
         6. Assigns status to each record in the parsed data based on its presence in the database.
         7. Retrieves the most recent record for each URL from the database.
         8. Compares the attributes of the most recent record with the parsed data.
         9. If the record is new, adds it to 'dataframe_to_update' with a status of 'existing'.
         10. If the record is existing and has changed, adds it to 'dataframe_to_update' with a status of 'existing'.
-        11. If the record is closed but has reappeared in the parsed data, adds it to 'dataframe_to_update' with a status of 'new'.
+        11. If the record is closed but has reappeared in the parsed data, adds it to 'dataframe_to_update' with a
+            status of 'new'.
         12. If the URL is not present in the database, adds the record to 'dataframe_to_update' with a status of 'new'.
 
         Raises:
@@ -248,9 +257,10 @@ class BaseJobParserSelenium:
                 if links_to_close:
                     for link in links_to_close:
                         query = f"""
-                            SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, date_closed, version_vac, actual
+                            SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, 
+                            currency_id, сurr_salary_from, сurr_salary_to, exp_from, exp_to, description, job_type, 
+                            job_format, languages, skills, source_vac, date_created, date_of_download, status, 
+                            date_closed, version_vac, actual
                             FROM {self.schema}.{self.table_name}
                             WHERE vacancy_url = '{link}'
                                 AND status != 'closed'
@@ -270,16 +280,19 @@ class BaseJobParserSelenium:
                                 data_to_close = {
                                     'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                    'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                    'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                    'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                    'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                    'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                    'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                    'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                    'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                    'date_created': record[18], 'date_of_download': datetime.now().date(),
                                     'status': 'closed', 'date_closed': datetime.now().date(),
                                     'version_vac': record[-2] + 1, 'actual': -1
                                 }
                                 self.dataframe_to_closed = pd.concat([self.dataframe_to_closed,
                                                                       pd.DataFrame(data_to_close, index=[0])])
-                        self.log.info('Dataframe dataframe_to_closed created')
+
+                    self.log.info('Dataframe dataframe_to_closed created')
+
                 else:
                     self.log.info('The links_to_close list is empty')
 
@@ -288,9 +301,10 @@ class BaseJobParserSelenium:
                 for record in data:
                     link = record[0]
                     query = f"""
-                        SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, exp_from, 
-                            exp_to, description, job_type, job_format, languages, skills, source_vac, date_created, 
-                            date_of_download, status, date_closed, version_vac, actual
+                        SELECT vacancy_url, vacancy_name, towns, level, company, salary_from, salary_to, currency_id, 
+                            сurr_salary_from, сurr_salary_to, exp_from, exp_to, description, job_type, job_format, 
+                            languages, skills, source_vac, date_created, date_of_download, status, date_closed, 
+                            version_vac, actual
                         FROM {self.schema}.{self.table_name}
                         WHERE vacancy_url = '{link}'
                         ORDER BY date_of_download DESC, version_vac DESC
@@ -308,10 +322,11 @@ class BaseJobParserSelenium:
                                 data_new_vac = {
                                     'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                     'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                    'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                    'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                    'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                    'date_created': old_record[15], 'date_of_download': datetime.now().date(),
+                                    'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                    'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                    'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                    'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                    'date_created': old_record[18], 'date_of_download': datetime.now().date(),
                                     'status': 'existing', 'date_closed': old_record[-3], 'version_vac': next_version,
                                     'actual': 1
                                 }
@@ -320,32 +335,44 @@ class BaseJobParserSelenium:
                                 )
 
                             elif old_status == 'existing':
-                                if pd.Series(old_record[:17]).equals(pd.Series(record[:17])):
+
+                                old_series = pd.Series(old_record[:8] + old_record[12:17])
+                                new_series = pd.Series(old_record[:8] + old_record[12:17])
+                                new_series_decimal = new_series.apply(
+                                    lambda x: Decimal(x) if isinstance(x, float) else x)
+                                # self.log.info("Old Series:", old_series.values, old_series.dtypes)
+                                # self.log.info("New Series:", new_series.values, new_series.dtypes)
+                                # self.log.info("New Series Decimal:", new_series_decimal.values, new_series_decimal.dtypes)
+
+                                if old_series.equals(new_series_decimal):
                                     pass
 
                                 else:
                                     data_new_vac = {
                                         'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': old_record[15], 'date_of_download': datetime.now().date(),
+                                        'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                        'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                        'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                        'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                        'date_created': old_record[18], 'date_of_download': datetime.now().date(),
                                         'status': 'existing', 'date_closed': old_record[-3],
                                         'version_vac': next_version, 'actual': 1
                                     }
                                     self.dataframe_to_update = pd.concat(
                                         [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                     )
+
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
                                         'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                        'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                                        'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                                        'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                                        'date_created': record[15], 'date_of_download': datetime.now().date(),
+                                        'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                        'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                        'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                        'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                        'date_created': record[18], 'date_of_download': datetime.now().date(),
                                         'status': 'new', 'date_closed': record[-3], 'version_vac': next_version,
                                         'actual': 1
                                     }
@@ -356,10 +383,11 @@ class BaseJobParserSelenium:
                         data_full_new = {
                             'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                             'level': record[3], 'company': record[4], 'salary_from': record[5],
-                            'salary_to': record[6], 'exp_from': record[7], 'exp_to': record[8],
-                            'description': record[9], 'job_type': record[10], 'job_format': record[11],
-                            'languages': record[12], 'skills': record[13], 'source_vac': record[14],
-                            'date_created': record[15], 'date_of_download': datetime.now().date(),
+                            'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                            'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                            'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                            'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                            'date_created': record[18], 'date_of_download': datetime.now().date(),
                             'status': 'new', 'date_closed': record[-3], 'version_vac': 1,
                             'actual': 1
                         }
