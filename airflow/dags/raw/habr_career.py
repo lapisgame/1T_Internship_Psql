@@ -86,7 +86,6 @@ class HabrJobParser(BaseJobParser):
                         salary_from = salary_to = сurr_salary_from = сurr_salary_to = currency_id = None  # Инициализация переменных
                         # Распаршивание зарплаты в зависимости от валюты
                         if salary_find:
-                            currency_id = salary_find
                             if '₽' in salary_find:
                                 currency_id = 'RUR'
                             elif '€' in salary_find:
@@ -98,40 +97,44 @@ class HabrJobParser(BaseJobParser):
                             else:
                                 self.log.info(f"A new currency has been found: "
                                               f"{salary_find}")
-                                # currency_id = salary_find
+                                currency_id = salary_find
                                 сurr_salary_from = None
                                 сurr_salary_to = None
 
-                        currencies = ["USD", "EUR", "KZT", "RUR"]
-                        if currency_id in currencies:
-                            try:
-                                # Распаршивание валютной зарплаты
-                                salary_find = salary_find.replace(' ', '')  # Удаление пробелов
-                                if 'от' in salary_find and 'до' in salary_find:
-                                    match = re.search(r'от(\d+)до(\d+)', salary_find)
-                                    if match:
-                                        сurr_salary_from = int(match.group(1))
-                                        сurr_salary_to = int(match.group(2))
+                            currencies = ["USD", "EUR", "KZT", "RUR"]
+                            if currency_id in currencies:
+                                try:
+                                    # Распаршивание валютной зарплаты
+                                    salary_find = salary_find.replace(' ', '')  # Удаление пробелов
+                                    if 'от' in salary_find and 'до' in salary_find:
+                                        match = re.search(r'от(\d+)до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1))
+                                            сurr_salary_to = int(match.group(2))
 
-                                elif 'от' in salary_find:
-                                    match = re.search(r'от(\d+)', salary_find)
-                                    if match:
-                                        сurr_salary_from = int(match.group(1))
+                                    elif 'от' in salary_find:
+                                        match = re.search(r'от(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1))
 
-                                elif 'до' in salary_find:
-                                    match = re.search(r'до(\d+)', salary_find)
-                                    if match:
-                                        сurr_salary_to = int(match.group(1))
+                                    elif 'до' in salary_find:
+                                        match = re.search(r'до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_to = int(match.group(1))
 
-                            except Exception as e:
-                                self.log.error(f'Error in record currency vacancies: {str(e)}')
+                                except Exception as e:
+                                    self.log.error(f'Error in record currency vacancies: {str(e)}')
 
+                            else:
+                                self.log.info(f"A new currency has been found: "
+                                              f"{salary_find}")
+                                currency_id = salary_find
+                                сurr_salary_from = None
+                                сurr_salary_to = None
                         else:
-                            self.log.info(f"A new currency has been found: "
-                                          f"{salary_find}")
-                            # currency_id = salary_find
-                            сurr_salary_from = None
-                            сurr_salary_to = None
+                            currency_id = 'RUR'
+
+
 
 
                         # Парсим описание вакансии
