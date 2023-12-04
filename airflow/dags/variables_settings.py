@@ -44,7 +44,7 @@ profs = [
     # "System analyst",
     # "Business analyst",
     # "Project manager",
-    # "Product manager",
+    "Product manager",
     # "Backend developer",
     # "Frontend developer",
     # "Fullstack developer",
