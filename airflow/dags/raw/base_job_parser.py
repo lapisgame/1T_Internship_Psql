@@ -62,6 +62,8 @@ class BaseJobParser:
         """
         raise NotImplementedError("You must define the find_vacancies method")
 
+    import pandas as pd
+
     def calculate_currency_vacancies(self):
         """
         Converts currency vacancies into rubles based on the latest exchange rates.
@@ -93,15 +95,14 @@ class BaseJobParser:
                 self.df.loc[
                     ~self.df['currency_id'].isin(["USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
 
+                self.df['salary_from'] = pd.to_numeric(self.df['salary_from'], errors='coerce').fillna(None)
+                self.df['salary_to'] = pd.to_numeric(self.df['salary_to'], errors='coerce').fillna(None)
+
                 self.log.info('The values of currency vacancies have been successfully converted into rubles '
                               'and recorded in the Dataframe')
 
-            self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
-            self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
-
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
-
         # try:
         #     if not self.df.empty:
         #         self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
