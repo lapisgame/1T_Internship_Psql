@@ -16,7 +16,7 @@ variables = {
     "base_tin": "https://www.tinkoff.ru/career/it/",
     "base_remote": "https://remote-job.ru/search?search%5Bquery%5D=&search%5BsearchType%5D=vacancy",
     "base_habr": "https://career.habr.com/vacancies",
-    "base_getmatch": "https://getmatch.ru/vacancies?p={i}&sa=150000&pa=all&s=landing_ca_header",
+    "base_getmatch": "https://getmatch.ru/api/offers?sa=150000&p={i}&pa=all&s=landing_ca_header&offset=20&limit=20",
     "base_careerspace": "https://careerspace.app/api/v2/jobs/filters?skip={i}&take=8&sortBy=new-desc&functions=8%2C13%2C14%2C9&jobLevel%5B0%5D={o}&currencyCode=RUR",
     "base_hh": "https://api.hh.ru/vacancies",
     "base_zarplata": "https://api.zarplata.ru/vacancies",

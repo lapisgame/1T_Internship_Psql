@@ -52,6 +52,7 @@ class Dags(BaseDags):
         try:
             parser = GetMatchJobParser(base_getmatch, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
             log.info('GetMatch parser successfully completed the job')
@@ -73,6 +74,7 @@ class Dags(BaseDags):
         try:
             parser = GetMatchJobParser(base_getmatch, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
