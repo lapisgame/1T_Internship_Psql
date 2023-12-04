@@ -57,7 +57,7 @@ class HHJobParser(BaseJobParser):
                 
                 try:
                     try_count += 1
-                    self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {vac_name}')
+                    self.log.info(f'get 1.{page_number} {index + 1}/{len(self.profs)} - {vac_name}')
                     req = requests.get(f'{base_hh}', params=params).json()
 
                     if 'items' in req.keys():
