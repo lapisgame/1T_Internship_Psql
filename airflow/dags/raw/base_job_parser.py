@@ -1,5 +1,6 @@
 import time
 import pandas as pd
+from decimal import Decimal
 import psycopg2
 from psycopg2.extensions import register_adapter, AsIs
 import sys
@@ -326,11 +327,17 @@ class BaseJobParser:
 
                                 old_series = pd.Series(old_record[:17])
                                 new_series = pd.Series(record[:17])
+                                new_series_decimal = new_series.apply(
+                                    lambda x: Decimal(x) if isinstance(x, float) else x)
                                 self.log.info("Old Series:", old_series.values, old_series.dtypes)
                                 self.log.info("New Series:", new_series.values, new_series.dtypes)
+                                self.log.info("New Series Decimal:", new_series_decimal.values, new_series_decimal.dtypes)
 
-                                if pd.Series(old_record[:17]).astype(str).equals(pd.Series(record[:17]).astype(str)):
+                                if old_series.equals(new_series_decimal):
                                     pass
+
+                                # if pd.Series(old_record[:17]).equals(pd.Series(record[:17])):
+                                #     pass
 
                                 # old_series = pd.Series(old_record[:14]).str.strip()
                                 # new_series = pd.Series(record[:14]).str.strip()
