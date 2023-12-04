@@ -257,7 +257,9 @@ class BaseJobParser:
                                 }
                                 self.dataframe_to_closed = pd.concat([self.dataframe_to_closed,
                                                                       pd.DataFrame(data_to_close, index=[0])])
-                        self.log.info('Dataframe dataframe_to_closed created')
+
+                    self.log.info('Dataframe dataframe_to_closed created')
+
                 else:
                     self.log.info('The links_to_close list is empty')
 

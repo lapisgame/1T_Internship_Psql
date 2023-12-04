@@ -51,6 +51,7 @@ class Dags(BaseDags):
         try:
             parser = ZarplataJobParser(base_zarplata, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
             log.info('Zarplata parser successfully completed the job')
@@ -72,6 +73,7 @@ class Dags(BaseDags):
         try:
             parser = ZarplataJobParser(base_zarplata, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()

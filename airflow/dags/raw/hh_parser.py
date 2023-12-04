@@ -147,7 +147,12 @@ class HHJobParser(BaseJobParser):
                                 self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
 
                             except Exception as exc:
-                                self.log.error(f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} произошла ошибка {exc} \n\n')
+                                if 'id' not in exc:
+                                    self.log.error(
+                                        f'В процессе парсинга вакансии https://hh.ru/vacancy/{item["id"]} произошла ошибка {exc} \n\n')
+                                else:
+                                    self.log.error(f'Произошла ошибка ID')
+                                continue
                     else:
                         self.log.info(req)
 
@@ -166,5 +171,4 @@ class HHJobParser(BaseJobParser):
                 
 
         self.df = self.df.drop_duplicates()
-        self.df.to_csv('/opt/airflow/files/hh.csv', index=False)
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
