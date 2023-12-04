@@ -142,7 +142,6 @@ class BaseJobParser:
         try:
             if not self.df.empty:
 
-
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 query = f"""
                     INSERT INTO {self.schema}.{self.table_name} 
