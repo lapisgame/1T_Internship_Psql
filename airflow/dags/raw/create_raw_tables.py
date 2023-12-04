@@ -81,7 +81,7 @@ class DatabaseManager:
                    company VARCHAR(255),
                    salary_from DECIMAL(10, 2),
                    salary_to DECIMAL(10, 2),
-                   currency_id VARCHAR(5),
+                   currency_id VARCHAR(127),
                    сurr_salary_from DECIMAL(10, 2),
                    сurr_salary_to DECIMAL(10, 2),
                    exp_from DECIMAL(2, 1),

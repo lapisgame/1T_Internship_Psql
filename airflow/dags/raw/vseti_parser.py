@@ -72,31 +72,24 @@ class VsetiJobParser(BaseJobParser):
                                 salary_find = salary.replace('\u200d', '-').replace('—', '-')
                                 salary_find = salary_find.replace(' ', '')
 
-                                if ('₽' or '€' or '$' or '₸') in salary_find:
+                                if any(currency in salary_find for currency in ('₽', '€', '$', '₸')):
                                     if 'от' in salary_find and 'до' in salary_find:
                                         match = re.search(r'от(\d+)до(\d+)', salary_find)
                                         if match:
-                                            сurr_salary_from = int(match.group(1)) if int(match.group(1)) < \
-                                                                                      99999999 else None
-                                            сurr_salary_to = int(match.group(2)) if int(match.group(2)) < \
-                                                                                    99999999 else None
+                                            сurr_salary_from = int(match.group(1)) if int(
+                                                match.group(1)) < 99999999 else None
+                                            сurr_salary_to = int(match.group(2)) if int(
+                                                match.group(2)) < 99999999 else None
                                     elif 'от' in salary_find:
                                         match = re.search(r'от(\d+)', salary_find)
                                         if match:
-                                            сurr_salary_from = int(match.group(1)) if int(match.group(1)) < \
-                                                                                      99999999 else None
+                                            сurr_salary_from = int(match.group(1)) if int(
+                                                match.group(1)) < 99999999 else None
                                     elif 'до' in salary_find:
                                         match = re.search(r'до(\d+)', salary_find)
                                         if match:
-                                            сurr_salary_to = int(match.group(1)) if int(match.group(1)) < \
-                                                                                    99999999 else None
-
-                                else:
-                                    self.log.info(f"A new currency has been found: "
-                                                  f"{salary_find}")
-                                    currency_id = salary_find
-                                    сurr_salary_from = None
-                                    сurr_salary_to = None
+                                            сurr_salary_to = int(match.group(1)) if int(
+                                                match.group(1)) < 99999999 else None
 
                                 if сurr_salary_from is not None or сurr_salary_to is not None:
                                     if '₽' in salary:
