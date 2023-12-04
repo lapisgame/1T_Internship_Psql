@@ -112,7 +112,7 @@ with DAG(
         catchup=False
 ) as careerspace_dag:
 
-    parse_habr_match_jobs = PythonOperator(
+    parse_careerspace_jobs = PythonOperator(
         task_id='init_careerspace_task',
         python_callable=init_call_all_func,
         provide_context=True
@@ -124,7 +124,8 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as careerspace_update_dag:
-    parse_delta_habr_jobs = PythonOperator(
+
+    parse_delta_careerspace_jobs = PythonOperator(
         task_id='update_careerspace_task',
         python_callable=update_call_all_func,
         provide_context=True
