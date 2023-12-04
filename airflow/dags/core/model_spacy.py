@@ -145,7 +145,8 @@ class DataPreprocessing:
         # companies_df.drop('title', axis=1)
         print(companies_df.columns)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
-        self.dataframe['company_id'] = self.dataframe['company'].map(companies_dictionary)
+        for i in self.dataframe.index:
+            self.dataframe[i, 'company_id'] = self.dataframe[i, 'company'].replace(companies_dictionary)
         print(self.dataframe)
 
         # print(self.dataframe)
