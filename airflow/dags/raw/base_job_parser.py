@@ -323,10 +323,14 @@ class BaseJobParser:
                                 )
 
                             elif old_status == 'existing':
-                                if pd.Series(old_record[:16]).equals(pd.Series(record[:16])):
+                                # Create Series excluding 'salary_from' and 'salary_to'
+                                old_series = pd.Series(old_record[:5] + old_record[7:17]).str.strip()
+                                new_series = pd.Series(record[:5] + record[7:17]).str.strip()
+
+                                if old_series.equals(new_series):
                                     pass
 
-                                else:
+                            else:
                                     data_new_vac = {
                                         'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
                                         'level': record[3], 'company': record[4], 'salary_from': record[5],
