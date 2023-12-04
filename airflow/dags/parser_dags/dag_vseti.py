@@ -52,6 +52,7 @@ class Dags(BaseDags):
         try:
             parser = VsetiJobParser(base_vseti, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
             log.info('VSeti parser successfully completed the job')
@@ -73,6 +74,7 @@ class Dags(BaseDags):
         try:
             parser = VsetiJobParser(base_vseti, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
@@ -92,7 +94,7 @@ def init_call_all_func():
 
 def update_call_all_func():
     worker = Dags()
-    worker.run_update_getmatch()
+    worker.run_update_vseti()
     worker.update_dicts()
     worker.archiving(worker.dataframe_to_closed)
     worker.model(worker.dataframe_to_update)
@@ -106,7 +108,7 @@ with DAG(
         catchup=False
 ) as vseti_dag:
 
-    parse_vseti_match_jobs = PythonOperator(
+    parse_vseti_jobs = PythonOperator(
         task_id='init_vseti_task',
         python_callable=init_call_all_func,
         provide_context=True
