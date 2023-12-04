@@ -107,14 +107,20 @@ class BaseJobParser:
                 self.cur.execute(query)
                 rate = self.cur.fetchall()[0]
 
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = round((self.df['сurr_salary_from'] * rate[0]), 0)
-                self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = round((self.df['сurr_salary_to'] * rate[0]), 0)
+                self.df.loc[self.df['currency_id'] == "USD", 'salary_from'] = float(str(self.df['сurr_salary_from'] *
+                                                                                        rate[0]).split('.')[0])
+                self.df.loc[self.df['currency_id'] == "USD", 'salary_to'] = float(str(self.df['сurr_salary_to'] *
+                                                                                      rate[0]).split('.')[0])
 
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = round((self.df['сurr_salary_from'] * rate[1]), 0)
-                self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = round((self.df['сurr_salary_to'] * rate[1]), 0)
+                self.df.loc[self.df['currency_id'] == "EUR", 'salary_from'] = float(str(self.df['сurr_salary_from'] *
+                                                                                        rate[1]).split('.')[0])
+                self.df.loc[self.df['currency_id'] == "EUR", 'salary_to'] = float(str(self.df['сurr_salary_to'] *
+                                                                                      rate[1]).split('.')[0])
 
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = round((self.df['сurr_salary_from'] * rate[2]), 0)
-                self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = round((self.df['сurr_salary_to'] * rate[2]), 0)
+                self.df.loc[self.df['currency_id'] == "KZT", 'salary_from'] = float(str(self.df['сurr_salary_from'] *
+                                                                                        rate[2]).split('.')[0])
+                self.df.loc[self.df['currency_id'] == "KZT", 'salary_to'] = float(str(self.df['сurr_salary_to'] *
+                                                                                      rate[2]).split('.')[0])
 
                 self.df.loc[
                     ~self.df['currency_id'].isin(["USD", "EUR", "KZT"]), ['salary_from', 'salary_to']] = None
