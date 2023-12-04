@@ -32,16 +32,14 @@ default_args = {
 
 class ZarplataJobParser(BaseJobParser):
     def find_vacancies(self):
-        currencies = {}
-        dictionaries = requests.get('https://api.hh.ru/dictionaries').json()
-        for currency in dictionaries['currency']:
-            currencies[currency['code']] = (1/currency['rate'])
-
-        self.max_page_count = 10
-        self.re_html_tag_remove = r'<[^>]+>'
+        max_page_count = 10
+        re_html_tag_remove = r'<[^>]+>'
 
         for index, vac_name in enumerate(self.profs):
-            for page_number in range(self.max_page_count):
+            parsing = True
+            page_number = 0
+            try_count = 0
+            while parsing and page_number < max_page_count:
                 params = {
                     'text': f'{vac_name}',
                     'page': page_number,
@@ -57,9 +55,9 @@ class ZarplataJobParser(BaseJobParser):
 
                     if 'items' in req.keys():
                         for item in req['items']:
-                            item = requests.get(f'{base_zarplata}/{item["id"]}').json()
-                            res = {}
                             try:
+                                item = requests.get(f'{base_zarplata}/{item["id"]}').json()
+                                res = {}
                                 res['vacancy_url'] = f'https://www.zarplata.ru/vacancy/card/id{item["id"]}'
                                 res['vacancy_name'] = item['name']
                                 res['towns'] = item['area']['name']
@@ -67,18 +65,41 @@ class ZarplataJobParser(BaseJobParser):
                                 res['company'] = item['employer']['name']
 
                                 if item['salary'] != None:
-                                    if item['salary']['from'] != None:
-                                        res['salary_from'] = int(item['salary']['from']) * currencies[item['currency']]
+                                    if item['salary']['currency'] == "RUR":
+                                        if item['salary']['from'] != None:
+                                            res['salary_from'] = int(item['salary']['from'])
+                                        else:
+                                            res['salary_from'] = None
+
+                                        if item['salary']['to'] != None:
+                                            res['salary_to'] = int(item['salary']['to'])
+                                        else:
+                                            res['salary_to'] = None
+
                                     else:
-                                        res['salary_from'] = None
-                                    
-                                    if item['salary']['to'] != None:
-                                        res['salary_to'] = int(item['salary']['to']) * currencies[item['currency']]
-                                    else:
-                                        res['salary_to'] = None
+                                        if item['salary']['currency'] in ["USD", "EUR", "KZT"]:
+
+                                            res['currency_id'] = item['salary']['currency']
+
+                                            if item['salary']['from'] != None:
+                                                res['сurr_salary_from'] = int(item['salary']['from'])
+                                            else:
+                                                res['сurr_salary_from'] = None
+
+                                            if item['salary']['to'] != None:
+                                                res['сurr_salary_to'] = int(item['salary']['to'])
+                                            else:
+                                                res['сurr_salary_to'] = None
+
+                                        else:
+                                            self.log.info(f"A new currency has been found: "
+                                                          f"{item['salary']['currency']}")
+                                            res['salary_from'] = None
+                                            res['salary_to'] = None
+
                                 else:
-                                    item['salary_form'] = None
-                                    item['salary_to'] = None
+                                    res['salary_from'] = None
+                                    res['salary_to'] = None
 
                                 if item['experience']['id'] == 'noExperience':
                                     res['exp_from'] = '0'
@@ -116,7 +137,12 @@ class ZarplataJobParser(BaseJobParser):
                                 self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
 
                             except Exception as exc:
-                                self.log.error(f'В процессе парсинга вакансии https://www.zarplata.ru/vacancy/card/id{item["id"]} произошла ошибка {exc} \n\n')
+                                if 'id' not in exc:
+                                    self.log.error(
+                                        f'В процессе парсинга вакансии https://www.zarplata.ru/vacancy/card/id{item["id"]} произошла ошибка {exc} \n\n')
+                                else:
+                                    self.log.error(f'Произошла ошибка ID')
+                                continue
                     else:
                         self.log.info(req)
 
@@ -124,7 +150,13 @@ class ZarplataJobParser(BaseJobParser):
 
                 except Exception as exp:
                     self.log.error(f'ERROR {vac_name} {exp}')
-                    time.sleep(5)
-                    continue
+                    if try_count < 3:
+                        time.sleep(10)
+                    else:
+                        try_count = 0
+                        page_number += 1
+                        time.sleep(5)
+
+                    page_number += 1
 
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
