@@ -74,6 +74,7 @@ class Dags(BaseDags):
             parser = HHJobParser(base_hh, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.calculate_currency_vacancies()
+            parser.addapt_numpy_null()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()

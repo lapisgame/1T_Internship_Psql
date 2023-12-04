@@ -323,11 +323,13 @@ class BaseJobParser:
                                 )
 
                             elif old_status == 'existing':
-                                old_series = pd.Series(old_record[:14]).str.strip()
-                                new_series = pd.Series(record[:14]).str.strip()
-
-                                if old_series.equals(new_series):
+                                if pd.Series(old_record[:16]).equals(pd.Series(record[:16])):
                                     pass
+                                # old_series = pd.Series(old_record[:14]).str.strip()
+                                # new_series = pd.Series(record[:14]).str.strip()
+                                #
+                                # if old_series.equals(new_series):
+                                #     pass
 
                                 else:
                                     data_new_vac = {
