@@ -50,7 +50,7 @@ class ZarplataJobParser(BaseJobParser):
                 }
 
                 try:
-                    self.log.info(f'get 1.{page_number} {index}/{len(self.profs)} - {vac_name}')
+                    self.log.info(f'get 1.{page_number + 1} {index + 1}/{len(self.profs)} - {vac_name}')
                     req = requests.get(f'{base_zarplata}', params=params).json()
 
                     if 'items' in req.keys():
