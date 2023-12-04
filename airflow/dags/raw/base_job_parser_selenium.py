@@ -320,7 +320,7 @@ class BaseJobParserSelenium:
                                 )
 
                             elif old_status == 'existing':
-                                if pd.Series(old_record[:13]).equals(pd.Series(record[:13])):
+                                if pd.Series(old_record[:17]).equals(pd.Series(record[:17])):
                                     pass
 
                                 else:
