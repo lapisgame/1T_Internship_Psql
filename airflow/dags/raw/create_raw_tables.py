@@ -90,7 +90,7 @@ class DatabaseManager:
                    job_type VARCHAR(255),
                    job_format VARCHAR(255),
                    languages VARCHAR(255),
-                   skills VARCHAR(511),
+                   skills VARCHAR(1023),
                    source_vac SMALLINT,
                    date_created DATE,
                    date_of_download DATE NOT NULL, 
