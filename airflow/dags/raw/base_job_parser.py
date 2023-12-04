@@ -323,7 +323,7 @@ class BaseJobParser:
                                 )
 
                             elif old_status == 'existing':
-                                if pd.Series(old_record[:13]).equals(pd.Series(record[:13])):
+                                if pd.Series(old_record[:16]).equals(pd.Series(record[:16])):
                                     pass
 
                                 else:
