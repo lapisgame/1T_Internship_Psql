@@ -351,6 +351,7 @@ class BaseJobParser:
                                     self.dataframe_to_update = pd.concat(
                                         [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
                                     )
+
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
