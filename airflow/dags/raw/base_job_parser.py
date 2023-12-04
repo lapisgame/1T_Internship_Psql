@@ -99,6 +99,14 @@ class BaseJobParser:
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
 
+        try:
+            if not self.df.empty:
+                self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
+                self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
+
+        except Exception as e:
+            self.log.error(f'Error converting values to an integer: {str(e)}')
+
     def addapt_numpy_null(self):
         """
         This method registers adapters for NumPy float64 and int64 data types in PostgreSQL.
