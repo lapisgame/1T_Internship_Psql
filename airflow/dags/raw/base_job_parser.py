@@ -325,8 +325,10 @@ class BaseJobParser:
 
                             elif old_status == 'existing':
 
-                                old_series = pd.Series(old_record[:17])
-                                new_series = pd.Series(record[:17])
+                                # old_series = pd.Series(old_record[:17])
+                                old_series = pd.Series(old_record[:7] + old_record[12:16])
+                                # new_series = pd.Series(record[:17])
+                                new_series = pd.Series(old_record[:7] + old_record[12:16])
                                 new_series_decimal = new_series.apply(
                                     lambda x: Decimal(x) if isinstance(x, float) else x)
                                 self.log.info("Old Series:", old_series.values, old_series.dtypes)
