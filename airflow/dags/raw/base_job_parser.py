@@ -324,8 +324,8 @@ class BaseJobParser:
 
                             elif old_status == 'existing':
                                 # Create Series excluding 'salary_from' and 'salary_to'
-                                old_series = pd.Series(old_record[:5] + old_record[7:17]).str.strip()
-                                new_series = pd.Series(record[:5] + record[7:17]).str.strip()
+                                old_series = pd.Series(old_record[:5] + old_record[8:17])
+                                new_series = pd.Series(record[:5] + record[8:17])
 
                                 if old_series.equals(new_series):
                                     pass
