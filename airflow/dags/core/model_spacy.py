@@ -84,8 +84,10 @@ class DataPreprocessing:
         # Assigning id
         updating_data = pd.merge(all_ids, df, left_on='url',
                                  right_on='vacancy_url', how='inner').drop('url', axis=1)
+        print('updating data: ', updating_data)
         new_data = df[~df['vacancy_url'].isin(updating_data['vacancy_url'])].copy()
-        for i in range(len(new_data)):
+        print('new_data: ', new_data)
+        for i in new_data.index:
             self.current_id += 1
             new_data.loc[i, 'id'] = self.current_id
         # new_data['id'] = range(current_id + 1, len(new_data) + current_id + 1)
@@ -145,8 +147,7 @@ class DataPreprocessing:
         # companies_df.drop('title', axis=1)
         print(companies_df.columns)
         companies_dictionary = dict(zip(companies_df['company'], companies_df['id']))
-        for i in self.dataframe.index:
-            self.dataframe[i, 'company_id'] = self.dataframe[i, 'company'].replace(companies_dictionary)
+        self.dataframe['company_id'] = self.dataframe['company'].map(companies_dictionary)
         print(self.dataframe)
 
         # print(self.dataframe)
