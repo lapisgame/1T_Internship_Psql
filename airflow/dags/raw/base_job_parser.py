@@ -66,8 +66,21 @@ class BaseJobParser:
         """
         Converts currency vacancies into rubles based on the latest exchange rates.
 
+        This method retrieves the latest exchange rates for USD, EUR, and KZT from the specified database schema's
+        currency directory. It then applies these rates to convert salary values in different currencies (USD, EUR, KZT)
+        within the DataFrame to their equivalent values in rubles (RUR).
+
+        For 'RUR' currency, the 'salary_from' column is directly set to the 'сurr_salary_from' value, and similarly,
+        'salary_to' is set to the 'сurr_salary_to' value without applying any conversion rates.
+
+        Any currencies other than USD, EUR, KZT, or RUR are marked as 'None' in the 'salary_from' and 'salary_to' columns.
+
+        The resulting converted values are stored within the DataFrame. Finally, the columns 'salary_from' and
+        'salary_to' are converted to numeric values, coercing errors to 'None' if encountered.
+
         Raises:
-            Exception: If there is an error in calculating currency vacancies.
+            Exception: If an error occurs during the currency conversion process, an error log is created
+            specifying the encountered issue.
         """
         try:
             if not self.df.empty:
