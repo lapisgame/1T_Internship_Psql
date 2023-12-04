@@ -331,20 +331,20 @@ class BaseJobParser:
                                     pass
 
                                 else:
-                                        data_new_vac = {
-                                            'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
-                                            'level': record[3], 'company': record[4], 'salary_from': record[5],
-                                            'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
-                                            'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
-                                            'description': record[12], 'job_type': record[13], 'job_format': record[14],
-                                            'languages': record[15], 'skills': record[16], 'source_vac': record[17],
-                                            'date_created': old_record[18], 'date_of_download': datetime.now().date(),
-                                            'status': 'existing', 'date_closed': old_record[-3],
-                                            'version_vac': next_version, 'actual': 1
-                                        }
-                                        self.dataframe_to_update = pd.concat(
-                                            [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
-                                        )
+                                    data_new_vac = {
+                                        'vacancy_url': link, 'vacancy_name': record[1], 'towns': record[2],
+                                        'level': record[3], 'company': record[4], 'salary_from': record[5],
+                                        'salary_to': record[6], 'currency_id': record[7], 'сurr_salary_from': record[8],
+                                        'сurr_salary_to': record[9], 'exp_from': record[10], 'exp_to': record[11],
+                                        'description': record[12], 'job_type': record[13], 'job_format': record[14],
+                                        'languages': record[15], 'skills': record[16], 'source_vac': record[17],
+                                        'date_created': old_record[18], 'date_of_download': datetime.now().date(),
+                                        'status': 'existing', 'date_closed': old_record[-3],
+                                        'version_vac': next_version, 'actual': 1
+                                    }
+                                    self.dataframe_to_update = pd.concat(
+                                        [self.dataframe_to_update, pd.DataFrame(data_new_vac, index=[0])]
+                                    )
                             elif old_status == 'closed':
                                 if link in links_in_parsed:
                                     data_clos_new = {
