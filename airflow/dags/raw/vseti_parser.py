@@ -66,32 +66,48 @@ class VsetiJobParser(BaseJobParser):
                             # наименование вакансии
                             job_title = vacancy_info.find('h1', class_='heading-9').text.strip()
                             # зарплата
+                            сurr_salary_from = сurr_salary_to = salary_from = salary_to = currency_id = None
                             salary = vacancy_info.find('p', class_='paragraph-22').text.strip()
-                            salary_find = salary.replace('\u200d', '-').replace('—', '-')
-                            salary_from = salary_to = None
-                            if '₽' in salary_find:
+                            if salary:
+                                salary_find = salary.replace('\u200d', '-').replace('—', '-')
                                 salary_find = salary_find.replace(' ', '')
-                            if 'от' in salary_find and 'до' in salary_find:
-                                match = re.search(r'от(\d+)до(\d+)', salary_find)
-                                if match:
-                                    salary_from = int(match.group(1))
-                                    if salary_from > 99999999:
-                                        salary_from = None
-                                    salary_to = int(match.group(2))
-                                    if salary_to > 99999999:
-                                        salary_to = None
-                            elif 'от' in salary_find:
-                                match = re.search(r'от(\d+)', salary_find)
-                                if match:
-                                    salary_from = int(match.group(1))
-                                    if salary_from > 99999999:
-                                        salary_from = None
-                            elif 'до' in salary_find:
-                                match = re.search(r'до(\d+)', salary_find)
-                                if match:
-                                    salary_to = int(match.group(1))
-                                    if salary_to > 99999999:
-                                        salary_to = None
+
+                                if ('₽' or '€' or '$' or '₸') in salary_find:
+                                    if 'от' in salary_find and 'до' in salary_find:
+                                        match = re.search(r'от(\d+)до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1)) if int(match.group(1)) < \
+                                                                                      99999999 else None
+                                            сurr_salary_to = int(match.group(2)) if int(match.group(2)) < \
+                                                                                    99999999 else None
+                                    elif 'от' in salary_find:
+                                        match = re.search(r'от(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1)) if int(match.group(1)) < \
+                                                                                      99999999 else None
+                                    elif 'до' in salary_find:
+                                        match = re.search(r'до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_to = int(match.group(1)) if int(match.group(1)) < \
+                                                                                    99999999 else None
+
+                                else:
+                                    self.log.info(f"A new currency has been found: "
+                                                  f"{salary_find}")
+                                    currency_id = salary_find
+                                    сurr_salary_from = None
+                                    сurr_salary_to = None
+
+                                if сurr_salary_from is not None or сurr_salary_to is not None:
+                                    if '₽' in salary:
+                                        currency_id = 'RUR'
+                                    elif '€' in salary:
+                                        currency_id = 'EUR'
+                                    elif '$' in salary:
+                                        currency_id = 'USD'
+                                    elif '₸' in salary:
+                                        currency_id = 'KZT'
+
                             # города и формат работы
                             towns_info = vacancy_info.find('div', class_='margin-16')
                             towns_text = towns_info.find_next('p',
@@ -145,6 +161,9 @@ class VsetiJobParser(BaseJobParser):
                                 "job_format": job_format,
                                 "salary_from": salary_from,
                                 "salary_to": salary_to,
+                                "сurr_salary_from": сurr_salary_from,
+                                "сurr_salary_to": сurr_salary_to,
+                                "currency_id": currency_id,
                                 "date_created": date_created,
                                 "date_of_download": date_of_download,
                                 "source_vac": '11',
