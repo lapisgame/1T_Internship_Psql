@@ -82,22 +82,25 @@ class BaseJobParser:
                 rate = self.cur.fetchall()[0]
 
                 currencies = ["USD", "EUR", "KZT"]
+
+                # Convert only the relevant rows based on currency_id
                 for curr in currencies:
                     mask = self.df['currency_id'] == curr
                     self.df.loc[mask, 'salary_from'] = self.df.loc[mask, 'сurr_salary_from'] * rate[
                         currencies.index(curr)]
                     self.df.loc[mask, 'salary_to'] = self.df.loc[mask, 'сurr_salary_to'] * rate[currencies.index(curr)]
 
+                # Set to None only for rows not in specified currencies
                 self.df.loc[~self.df['currency_id'].isin(currencies), ['salary_from', 'salary_to']] = None
 
                 self.log.info('The values of currency vacancies have been successfully converted into rubles '
                               'and recorded in the Dataframe')
 
-            self.df['salary_from'] = pd.to_numeric(self.df['salary_from'], errors='coerce').apply(
-                lambda x: int(x) if not pd.isnull(x) else None)
-            self.df['salary_to'] = pd.to_numeric(self.df['salary_to'], errors='coerce').apply(
-                lambda x: int(x) if not pd.isnull(x) else None)
+            self.df['salary_from'] = pd.to_numeric(self.df['salary_from'], errors='coerce')
+            self.df['salary_to'] = pd.to_numeric(self.df['salary_to'], errors='coerce')
 
+            self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if not pd.isnull(x) else None)
+            self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if not pd.isnull(x) else None)
 
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
