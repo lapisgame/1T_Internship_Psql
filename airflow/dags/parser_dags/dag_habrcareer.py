@@ -91,7 +91,7 @@ def init_call_all_func():
 
 def update_call_all_func():
     worker = Dags()
-    worker.run_update_getmatch()
+    worker.run_update_habr()
     worker.update_dicts()
     worker.archiving(worker.dataframe_to_closed)
     worker.model(worker.dataframe_to_update)

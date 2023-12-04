@@ -56,6 +56,7 @@ class Dags(BaseDags):
         try:
             parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.addapt_numpy_null()
             parser.save_df()
             log.info('CareerSpace parser successfully completed the job')
@@ -77,6 +78,7 @@ class Dags(BaseDags):
         try:
             parser = CareerspaceJobParser(base_careerspace, profs, log, conn, table_name)
             parser.find_vacancies()
+            parser.calculate_currency_vacancies()
             parser.generating_dataframes()
             parser.addapt_numpy_null()
             parser.update_database_queries()
