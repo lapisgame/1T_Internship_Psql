@@ -62,32 +62,6 @@ class BaseJobParser:
         """
         raise NotImplementedError("You must define the find_vacancies method")
 
-    def addapt_numpy_null(self):
-        """
-        This method registers adapters for NumPy float64 and int64 data types in PostgreSQL.
-        It creates two adapter functions, `adapt_numpy_float64` and `adapt_numpy_int64`, which return the input
-        values as is.
-        This ensures that NumPy float64 and int64 values are adapted correctly when inserted into PostgreSQL.
-        The adapters are then registered using the `register_adapter` function from the `psycopg2.extensions` module.
-        Method also replaces any missing values (NaN) in the DataFrame `self.df`
-        with the string 'NULL'. This is done using the "fillna()" method, where we pass
-        "psycopg2.extensions.AsIs('NULL')" as the value to fill missing values.
-        """
-        # self.cur = self.conn.cursor()
-
-        def addapt_numpy_float64(numpy_float64):
-            return AsIs(numpy_float64)
-
-        def addapt_numpy_int64(numpy_int64):
-            return AsIs(numpy_int64)
-
-        register_adapter(np.float64, addapt_numpy_float64)
-        register_adapter(np.int64, addapt_numpy_int64)
-
-        self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
-        self.dataframe_to_closed = self.dataframe_to_closed.fillna(psycopg2.extensions.AsIs('NULL'))
-        self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
-
     def calculate_currency_vacancies(self):
         """
         Converts currency vacancies into rubles based on the latest exchange rates.
@@ -125,13 +99,31 @@ class BaseJobParser:
         except Exception as e:
             self.log.error(f'Error in calculating currency vacancies: {str(e)}')
 
-        try:
-            if not self.df.empty:
-                self.df['salary_from'] = self.df['salary_from'].apply(lambda x: int(x) if x is not None else None)
-                self.df['salary_to'] = self.df['salary_to'].apply(lambda x: int(x) if x is not None else None)
+    def addapt_numpy_null(self):
+        """
+        This method registers adapters for NumPy float64 and int64 data types in PostgreSQL.
+        It creates two adapter functions, `adapt_numpy_float64` and `adapt_numpy_int64`, which return the input
+        values as is.
+        This ensures that NumPy float64 and int64 values are adapted correctly when inserted into PostgreSQL.
+        The adapters are then registered using the `register_adapter` function from the `psycopg2.extensions` module.
+        Method also replaces any missing values (NaN) in the DataFrame `self.df`
+        with the string 'NULL'. This is done using the "fillna()" method, where we pass
+        "psycopg2.extensions.AsIs('NULL')" as the value to fill missing values.
+        """
+        # self.cur = self.conn.cursor()
 
-        except Exception as e:
-            self.log.error(f'Error converting values to an integer: {str(e)}')
+        def addapt_numpy_float64(numpy_float64):
+            return AsIs(numpy_float64)
+
+        def addapt_numpy_int64(numpy_int64):
+            return AsIs(numpy_int64)
+
+        register_adapter(np.float64, addapt_numpy_float64)
+        register_adapter(np.int64, addapt_numpy_int64)
+
+        self.df = self.df.fillna(psycopg2.extensions.AsIs('NULL'))
+        self.dataframe_to_closed = self.dataframe_to_closed.fillna(psycopg2.extensions.AsIs('NULL'))
+        self.dataframe_to_update = self.dataframe_to_update.fillna(psycopg2.extensions.AsIs('NULL'))
 
     def save_df(self):
         """
