@@ -50,10 +50,14 @@ class ZarplataJobParser(BaseJobParser):
                 }
 
                 try:
+                    try_count += 1
                     self.log.info(f'get 1.{page_number + 1} {index + 1}/{len(self.profs)} - {vac_name}')
                     req = requests.get(f'{base_zarplata}', params=params).json()
 
                     if 'items' in req.keys():
+                        if len(req['items']) < 20:
+                            parsing = False
+
                         for item in req['items']:
                             try:
                                 item = requests.get(f'{base_zarplata}/{item["id"]}').json()
@@ -105,7 +109,7 @@ class ZarplataJobParser(BaseJobParser):
                                     res['exp_from'] = '6'
                                     res['level'] = 'Lead'
 
-                                res['description'] = re.sub(self.re_html_tag_remove, '', item['description'])
+                                res['description'] = re.sub(re_html_tag_remove, '', item['description'])
 
                                 res['job_type'] = item['employment']['name']
                                 res['job_format'] = item['schedule']['name']
@@ -126,7 +130,7 @@ class ZarplataJobParser(BaseJobParser):
                                 self.df = pd.concat([self.df, pd.DataFrame(pd.json_normalize(res))], ignore_index=True)
 
                             except Exception as exc:
-                                if 'id' not in exc:
+                                if 'id' not in str(exc):
                                     self.log.error(
                                         f'В процессе парсинга вакансии https://www.zarplata.ru/vacancy/card/id{item["id"]} произошла ошибка {exc} \n\n')
                                 else:
@@ -148,4 +152,5 @@ class ZarplataJobParser(BaseJobParser):
 
                     page_number += 1
 
+        self.df = self.df.drop_duplicates()
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
