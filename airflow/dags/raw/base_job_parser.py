@@ -329,7 +329,7 @@ class BaseJobParser:
                                 self.log.info("Old Series:", old_series.values, old_series.dtypes)
                                 self.log.info("New Series:", new_series.values, new_series.dtypes)
 
-                                if pd.Series(old_record[:16]).equals(pd.Series(record[:16])):
+                                if pd.Series(old_record[:17]).astype(str).equals(pd.Series(record[:17]).astype(str)):
                                     pass
 
                                 # old_series = pd.Series(old_record[:14]).str.strip()
