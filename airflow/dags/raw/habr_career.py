@@ -79,30 +79,50 @@ class HabrJobParser(BaseJobParser):
                 if html:
                     soup = BeautifulSoup(html, "html.parser")
                     vacancy_cards = soup.find_all("div", class_="vacancy-card")
-                    
+
                     for card in vacancy_cards:
-                       # На хабр.карьере в зарплате передается строка "от N до N валюта", которую нужно распарсить            
+                        # На хабр.карьере в зарплате передается строка "от N до N валюта", которую нужно распарсить
                         salary_find = card.find("div", class_="basic-salary").text.strip()
-                        salary_from = salary_to = None  # Инициализация переменных
+                        salary_from = salary_to = сurr_salary_from = сurr_salary_to = currency_id = None  # Инициализация переменных
+                        # Распаршивание зарплаты в зависимости от валюты
+                        if salary_find:
+                            if '₽' in salary_find:
+                                currency_id = 'RUR'
+                            elif '€' in salary_find:
+                                currency_id = 'EUR'
+                            elif '$' in salary_find:
+                                currency_id = 'USD'
+                            elif '₸' in salary_find:
+                                currency_id = 'KZT'
 
-                        if '₽' in salary_find:
-                            # Используем регулярное выражение для поиска чисел в строке
-                            salary_find = salary_find.replace(' ', '')  # Удаление пробелов
-                            if 'от' in salary_find and 'до' in salary_find:
-                                match = re.search(r'от(\d+)до(\d+)', salary_find)
-                                if match:
-                                    salary_from = int(match.group(1))
-                                    salary_to = int(match.group(2))
+                            currencies = ["USD", "EUR", "KZT", "RUR"]
+                            if currency_id in currencies:
+                                try:
+                                    # Распаршивание валютной зарплаты
+                                    salary_find = salary_find.replace(' ', '')  # Удаление пробелов
+                                    if 'от' in salary_find and 'до' in salary_find:
+                                        match = re.search(r'от(\d+)до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1))
+                                            сurr_salary_to = int(match.group(2))
 
-                            elif 'от' in salary_find:
-                                match = re.search(r'от(\d+)', salary_find)
-                                if match:
-                                    salary_from = int(match.group(1))
+                                    elif 'от' in salary_find:
+                                        match = re.search(r'от(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_from = int(match.group(1))
 
-                            elif 'до' in salary_find:
-                                match = re.search(r'до(\d+)', salary_find)
-                                if match:
-                                    salary_to = int(match.group(1))
+                                    elif 'до' in salary_find:
+                                        match = re.search(r'до(\d+)', salary_find)
+                                        if match:
+                                            сurr_salary_to = int(match.group(1))
+                                except Exception as e:
+                                    self.log.error(f'Error in record currency vacancies: {str(e)}')
+
+                            else:
+                                self.log.info(f"A new currency has been found: "
+                                              f"{salary_find}")
+                                сurr_salary_from = None
+                                сurr_salary_to = None
                               
                        # Парсим описание вакансии    
                         description_url = "https://career.habr.com" + card.find("a", class_="vacancy-card__title-link").get("href")
@@ -142,7 +162,11 @@ class HabrJobParser(BaseJobParser):
                             "actual": actual,
                             "level": level,
                             "salary_from": salary_from,
-                            "salary_to": salary_to}            
+                            "salary_to": salary_to,
+                            "сurr_salary_from": сurr_salary_from,
+                            "сurr_salary_to": сurr_salary_to,
+                            "currency_id": currency_id
+                            }
                         print(f"Adding item: {item}")
                         self.df = pd.concat([self.df, pd.DataFrame(item, index=[0])], ignore_index=True)
                         time.sleep(3)
@@ -154,30 +178,3 @@ class HabrJobParser(BaseJobParser):
         self.df = self.df.drop_duplicates()
         self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
 
-
-# # Создаем объект HabrJobParser
-# def init_run_habr_parser():
-#     log.info('Запуск парсера Хабр. Карьера')
-#     parser = HabrJobParser(base_habr, log, conn, table_name)
-#     parser.find_vacancies()
-#     parser.save_df()
-#     log.info('Парсер Хабр. Карьера успешно провел работу')
-#
-#
-# with DAG(
-#         dag_id = "init_habrcareer_parser",
-#         schedule_interval = None,
-#         tags=['admin_1T'],
-#         default_args = default_args,
-#         catchup = False) as habr_dag:
-#
-#
-# # Определение задачи
-#
-#         parse_habrjobs = PythonOperator(
-#                 task_id='init_habrcareer_task',
-#                 python_callable=init_run_habr_parser,
-#                 provide_context=True
-#                 )
-#
-# parse_habrjobs
