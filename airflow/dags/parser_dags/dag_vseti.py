@@ -60,6 +60,7 @@ class Dags(BaseDags):
         except Exception as e:
             log.error(f'Error occurred during the VSeti parser workflow: {e}')
 
+
     def run_update_vseti(self):
         """
         Runs the update VSeti parser workflow.
