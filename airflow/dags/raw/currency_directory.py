@@ -116,7 +116,6 @@ class CurrencyDirectory:
         the existing row will be updated with the new exchange rates.
         """
         self.log.info(f"Loading currency exchange rates into the database")
-        self.conn.autocommit = False
         try:
             if not self.exchange_rate.empty:
                 data = [tuple(x) for x in self.exchange_rate.to_records(index=False)]
