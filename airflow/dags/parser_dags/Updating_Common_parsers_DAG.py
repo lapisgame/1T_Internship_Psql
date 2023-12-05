@@ -38,7 +38,7 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
             'retry_delay': timedelta(minutes=5),
         },
         start_date=start_date,
-        schedule_interval='@daily',
+        schedule_interval=None,
         # schedule_interval=None,
     )
 
@@ -68,7 +68,7 @@ with DAG(
         'retry_delay': timedelta(minutes=5),
     },
     start_date=start_date,
-    schedule_interval=None,
+    schedule_interval='@daily',
     ) as updating_common_dag:
 
     with TaskGroup('updating_parsers') as parsers:
