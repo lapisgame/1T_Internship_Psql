@@ -38,22 +38,22 @@ variables = {
 }
 
 profs = [
-    # "Data engineer",
-    # "Data analyst",
+    "Data engineer",
+    "Data analyst",
     "Data scientist",
-    # "System analyst",
-    # "Business analyst",
-    # "Project manager",
+    "System analyst",
+    "Business analyst",
+    "Project manager",
     "Product manager",
-    # "Backend developer",
-    # "Frontend developer",
-    # "Fullstack developer",
-    # "digital marketing specialist",
-    # "Web designer",
-    # "UI/UX",
-    # "UX/UI",
-    # "QA engineer",
-    # "DevOps"
+    "Backend developer",
+    "Frontend developer",
+    "Fullstack developer",
+    "digital marketing specialist",
+    "Web designer",
+    "UI/UX",
+    "UX/UI",
+    "QA engineer",
+    "DevOps"
 ]
 
 currencies = [
