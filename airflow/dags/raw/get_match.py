@@ -40,8 +40,6 @@ class GetMatchJobParser(BaseJobParser):
         salary range, date created, and other relevant information.
         The parsed data is stored in a DataFrame for further processing.
         """
-        # i = 1
-        # # BASE_URL = 'https://getmatch.ru/api/offers?sa=150000&p={i}&pa=all&s=landing_ca_header&offset=20&limit=20'
         HEADERS = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
@@ -51,13 +49,18 @@ class GetMatchJobParser(BaseJobParser):
         self.all_links = []
         self.log.info(f'Парсим данные')
         try:
-            # Парсим линки вакансий с каждой страницы (на сайте примерно 50страниц, 100 - это с избытком)
-            for i in range(1, 100):
-                url = BASE_URL.format(i=i)  # Обновляем URL на каждой итерации
+            page = 1
+            has_data = True
+            while has_data:
+                url = BASE_URL.format(i=page)  # Обновляем URL на каждой итерации
                 r = requests.get(url)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
                     data = r.json()
+                    # Если нет данных, выходим из цикла
+                    if not data.get('offers'):
+                        has_data = False
+                        break
                     # Извлекаем ссылки из JSON
                     for job in data.get('offers', []):
                         # Получаем дату размещения из JSON
@@ -85,15 +88,7 @@ class GetMatchJobParser(BaseJobParser):
                                 currency_id = 'KZT'
                             elif '₽' in salary:
                                 currency_id = 'RUR'
-                            # Приводим зарплаты к числовому формату
-                            #     if salary_from is not None:
-                            #         numbers = re.findall(r'\d+', salary_from)
-                            #         combined_number = ''.join(numbers)
-                            #         salary_from = int(combined_number) if combined_number else None
-                            #     if salary_to is not None:
-                            #         numbers = re.findall(r'\d+', salary_to)
-                            #         combined_number = ''.join(numbers)
-                            #         salary_to = int(combined_number) if combined_number else None
+
                             if сurr_salary_from is not None:
                                 numbers = re.findall(r'\d+', сurr_salary_from)
                                 combined_number = ''.join(numbers)
@@ -177,7 +172,7 @@ class GetMatchJobParser(BaseJobParser):
                 else:
                     print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
                     continue  # Прерываем цикл при ошибке запроса
-                # i += 1
+                page += 1
             self.log.info("В список добавлены данные")
 
         except AttributeError as e:
