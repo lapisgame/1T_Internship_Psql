@@ -14,7 +14,7 @@ import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti, dag_zar
 import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
 from raw.currency_directory import exchange_rates
 
-start_date = datetime(2023, 12, 6)
+start_date = datetime(2023, 12, 7)
 
 def generate_parser_task(task_id: str, run_parser: Callable, trigger_rule='all_done'):
     """
