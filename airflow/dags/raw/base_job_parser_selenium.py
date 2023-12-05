@@ -174,7 +174,7 @@ class BaseJobParserSelenium:
         self.log.info(f"Loading data into the database")
         try:
             if not self.df.empty:
-
+                self.df = self.df.drop_duplicates(subset=['vacancy_url', 'version_vac'])
                 data = [tuple(x) for x in self.df.to_records(index=False)]
                 query = f"""
                     INSERT INTO {self.schema}.{self.table_name} 
