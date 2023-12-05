@@ -104,30 +104,30 @@ def update_call_all_func():
     worker.model(worker.dataframe_to_update)
     worker.dml_core_update(worker.dfs)
 
-
-with DAG(
-        dag_id="init_careerspace_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as careerspace_dag:
-
-    parse_careerspace_jobs = PythonOperator(
-        task_id='init_careerspace_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-with DAG(
-        dag_id="update_careerspace_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as careerspace_update_dag:
-
-    parse_delta_careerspace_jobs = PythonOperator(
-        task_id='update_careerspace_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+#
+# with DAG(
+#         dag_id="init_careerspace_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as careerspace_dag:
+#
+#     parse_careerspace_jobs = PythonOperator(
+#         task_id='init_careerspace_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+# with DAG(
+#         dag_id="update_careerspace_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as careerspace_update_dag:
+#
+#     parse_delta_careerspace_jobs = PythonOperator(
+#         task_id='update_careerspace_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )
 

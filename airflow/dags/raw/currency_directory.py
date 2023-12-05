@@ -156,24 +156,24 @@ def exchange_rates():
     except Exception as e:
         log.error(f'Error occurred during parser execution: {e}')
 
-default_args = {
-    "owner": "admin_1T",
-    'start_date': datetime(2023, 12, 2),
-    'retry_delay': timedelta(minutes=5),
-}
-
-with DAG(
-        dag_id="upd_exchange_rates",
-        schedule_interval='@daily', tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as dag_exchange_rates:
-
-    parse_get_match_jobs = PythonOperator(
-        task_id='upd_exchange_rates_task',
-        python_callable=exchange_rates,
-        provide_context=True
-    )
+# default_args = {
+#     "owner": "admin_1T",
+#     'start_date': datetime(2023, 12, 2),
+#     'retry_delay': timedelta(minutes=5),
+# }
+#
+# with DAG(
+#         dag_id="upd_exchange_rates",
+#         schedule_interval='@daily', tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as dag_exchange_rates:
+#
+#     parse_get_match_jobs = PythonOperator(
+#         task_id='upd_exchange_rates_task',
+#         python_callable=exchange_rates,
+#         provide_context=True
+#     )
 
 
 

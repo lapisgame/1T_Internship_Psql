@@ -100,27 +100,27 @@ def update_call_all_func():
     worker.model(worker.dataframe_to_update)
     worker.dml_core_update(worker.dfs)
 
-
-with DAG(
-        dag_id="init_vk_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as dag_initial_vk:
-    parse_get_match_jobs = PythonOperator(
-        task_id='init_vk_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-with DAG(
-        dag_id="update_vk_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as vk_update_dag:
-    parse_delta_getmatch_jobs = PythonOperator(
-        task_id='update_vk_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+#
+# with DAG(
+#         dag_id="init_vk_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as dag_initial_vk:
+#     parse_get_match_jobs = PythonOperator(
+#         task_id='init_vk_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+# with DAG(
+#         dag_id="update_vk_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as vk_update_dag:
+#     parse_delta_getmatch_jobs = PythonOperator(
+#         task_id='update_vk_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )

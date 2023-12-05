@@ -102,26 +102,26 @@ def update_call_all_func():
     worker.dml_core_update(worker.dfs)
 
 
-with DAG(
-        dag_id="init_yandex_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as dag_initial_yandex:
-    parse_yandex_jobs = PythonOperator(
-        task_id='init_yandex_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-with DAG(
-        dag_id="update_yandex_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as yandex_update_dag:
-    parse_delta_yandex_jobs = PythonOperator(
-        task_id='update_yandex_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+# with DAG(
+#         dag_id="init_yandex_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as dag_initial_yandex:
+#     parse_yandex_jobs = PythonOperator(
+#         task_id='init_yandex_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+# with DAG(
+#         dag_id="update_yandex_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as yandex_update_dag:
+#     parse_delta_yandex_jobs = PythonOperator(
+#         task_id='update_yandex_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )

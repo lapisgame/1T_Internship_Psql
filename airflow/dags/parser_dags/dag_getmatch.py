@@ -100,28 +100,28 @@ def update_call_all_func():
     worker.dml_core_update(worker.dfs)
 
 
-with DAG(
-        dag_id="init_getmatch_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as dag_initial:
-
-    parse_get_match_jobs = PythonOperator(
-        task_id='init_getmatch_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-with DAG(
-        dag_id="update_getmatch_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as getmatch_update_dag:
-
-    parse_delta_getmatch_jobs = PythonOperator(
-        task_id='update_getmatch_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+# with DAG(
+#         dag_id="init_getmatch_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as dag_initial:
+#
+#     parse_get_match_jobs = PythonOperator(
+#         task_id='init_getmatch_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+# with DAG(
+#         dag_id="update_getmatch_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as getmatch_update_dag:
+#
+#     parse_delta_getmatch_jobs = PythonOperator(
+#         task_id='update_getmatch_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )

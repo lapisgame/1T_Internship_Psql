@@ -100,31 +100,31 @@ def update_call_all_func():
     worker.dml_core_update(worker.dfs)
 
 
-with DAG(
-        dag_id="init_hh_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as init_hh_dag:
-
-    parse_hh_match_jobs = PythonOperator(
-        task_id='init_hh_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-
-with DAG(
-        dag_id="update_hh_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as hh_update_dag:
-
-    parse_delta_hh_jobs = PythonOperator(
-        task_id='update_hh_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+# with DAG(
+#         dag_id="init_hh_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as init_hh_dag:
+#
+#     parse_hh_match_jobs = PythonOperator(
+#         task_id='init_hh_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+#
+# with DAG(
+#         dag_id="update_hh_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as hh_update_dag:
+#
+#     parse_delta_hh_jobs = PythonOperator(
+#         task_id='update_hh_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )
 
 
