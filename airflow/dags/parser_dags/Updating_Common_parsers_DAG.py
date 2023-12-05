@@ -5,16 +5,16 @@ from airflow.operators.bash_operator import BashOperator
 from typing import Callable
 from airflow.utils.task_group import TaskGroup
 from datetime import datetime, timedelta
-from raw.currency_directory import exchange_rates
 import sys
 import os
 sys.path.insert(0, '/opt/airflow/dags/parser_dags')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti
+import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti, dag_zarplata
 import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
+from raw.currency_directory import exchange_rates
 
-start_date = datetime(2023, 12, 5)
+start_date = datetime(2023, 12, 6)
 
 def generate_parser_task(task_id: str, run_parser: Callable, trigger_rule='all_done'):
     """
@@ -39,7 +39,6 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
         },
         start_date=start_date,
         schedule_interval=None,
-        # schedule_interval=None,
     )
 
     with dag:
@@ -101,6 +100,8 @@ with DAG(
                                                          trigger_rule='all_done')
             update_vseti_task = generate_parser_task('update_vseti_task', dag_vseti.update_call_all_func,
                                                          trigger_rule='all_done')
+            update_zarplata_task = generate_parser_task('update_zarplata_task', dag_zarplata.update_call_all_func,
+                                                         trigger_rule='all_done')
             update_vkjob_task = generate_parser_task('update_vkjob_task', dag_vk.update_call_all_func,
                                                          trigger_rule='all_done')
             update_sber_task = generate_parser_task('update_sber_task', dag_sber.update_call_all_func,
@@ -114,13 +115,14 @@ with DAG(
 
             # Define the execution order of tasks within the task group
             update_careerspace_task >> update_getmatch_task >> update_habrcareer_task >> \
-            update_headhunter_task >> update_vseti_task >> update_vkjob_task >> update_sber_task >> update_tinkoff_task \
-            >> update_yandex_task >> update_remotejob_task
+            update_headhunter_task >> update_vseti_task >> update_zarplata_task >> update_vkjob_task \
+            >> update_sber_task >> update_tinkoff_task >> update_yandex_task >> update_remotejob_task
 
         hello_bash_task >> update_currency_task >> parsers_group >> end_task
 
 # Create separate DAGs for each parsing task
-
+update_currency_dag = generate_parsing_dag('update_currency_dag', 'update_currency',
+                                      exchange_rates, start_date)
 update_careerspace_dag = generate_parsing_dag('update_careerspace_dag', 'update_careerspace',
                                       dag_careerspace.update_call_all_func, start_date)
 update_getmatch_dag = generate_parsing_dag('update_getmatch_dag', 'update_getmatch',
@@ -131,6 +133,8 @@ update_headhunter_dag = generate_parsing_dag('update_headhunter_dag', 'update_he
                                       dag_hh.update_call_all_func, start_date)
 update_vseti_dag = generate_parsing_dag('update_vseti_dag', 'update_vseti',
                                       dag_vseti.update_call_all_func, start_date)
+update_zarplata_dag = generate_parsing_dag('update_zarplata_dag', 'update_zarplata',
+                                      dag_zarplata.update_call_all_func, start_date)
 update_vk_dag = generate_parsing_dag('update_vk_dag', 'update_vk',
                                       dag_vk.update_call_all_func, start_date)
 update_sber_dag = generate_parsing_dag('update_sber_dag', 'update_sber',
@@ -144,11 +148,13 @@ update_remotejob_dag = generate_parsing_dag('update_remotejob_dag', 'update_remo
 
 # Make DAGs globally accessible
 globals()[upd_common_dag_id] = updating_common_dag
+globals()[update_currency_dag.dag_id] = update_currency_dag
 globals()[update_careerspace_dag.dag_id] = update_careerspace_dag
 globals()[update_getmatch_dag.dag_id] = update_getmatch_dag
 globals()[update_habrcareer_dag.dag_id] = update_habrcareer_dag
 globals()[update_headhunter_dag.dag_id] = update_headhunter_dag
 globals()[update_vseti_dag.dag_id] = update_vseti_dag
+globals()[update_zarplata_dag.dag_id] = update_zarplata_dag
 globals()[update_vk_dag.dag_id] = update_vk_dag
 globals()[update_sber_dag.dag_id] = update_sber_dag
 globals()[update_tinkoff_dag.dag_id] = update_tinkoff_dag

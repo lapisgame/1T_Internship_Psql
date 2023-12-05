@@ -150,7 +150,7 @@ class ZarplataJobParser(BaseJobParser):
                         page_number += 1
                         time.sleep(5)
 
-                    # page_number += 1
+                page_number += 1
 
         self.df = self.df.drop_duplicates()
         self.log.info(f'Общее количество найденных вакансий после удаления дубликатов: {len(self.df)}')
