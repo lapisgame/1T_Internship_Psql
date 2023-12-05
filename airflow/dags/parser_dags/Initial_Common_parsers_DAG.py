@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/parser_dags')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti
+import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti, dag_zarplata
 import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
 
 start_date = datetime(2023, 12, 5)
@@ -101,6 +101,8 @@ with DAG(
                                                          trigger_rule='all_done')
             init_vseti_task = generate_parser_task('init_vseti_task', dag_vseti.init_call_all_func,
                                                          trigger_rule='all_done')
+            init_zarplata_task = generate_parser_task('init_zarplata_task', dag_zarplata.init_call_all_func,
+                                                         trigger_rule='all_done')
             init_vkjob_task = generate_parser_task('init_vkjob_task', dag_vk.init_call_all_func,
                                                          trigger_rule='all_done')
             init_sber_task = generate_parser_task('init_sber_task', dag_sber.init_call_all_func,
@@ -114,8 +116,8 @@ with DAG(
 
             # Define the execution order of tasks within the task group
             init_careerspace_task >> init_getmatch_task >> init_habrcareer_task >> \
-            init_headhunter_task >> init_vseti_task >> init_vkjob_task >> init_sber_task >> init_tinkoff_task \
-            >> init_yandex_task >> init_remotejob_task
+            init_headhunter_task >> init_vseti_task >> init_zarplata_task >> init_vkjob_task >> init_sber_task >> \
+            init_tinkoff_task >> init_yandex_task >> init_remotejob_task
 
         hello_bash_task >> init_currency_task >> parsers_group >> end_task
 
@@ -131,6 +133,8 @@ init_headhunter_dag = generate_parsing_dag('init_headhunter_dag', 'initial_headh
                                       dag_hh.init_call_all_func, start_date)
 init_vseti_dag = generate_parsing_dag('init_vseti_dag', 'initial_vseti',
                                       dag_vseti.init_call_all_func, start_date)
+init_zarplata_dag = generate_parsing_dag('init_zarplata_dag', 'init_zarplata',
+                                      dag_zarplata.init_call_all_func, start_date)
 init_vk_dag = generate_parsing_dag('init_vk_dag', 'initial_vk',
                                       dag_vk.init_call_all_func, start_date)
 init_sber_dag = generate_parsing_dag('init_sber_dag', 'initial_sber',
@@ -149,6 +153,7 @@ globals()[init_getmatch_dag.dag_id] = init_getmatch_dag
 globals()[init_habrcareer_dag.dag_id] = init_habrcareer_dag
 globals()[init_headhunter_dag.dag_id] = init_headhunter_dag
 globals()[init_vseti_dag.dag_id] = init_vseti_dag
+globals()[init_zarplata_dag.dag_id] = init_zarplata_dag
 globals()[init_vk_dag.dag_id] = init_vk_dag
 globals()[init_sber_dag.dag_id] = init_sber_dag
 globals()[init_tinkoff_dag.dag_id] = init_tinkoff_dag

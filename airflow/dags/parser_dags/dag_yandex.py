@@ -53,7 +53,7 @@ class Dags(BaseDags):
             parser = YandJobParser(base_yand, profs, log, conn, table_name)
             parser.find_vacancies()
             parser.find_vacancies_description()
-            parser.adapt_numpy_null()
+            parser.addapt_numpy_null()
             parser.save_df()
             parser.stop()
             log.info('Yandex parser successfully completed the job')
@@ -77,7 +77,7 @@ class Dags(BaseDags):
             parser.find_vacancies()
             parser.find_vacancies_description()
             parser.generating_dataframes()
-            parser.adapt_numpy_null()
+            parser.addapt_numpy_null()
             parser.update_database_queries()
             log.info('Yandex parser successfully completed the job')
             self.dataframe_to_update = parser.dataframe_to_update
