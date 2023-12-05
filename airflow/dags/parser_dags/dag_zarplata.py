@@ -1,5 +1,4 @@
 from connect_settings import conn, engine
-conn.autocommit = False
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import logging as log
@@ -99,32 +98,32 @@ def update_call_all_func():
     worker.model(worker.dataframe_to_update)
     worker.dml_core_update(worker.dfs)
 
-
-with DAG(
-        dag_id="init_zarplata_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as init_zarplata_dag:
-
-    parse_zarplata_match_jobs = PythonOperator(
-        task_id='init_zarplata_task',
-        python_callable=init_call_all_func,
-        provide_context=True
-    )
-
-
-with DAG(
-        dag_id="update_zarplata_parser",
-        schedule_interval=None, tags=['admin_1T'],
-        default_args=default_args,
-        catchup=False
-) as zarplata_update_dag:
-
-    parse_delta_zarplata_jobs = PythonOperator(
-        task_id='update_zarplata_task',
-        python_callable=update_call_all_func,
-        provide_context=True
-    )
+#
+# with DAG(
+#         dag_id="init_zarplata_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as init_zarplata_dag:
+#
+#     parse_zarplata_match_jobs = PythonOperator(
+#         task_id='init_zarplata_task',
+#         python_callable=init_call_all_func,
+#         provide_context=True
+#     )
+#
+#
+# with DAG(
+#         dag_id="update_zarplata_parser",
+#         schedule_interval=None, tags=['admin_1T'],
+#         default_args=default_args,
+#         catchup=False
+# ) as zarplata_update_dag:
+#
+#     parse_delta_zarplata_jobs = PythonOperator(
+#         task_id='update_zarplata_task',
+#         python_callable=update_call_all_func,
+#         provide_context=True
+#     )
 
 

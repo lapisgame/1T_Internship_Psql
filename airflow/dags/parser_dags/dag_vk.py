@@ -1,5 +1,4 @@
 from connect_settings import conn, engine
-conn.autocommit = False
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import logging as log

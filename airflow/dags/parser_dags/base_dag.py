@@ -1,4 +1,5 @@
 from connect_settings import conn, engine
+conn.autocommit = False
 import psycopg2
 
 from datetime import datetime, timedelta
