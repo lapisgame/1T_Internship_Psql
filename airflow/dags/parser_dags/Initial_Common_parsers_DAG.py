@@ -8,10 +8,11 @@ from datetime import datetime, timedelta
 from raw.currency_directory import exchange_rates
 import sys
 import os
+sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti
-import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
+from . import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti
+from . import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
 
 start_date = datetime(2023, 12, 5)
 
