@@ -11,8 +11,8 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from . import dag_careerspace, dag_getmatch, dag_hh, dag_habrcareer, dag_vseti
-from . import dag_remotejob, dag_sber, dag_tinkoff, dag_vk, dag_yandex
+import parser_dags.dag_careerspace, parser_dags.dag_getmatch, parser_dags.dag_hh, parser_dags.dag_habrcareer, parser_dags.dag_vseti
+import parser_dags.dag_remotejob, parser_dags.dag_sber, parser_dags.dag_tinkoff, parser_dags.dag_vk, parser_dags.dag_yandex
 
 start_date = datetime(2023, 12, 5)
 
@@ -91,25 +91,35 @@ with DAG(
 
         with TaskGroup('parsers_group') as parsers_group:
 
-            init_careerspace_task = generate_parser_task('init_careerspace_task', dag_careerspace.init_call_all_func,
+            init_careerspace_task = generate_parser_task('init_careerspace_task',
+                                                         parser_dags.dag_careerspace.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_getmatch_task = generate_parser_task('init_getmatch_task', dag_getmatch.init_call_all_func,
+            init_getmatch_task = generate_parser_task('init_getmatch_task',
+                                                         parser_dags.dag_getmatch.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_habrcareer_task = generate_parser_task('init_habrcareer_task', dag_habrcareer.init_call_all_func,
+            init_habrcareer_task = generate_parser_task('init_habrcareer_task',
+                                                         parser_dags.dag_habrcareer.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_headhunter_task = generate_parser_task('init_headhunter_task', dag_hh.init_call_all_func,
+            init_headhunter_task = generate_parser_task('init_headhunter_task',
+                                                         parser_dags.dag_hh.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_vseti_task = generate_parser_task('init_vseti_task', dag_vseti.init_call_all_func,
+            init_vseti_task = generate_parser_task('init_vseti_task',
+                                                         parser_dags.dag_vseti.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_vkjob_task = generate_parser_task('init_vkjob_task', dag_vk.init_call_all_func,
+            init_vkjob_task = generate_parser_task('init_vkjob_task',
+                                                         parser_dags.dag_vk.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_sber_task = generate_parser_task('init_sber_task', dag_sber.init_call_all_func,
+            init_sber_task = generate_parser_task('init_sber_task',
+                                                         parser_dags.dag_sber.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_tinkoff_task = generate_parser_task('init_tinkoff_task', dag_tinkoff.init_call_all_func,
+            init_tinkoff_task = generate_parser_task('init_tinkoff_task',
+                                                         parser_dags.dag_tinkoff.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_yandex_task = generate_parser_task('init_yandex_task', dag_yandex.init_call_all_func,
+            init_yandex_task = generate_parser_task('init_yandex_task',
+                                                         parser_dags.dag_yandex.init_call_all_func,
                                                          trigger_rule='all_done')
-            init_remotejob_task = generate_parser_task('init_remotejob_task', dag_remotejob.init_call_all_func,
+            init_remotejob_task = generate_parser_task('init_remotejob_task',
+                                                         parser_dags.dag_remotejob.init_call_all_func,
                                                          trigger_rule='all_done')
 
             # Define the execution order of tasks within the task group
@@ -122,25 +132,25 @@ with DAG(
 # Create separate DAGs for each parsing task
 
 init_careerspace_dag = generate_parsing_dag('init_careerspace_dag', 'initial_careerspace',
-                                      dag_careerspace.init_call_all_func, start_date)
+                                      parser_dags.dag_careerspace.init_call_all_func, start_date)
 init_getmatch_dag = generate_parsing_dag('init_getmatch_dag', 'initial_getmatch',
-                                      dag_getmatch.init_call_all_func, start_date)
+                                      parser_dags.dag_getmatch.init_call_all_func, start_date)
 init_habrcareer_dag = generate_parsing_dag('init_habrcareer_dag', 'initial_habrcareer',
-                                      dag_habrcareer.init_call_all_func, start_date)
+                                      parser_dags.dag_habrcareer.init_call_all_func, start_date)
 init_headhunter_dag = generate_parsing_dag('init_headhunter_dag', 'initial_headhunter',
-                                      dag_hh.init_call_all_func, start_date)
+                                      parser_dags.dag_hh.init_call_all_func, start_date)
 init_vseti_dag = generate_parsing_dag('init_vseti_dag', 'initial_vseti',
-                                      dag_vseti.init_call_all_func, start_date)
+                                      parser_dags.dag_vseti.init_call_all_func, start_date)
 init_vk_dag = generate_parsing_dag('init_vk_dag', 'initial_vk',
-                                      dag_vk.init_call_all_func, start_date)
+                                      parser_dags.dag_vk.init_call_all_func, start_date)
 init_sber_dag = generate_parsing_dag('init_sber_dag', 'initial_sber',
-                                      dag_sber.init_call_all_func, start_date)
+                                      parser_dags.dag_sber.init_call_all_func, start_date)
 init_tinkoff_dag = generate_parsing_dag('init_tinkoff_dag', 'initial_tinkoff',
-                                      dag_tinkoff.init_call_all_func, start_date)
+                                      parser_dags.dag_tinkoff.init_call_all_func, start_date)
 init_yandex_dag = generate_parsing_dag('init_yandex_dag', 'initial_yandex',
-                                      dag_yandex.init_call_all_func, start_date)
+                                      parser_dags.dag_yandex.init_call_all_func, start_date)
 init_remotejob_dag = generate_parsing_dag('init_remotejob_dag', 'initial_remotejob',
-                                      dag_remotejob.init_call_all_func, start_date)
+                                      parser_dags.dag_remotejob.init_call_all_func, start_date)
 
 # Make DAGs globally accessible
 globals()[initial_common_dag_id] = initial_common_dag
