@@ -96,52 +96,41 @@ class GetMatchJobParser(BaseJobParser):
                 description = '\n'.join(description_lines)
 
                 # Parse and parse salary range
-                salary = vac.find('h3').text
                 salary_text = vac.find('h3').text.strip()
                 salary_text = salary_text.replace('\u200d', '-').replace('—', '-')
-                salary_parts = list(map(str.strip, salary_text.split('-')))
-                if ('₽' or '€' or '$' or '₸') in salary:
-                    сurr_salary_from = salary_parts[0]
-                    if len(salary_parts) == 1:
-                        сurr_salary_to = None if 'от' in salary else salary_parts[0]
-                    elif len(salary_parts) > 1:
-                        сurr_salary_to = salary_parts[2]
-                if '€' in salary:
-                    currency_id = 'EUR'
-                elif '$' in salary:
-                    currency_id = 'USD'
-                elif '₸' in salary:
-                    currency_id = 'KZT'
-                elif '₽' in salary:
-                    currency_id = 'KZT'
-                if сurr_salary_from is not None:
-                    numbers = re.findall(r'\d+', сurr_salary_from)
+                salary = vac.find('h3').text
+                if salary:
+                    if '₽' in salary or '€' in salary or '$' in salary or '₸' in salary:
+                        if '€' in salary:
+                            currency_id = 'EUR'
+                        elif '$' in salary:
+                            currency_id = 'USD'
+                        elif '₸' in salary:
+                            currency_id = 'KZT'
+                        elif '₽' in salary:
+                            currency_id = 'RUR'
+                        salary_parts = list(map(str.strip, salary_text.split('-')))
+                        curr_salary_from = salary_parts[0]
+                        if len(salary_parts) == 1:
+                            curr_salary_to = None if 'от' in vac.find('h3').text else salary_parts[0]
+                        elif len(salary_parts) > 1:
+                            curr_salary_to = salary_parts[2]
+                    else:
+                        self.log.info(f"A new currency has been found: {salary}")
+                        curr_salary_from = None
+                        curr_salary_to = None
+                        currency_id = salary
+
+                # Convert salary range to numeric format
+                if curr_salary_from is not None:
+                    numbers = re.findall(r'\d+', curr_salary_from)
                     combined_number = ''.join(numbers)
-                    сurr_salary_from = int(combined_number) if combined_number else None
-                if сurr_salary_to is not None:
-                    numbers = re.findall(r'\d+', сurr_salary_to)
+                    curr_salary_from = int(combined_number) if combined_number else None
+                if curr_salary_to is not None:
+                    numbers = re.findall(r'\d+', curr_salary_to)
                     combined_number = ''.join(numbers)
-                    сurr_salary_to = int(combined_number) if combined_number else None
-                # if '₽/мес на руки' in vac.find('h3').text:
-                #     salary_parts = list(map(str.strip, salary_text.split('-')))
-                #     salary_from = salary_parts[0]
-                #     if len(salary_parts) == 1:
-                #         salary_to = None if 'от' in vac.find('h3').text else salary_parts[0]
-                #     elif len(salary_parts) > 1:
-                #         salary_to = salary_parts[2]
-                # else:
-                #     salary_from = None
-                #     salary_to = None
-                #
-                # # Convert salary range to numeric format
-                # if salary_from is not None:
-                #     numbers = re.findall(r'\d+', salary_from)
-                #     combined_number = ''.join(numbers)
-                #     salary_from = int(combined_number) if combined_number else None
-                # if salary_to is not None:
-                #     numbers = re.findall(r'\d+', salary_to)
-                #     combined_number = ''.join(numbers)
-                #     salary_to = int(combined_number) if combined_number else None
+                    curr_salary_to = int(combined_number) if combined_number else None
+
 
                 # Parse job format
                 job_form_classes = ['g-label-linen', 'g-label-zanah', 'ng-star-inserted']
@@ -163,9 +152,9 @@ class GetMatchJobParser(BaseJobParser):
                     "description": description,
                     "job_format": job_format,
                     "level": level,
-                    "сurr_salary_from": сurr_salary_from,
-                    "сurr_salary_to": сurr_salary_to,
                     "currency_id": currency_id,
+                    "curr_salary_from": curr_salary_from,
+                    "curr_salary_to": curr_salary_to,
                     "date_created": date_created,
                     "date_of_download": date_of_download,
                     "source_vac": 1,
