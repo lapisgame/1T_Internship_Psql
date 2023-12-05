@@ -84,7 +84,7 @@ class GetMatchJobParser(BaseJobParser):
                             elif '₸' in salary:
                                 currency_id = 'KZT'
                             elif '₽' in salary:
-                                currency_id = 'KZT'
+                                currency_id = 'RUR'
                             # Приводим зарплаты к числовому формату
                             #     if salary_from is not None:
                             #         numbers = re.findall(r'\d+', salary_from)
