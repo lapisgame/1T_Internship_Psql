@@ -59,7 +59,7 @@ def generate_parsing_dag(dag_id: str, task_id: str, run_parser: Callable, start_
     return dag
 
 
-initial_common_dag_id = 'INITIAL_COMMON_PARSING_TASK'
+initial_common_dag_id = 'INITIAL_COMMON_PARSING_DAG'
 
 with DAG(
     dag_id=initial_common_dag_id,
