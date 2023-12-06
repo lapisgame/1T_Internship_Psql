@@ -61,7 +61,7 @@ class GetMatchJobParser(BaseJobParser):
             self.log.info(f'MAX PAGE = {max_page}')
             try:
                 for i in range(1, max_page + 1):
-                    url = BASE_URL.format(i=i)  # Обновляем URL на каждой итерации
+                    url = BASE_URL.format(i)  # Обновляем URL на каждой итерации
                     r = requests.get(url)
                     data = r.json()
                     # Извлекаем ссылки из JSON
