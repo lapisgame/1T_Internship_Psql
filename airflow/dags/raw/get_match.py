@@ -34,19 +34,6 @@ default_args = {
 
 
 class GetMatchJobParser(BaseJobParser):
-    def find_max_page(self, html_content):
-        """
-        Метод для извлечения максимального числа страниц из HTML-контента.
-        """
-        # Используем регулярное выражение для поиска числа внутри тега div с классом b-pagination-page и b-pagination-page__sep
-        match = re.search(r'class="b-pagination-page.*?"> (\d+) </div><!---->', html_content)
-        print(f'MATCH = {match}')
-
-        if match:
-            return int(match.group(1))
-        else:
-            return 100
-
     def find_vacancies(self):
         """
         This method parses job vacancies from the GetMatch website.
@@ -64,12 +51,32 @@ class GetMatchJobParser(BaseJobParser):
         self.log.info(f'Парсим данные')
 
         try:
-            # Получаем HTML-контент для определения максимальной страницы
-            html_response = requests.get(BASE_URL.format(i=1)).content
-            max_page = self.find_max_page(html_response.decode('utf-8'))
+            page = 1
+            max_page = None  # Инициализируем переменную для максимальной страницы
+            has_data = True
 
+            # Определяем максимальную страницу
+            while True:
+                url = BASE_URL.format(i=page)
+                r = requests.get(url)
+                if r.status_code == 200:
+                    html_content = r.text
+                    match = re.search(r'class="b-pagination-page.*?"> (\d+) </div><!---->', html_content)
+                    if match:
+                        max_page = int(match.group(1))
+                    else:
+                        break
+                    page += 1
+                else:
+                    print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
+                    break
+
+            if max_page is not None:
+                print(f'Maximum Page Found: {max_page}')
+
+            # Парсим данные
             for i in range(1, max_page + 1):
-                url = BASE_URL.format(i=i)  # Обновляем URL на каждой итерации
+                url = BASE_URL.format(i=i)
                 r = requests.get(url)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
