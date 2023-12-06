@@ -73,7 +73,7 @@ class GetMatchJobParser(BaseJobParser):
                         salary = job.get('salary_description')
                         if salary:
                             salary_text = salary.replace('\u200d', '-').replace('—', '-')
-                            salary_parts = list(map(str.strip, salary_text.split('-')))
+                            # salary_parts = list(map(str.strip, salary_text.split('-')))
                             currency_symbols = {'₽': 'RUR', '€': 'EUR', '$': 'USD', '₸': 'KZT'}
 
                             if any(symbol in salary for symbol in currency_symbols):
@@ -99,30 +99,7 @@ class GetMatchJobParser(BaseJobParser):
                                 numbers = re.findall(r'\d+', curr_salary_to)
                                 combined_number = ''.join(numbers)
                                 curr_salary_to = int(combined_number) if combined_number else None
-                            # # Если зарплата рублевая
-                            # if '₽' in salary or '€' in salary or '$' in salary or '₸' in salary:
-                            #     сurr_salary_from = salary_parts[0]
-                            #     if len(salary_parts) == 1:
-                            #         сurr_salary_to = None if 'от' in salary else salary_parts[0]
-                            #     elif len(salary_parts) > 1:
-                            #         сurr_salary_to = salary_parts[2]
-                            # if '€' in salary:
-                            #     currency_id = 'EUR'
-                            # elif '$' in salary:
-                            #     currency_id = 'USD'
-                            # elif '₸' in salary:
-                            #     currency_id = 'KZT'
-                            # elif '₽' in salary:
-                            #     currency_id = 'RUR'
-                            #
-                            # if сurr_salary_from is not None:
-                            #     numbers = re.findall(r'\d+', сurr_salary_from)
-                            #     combined_number = ''.join(numbers)
-                            #     сurr_salary_from = int(combined_number) if combined_number else None
-                            # if сurr_salary_to is not None:
-                            #     numbers = re.findall(r'\d+', сurr_salary_to)
-                            #     combined_number = ''.join(numbers)
-                            #     сurr_salary_to = int(combined_number) if combined_number else None
+
                         # Получаем описание вакансии из JSON
                         description_text = job.get('offer_description')
                         description = BeautifulSoup(description_text, 'html.parser').get_text()
@@ -198,7 +175,7 @@ class GetMatchJobParser(BaseJobParser):
                 else:
                     print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
                     break  # Прерываем цикл при ошибке запроса
-            page += 1
+                page += 1
 
             self.log.info("В список добавлены данные")
 
