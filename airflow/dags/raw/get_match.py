@@ -51,11 +51,10 @@ class GetMatchJobParser(BaseJobParser):
         self.log.info('Парсим данные')
 
         try:
-            page = 1
-            url = 0
+            i = 1
             # Send a request to the first page to extract the maximum page value
-            first_page_url = BASE_URL.format(i=page)
-            r = requests.get(first_page_url, headers=HEADERS)
+            url = BASE_URL.format(i=i)
+            r = requests.get(url, headers=HEADERS)
             if r.status_code == 200:
                 soup = BeautifulSoup(r.content, 'html.parser')
                 max_page_element = soup.find('div', {'class': 'b-pagination-page'})
@@ -69,7 +68,7 @@ class GetMatchJobParser(BaseJobParser):
                 return
 
             for i in range(1, max_page + 1):
-                url = BASE_URL.format(i=i)
+                # url = BASE_URL.format(i=i)
                 r = requests.get(url, headers=HEADERS)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
