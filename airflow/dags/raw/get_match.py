@@ -49,34 +49,19 @@ class GetMatchJobParser(BaseJobParser):
         self.items = []
         self.all_links = []
         self.log.info(f'Парсим данные')
+        # Получаем HTML-контент для определения максимальной страницы
+        page = 1
+        response = requests.get(BASE_URL.format(i=page))
+        if response.status_code == 200:
+            # Используем регулярное выражение для поиска всех элементов с классом 'b-pagination-page ng-star-inserted'
+            matches = re.findall(r'class="b-pagination-page ng-star-inserted"> (\d+) </div>', response.text)
+            pages = [int(match) for match in matches]
+            max_page = max(pages)
+            self.log.info(f'MAX PAGE = {max_page}')
 
         try:
-            page = 1
-            max_page = None  # Инициализируем переменную для максимальной страницы
-            has_data = True
-
-            # Определяем максимальную страницу
-            while True:
-                url = BASE_URL.format(i=page)
-                r = requests.get(url)
-                if r.status_code == 200:
-                    html_content = r.text
-                    match = re.search(r'class="b-pagination-page.*?"> (\d+) </div><!---->', html_content)
-                    if match:
-                        max_page = int(match.group(1))
-                    else:
-                        break
-                    page += 1
-                else:
-                    print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
-                    break
-
-            if max_page is not None:
-                print(f'Maximum Page Found: {max_page}')
-
-            # Парсим данные
             for i in range(1, max_page + 1):
-                url = BASE_URL.format(i=i)
+                url = BASE_URL.format(i=i)  # Обновляем URL на каждой итерации
                 r = requests.get(url)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
