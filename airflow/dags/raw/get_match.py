@@ -52,7 +52,7 @@ class GetMatchJobParser(BaseJobParser):
 
         try:
             page = 1
-            url = None
+            url = 0
             # Send a request to the first page to extract the maximum page value
             first_page_url = BASE_URL.format(i=page)
             r = requests.get(first_page_url, headers=HEADERS)
