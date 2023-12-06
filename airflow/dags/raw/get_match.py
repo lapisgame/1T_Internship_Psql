@@ -57,7 +57,10 @@ class GetMatchJobParser(BaseJobParser):
             r = requests.get(first_page_url, headers=HEADERS)
             if r.status_code == 200:
                 soup = BeautifulSoup(r.content, 'html.parser')
-                max_page = int(soup.select('.b-pagination-page')[-1].text.strip())
+                max_page_element = soup.find('div', {'class': 'b-pagination-page'})
+                max_page = int(max_page_element.text.strip())
+                    # if max_page_element else 1
+                # max_page = int(soup.select('.b-pagination-page')[-1].text.strip())
                 self.log.info(f'MAX PAGE = {max_page}')
             else:
                 # Handle the case when the request to the first page fails
