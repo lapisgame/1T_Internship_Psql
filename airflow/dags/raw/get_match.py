@@ -17,7 +17,6 @@ from variables_settings import variables, base_getmatch
 from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][6]['raw_tables_name']
-BASE_URL = base_getmatch
 
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',
@@ -45,6 +44,7 @@ class GetMatchJobParser(BaseJobParser):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
         }
+        BASE_URL = base_getmatch
         self.log.info(f'Создаем пустой список')
         self.items = []
         self.all_links = []
