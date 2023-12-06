@@ -20,7 +20,8 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raw.variables_settings import variables, base_getmatch
+from variables_settings import variables, base_getmatch
+from raw.base_job_parser import BaseJobParser
 
 table_name = variables['raw_tables'][6]['raw_tables_name']
 url = base_getmatch
@@ -31,14 +32,6 @@ logging.basicConfig(
 )
 
 log = logging
-
-# Параметры по умолчанию
-default_args = {
-    "owner": "admin_1T",
-    'start_date': days_ago(1)
-}
-
-from raw.base_job_parser import BaseJobParser
 
 class GetMatchJobParser(BaseJobParser):
     def find_vacancies(self):
