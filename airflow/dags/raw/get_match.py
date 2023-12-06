@@ -33,6 +33,7 @@ logging.basicConfig(
 
 log = logging
 
+
 class GetMatchJobParser(BaseJobParser):
     def find_vacancies(self):
         self.items = []
