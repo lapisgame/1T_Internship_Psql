@@ -50,8 +50,7 @@ class GetMatchJobParser(BaseJobParser):
         self.all_links = []
         self.log.info(f'Парсим данные')
         # Получаем HTML-контент для определения максимальной страницы
-        # url_max_page = "https://getmatch.ru/vacancies?p=1&sa=150000&pa=all&s=landing_ca_header"
-        url_max_page = BASE_URL.format(i=1)
+        url_max_page = "https://getmatch.ru/vacancies?p=1&sa=150000&pa=all&s=landing_ca_header"
         response = requests.get(url_max_page)
         if response.status_code == 200:
             # Используем регулярное выражение для поиска всех элементов с классом 'b-pagination-page ng-star-inserted'
