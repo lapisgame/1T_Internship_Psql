@@ -40,13 +40,12 @@ class GetMatchJobParser(BaseJobParser):
         """
         # Используем регулярное выражение для поиска числа внутри тега div с классом b-pagination-page и b-pagination-page__sep
         match = re.search(r'class="b-pagination-page.*?"> (\d+) </div><!---->', html_content)
+        print(f'MATCH = {match}')
 
         if match:
-            # Если найдено, возвращаем найденное значение
             return int(match.group(1))
         else:
-            # Если не найдено, возвращаем значение по умолчанию (например, 1)
-            return 1
+            return 100
 
     def find_vacancies(self):
         """
