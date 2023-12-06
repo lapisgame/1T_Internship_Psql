@@ -45,38 +45,37 @@ class GetMatchJobParser(BaseJobParser):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
         }
-        self.log.info('Создаем пустой список')
+        self.log.info(f'Создаем пустой список')
         self.items = []
         self.all_links = []
-        self.log.info('Парсим данные')
+        self.log.info(f'Парсим данные')
 
         try:
-            i = 1
             # Send a request to the first page to extract the maximum page value
-            url = BASE_URL.format(i=i)
-            r = requests.get(url, headers=HEADERS)
+            first_page_url = BASE_URL.format(i=1)
+            r = requests.get(first_page_url, headers=HEADERS)
             if r.status_code == 200:
                 soup = BeautifulSoup(r.content, 'html.parser')
-                max_page_element = soup.find('div', {'class': 'b-pagination-page'})
-                max_page = int(max_page_element.text.strip())
-                    # if max_page_element else 1
-                # max_page = int(soup.select('.b-pagination-page')[-1].text.strip())
+                max_page_element = soup.find('div',
+                                             {'class': 'b-pagination-page b-pagination-page__sep ng-star-inserted'})
+                max_page = int(max_page_element.text.strip()) if max_page_element else 100
                 self.log.info(f'MAX PAGE = {max_page}')
             else:
                 # Handle the case when the request to the first page fails
                 self.log.error('Failed to retrieve the first page')
                 return
 
-            for i in range(1, max_page + 1):
-                # url = BASE_URL.format(i=i)
-                r = requests.get(url, headers=HEADERS)
+            has_data = True
+            for page in range(1, max_page + 1):
+                url = BASE_URL.format(i=page)  # Обновляем URL на каждой итерации
+                r = requests.get(url)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
                     data = r.json()
-                    # # Если нет данных или не существует ключа 'offers', выходим из цикла
-                    # if not data.get('offers'):
-                    #     has_data = False
-                    #     break
+                    # Если нет данных или не существует ключа 'offers', выходим из цикла
+                    if not data.get('offers'):
+                        has_data = False
+                        break
                     # Извлекаем ссылки из JSON
                     for job in data['offers']:
                         # Получаем дату размещения из JSON
@@ -183,7 +182,7 @@ class GetMatchJobParser(BaseJobParser):
                             "сurr_salary_to": сurr_salary_to,
                             "currency_id": currency_id
                         }
-                        print(f"{page}: Adding item: {item}")
+                        print(f"Page {page}/{max_page}: Adding item: {item}")
                         item_df = pd.DataFrame([item])
                         self.df = pd.concat([self.df, item_df], ignore_index=True)
                         time.sleep(3)
