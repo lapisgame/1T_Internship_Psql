@@ -1,11 +1,18 @@
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.bash_operator import BashOperator
+import logging
 from airflow.utils.task_group import TaskGroup
 import logging
 import time
 from datetime import datetime
+import os
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from airflow.utils.dates import days_ago
+from psycopg2.extras import execute_values
 import re
 
 import sys
@@ -13,11 +20,10 @@ import os
 sys.path.insert(0, '/opt/airflow/dags/')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from variables_settings import variables, base_getmatch
-from raw.base_job_parser import BaseJobParser
+from raw.variables_settings import variables, base_getmatch
 
 table_name = variables['raw_tables'][6]['raw_tables_name']
-BASE_URL = base_getmatch
+url = base_getmatch
 
 logging.basicConfig(
     format='%(threadName)s %(name)s %(levelname)s: %(message)s',
@@ -32,151 +38,133 @@ default_args = {
     'start_date': days_ago(1)
 }
 
+from raw.base_job_parser import BaseJobParser
+
 class GetMatchJobParser(BaseJobParser):
     def find_vacancies(self):
-        """
-        This method parses job vacancies from the GetMatch website.
-        It retrieves the vacancy details such as company name, vacancy name, skills required, location, job format,
-        salary range, date created, and other relevant information.
-        The parsed data is stored in a DataFrame for further processing.
-        """
+        self.items = []
         HEADERS = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
-        }
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0",
+                }
         self.log.info(f'Создаем пустой список')
         self.items = []
-        self.all_links = []
+        # seen_ids = set()
+        self.all_links = []  
         self.log.info(f'Парсим данные')
-        try:
-            page = 1
-            has_data = True
-            while has_data:
-                url = BASE_URL.format(i=page)  # Обновляем URL на каждой итерации
-                r = requests.get(url)
-                if r.status_code == 200:
-                    # Парсим JSON-ответ
-                    data = r.json()
-                    # Если нет данных, выходим из цикла
-                    if not data.get('offers'):
-                        has_data = False
-                        break
-                    # Извлекаем ссылки из JSON
-                    for job in data.get('offers', []):
-                        # Получаем дату размещения из JSON
-                        date_created = job.get('published_at')
-                        # Получаем название вакансии из JSON
-                        vacancy_name = job.get('position')
-                        # Получаем зарплату из JSON
-                        сurr_salary_from = сurr_salary_to = salary_from = salary_to = currency_id = None
-                        salary = job.get('salary_description')
-                        if salary:
-                            salary_text = salary.replace('\u200d', '-').replace('—', '-')
-                            salary_parts = list(map(str.strip, salary_text.split('-')))
-                            # Если зарплата рублевая
-                            if '₽' in salary or '€' in salary or '$' in salary or '₸' in salary:
-                                сurr_salary_from = salary_parts[0]
-                                if len(salary_parts) == 1:
-                                    сurr_salary_to = None if 'от' in salary else salary_parts[0]
-                                elif len(salary_parts) > 1:
-                                    сurr_salary_to = salary_parts[2]
-                            if '€' in salary:
-                                currency_id = 'EUR'
-                            elif '$' in salary:
-                                currency_id = 'USD'
-                            elif '₸' in salary:
-                                currency_id = 'KZT'
-                            elif '₽' in salary:
-                                currency_id = 'RUR'
+        # Парсим линки вакансий с каждой страницы (на сайте примерно 50страниц, 100 - это с избытком)     
+        
+        for i in range(1, 100):
+            response = requests.get(url.format(i=i), headers=HEADERS)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            divs = soup.find_all('div', class_='b-vacancy-card-title')
+            for div in divs:
+                vacancy_url = 'https://getmatch.ru/' + div.find('a').get('href')
+                self.all_links.append(vacancy_url)
 
-                            if сurr_salary_from is not None:
-                                numbers = re.findall(r'\d+', сurr_salary_from)
-                                combined_number = ''.join(numbers)
-                                сurr_salary_from = int(combined_number) if combined_number else None
-                            if сurr_salary_to is not None:
-                                numbers = re.findall(r'\d+', сurr_salary_to)
-                                combined_number = ''.join(numbers)
-                                сurr_salary_to = int(combined_number) if combined_number else None
-                        # Получаем описание вакансии из JSON
-                        description_text = job.get('offer_description')
-                        description = BeautifulSoup(description_text, 'html.parser').get_text()
+        # vacancy_count = 0
+        for link in self.all_links:
+            # if vacancy_count < 5:
+            resp = requests.get(link, HEADERS)
+            vac = BeautifulSoup(resp.content, 'lxml')
 
-                        # Получаем ссылку на вакансию из JSON
-                        full_url = 'https://getmatch.ru' + str(job.get('url'))
+            try:
+                # парсим грейд вакансии
+                term_element = vac.find('div', {'class': 'col b-term'}, text='Уровень')
+                level = term_element.find_next('div', {'class': 'col b-value'}).text.strip() if term_element else None
 
-                        # Переходим по ссылке, чтобы спарсить оставшиеся элементы
-                        resp = requests.get(full_url, HEADERS)
-                        vac = BeautifulSoup(resp.content, 'lxml')
-                        try:
-                            # Парсим уровень
-                            term_element = vac.find('div', {'class': 'col b-term'}, text='Уровень')
-                            level = term_element.find_next('div', {
-                                'class': 'col b-value'}).text.strip() if term_element else None
-                            # Парсим знание языков, если есть
-                            lang = None
-                            try:
-                                lang = vac.find('div', {'class': 'col b-term'}, text='Английский')
-                                if lang is not None:
-                                    level_lang = lang.find_next('span', {
-                                        'class': 'b-language-description d-md-none'}).text.strip()
-                                    lang = lang.text.strip()
-                                    language = f"{lang}: {level_lang}"
-                                    if level == level_lang:
-                                        level = None
-                                else:
-                                    language = None
-                            except:
-                                pass
-                            # Парсим формат работы
-                            job_form_classes = ['g-label-linen', 'g-label-zanah', 'ng-star-inserted']
-                            job_form = vac.find('span', class_=job_form_classes)
-                            job_format = job_form.get_text(strip=True) if job_form is not None else None
-
-                            # Парсим скиллы
-                            stack_container = vac.find('div', class_='b-vacancy-stack-container')
-                            if stack_container is not None:
-                                labels = stack_container.find_all('span', class_='g-label')
-                                skills = ', '.join([label.text.strip('][') for label in labels])
-                            else:
-                                skills = None
-                            date_of_download = datetime.now().date()
-                        except:
-                            pass
-                        item = {
-                            "company": job.get('company', {}).get('name'),
-                            "vacancy_name": vacancy_name,
-                            "skills": skills,
-                            "towns": ', '.join([span.get_text(strip=True).replace('📍', '') for span in
-                                                vac.find_all('span', class_='g-label-secondary')]),
-                            "vacancy_url": full_url,
-                            "description": description,
-                            "job_format": job_format,
-                            "level": level,
-                            "salary_from": salary_from,
-                            "salary_to": salary_to,
-                            "date_created": date_created,
-                            "date_of_download": date_of_download,
-                            "source_vac": 1,
-                            "status": 'existing',
-                            "version_vac": 1,
-                            "actual": 1,
-                            "languages": language,
-                            "сurr_salary_from": сurr_salary_from,
-                            "сurr_salary_to": сurr_salary_to,
-                            "currency_id": currency_id
-                        }
-                        print(f"{page}: Adding item: {item}")
-                        item_df = pd.DataFrame([item])
-                        self.df = pd.concat([self.df, item_df], ignore_index=True)
-                        time.sleep(3)
+                # Парсим иностранные языки
+                lang = vac.find('div', {'class': 'col b-term'}, text='Английский')
+                if lang is not None:
+                    level_lang= lang.find_next('span', {'class': 'b-language-description d-md-none'}).text.strip()
+                    lang=lang.text.strip()
+                    language = f"{lang}: {level_lang}"
+                    if level==level_lang:
+                        level=None
                 else:
-                    print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
-                    break  # Прерываем цикл при ошибке запроса
-                page += 1
-            self.log.info("В список добавлены данные")
+                    language=None
 
-        except AttributeError as e:
-            self.log.error(f"Error processing link {url}: {e}")
+                # Парсим навыки
+                stack_container = vac.find('div', class_='b-vacancy-stack-container')
+                if stack_container is not None:
+                    labels = stack_container.find_all('span', class_='g-label')
+                    page_stacks = ', '.join([label.text.strip('][') for label in labels])
+                else:
+                    page_stacks=None
 
+                # Парсим описание вакансий
+                description_element = vac.find('section', class_='b-vacancy-description')
+                description_lines = description_element.stripped_strings
+                description = '\n'.join(description_lines)
+
+                # Парсим и распаршиваем зарплаты
+                salary_text = vac.find('h3').text.strip()
+                salary_text = salary_text.replace('\u200d', '-').replace('—', '-')
+                currency_symbols = {'₽': 'RUR', '€': 'EUR', '$': 'USD', '₸': 'KZT'}
+
+                if any(symbol in vac.find('h3').text for symbol in currency_symbols):
+                    currency_id = next(
+                        (currency_symbols[symbol] for symbol in currency_symbols if symbol in vac.find('h3').text),
+                        None)
+
+                    salary_parts = list(map(str.strip, salary_text.split('-')))
+                    curr_salary_from = salary_parts[0]
+
+                    if len(salary_parts) == 1:
+                        curr_salary_to = None if 'от' in vac.find('h3').text else salary_parts[0]
+                    elif len(salary_parts) > 1:
+                        curr_salary_to = salary_parts[2]
+
+                # Приводим зарплаты к числовому формату
+                if curr_salary_from is not None:
+                    numbers = re.findall(r'\d+', curr_salary_from)
+                    combined_number = ''.join(numbers)
+                    curr_salary_from = int(combined_number) if combined_number else None
+                if curr_salary_to is not None:
+                    numbers = re.findall(r'\d+', curr_salary_to)
+                    combined_number = ''.join(numbers)
+                    curr_salary_to = int(combined_number) if combined_number else None
+
+                # Парсим формат работы
+                job_form_classes = ['g-label-linen', 'g-label-zanah', 'ng-star-inserted']
+                job_form = vac.find('span', class_=job_form_classes)
+                job_format = job_form.get_text(strip=True) if job_form is not None else None
+
+                # Получаем другие переменные
+                date_created = date_of_download = datetime.now().date()
+                status ='existing'
+                version_vac=1
+                actual=1
+
+                item = {
+                    "company": vac.find('h2').text.replace('\xa0', ' ').strip('в'),
+                    "vacancy_name": vac.find('h1').text,
+                    "skills": page_stacks,
+                    "towns": ', '.join([span.get_text(strip=True).replace('📍', '') for span in
+                                        vac.find_all('span', class_='g-label-secondary')]),
+                    "vacancy_url": link,
+                    "description": description,
+                    "job_format": job_format,
+                    "level": level,
+                    "currancy_id": currency_id,
+                    "curr_salary_from": curr_salary_from,
+                    "curr_salary_to": curr_salary_to,
+                    "date_created": date_created,
+                    "date_of_download": date_of_download,
+                    "source_vac": 1,
+                    "status": status,
+                    "version_vac": version_vac,
+                    "actual": actual,
+                    "languages":language,
+                    }
+                print(f"Page: {link}: Adding item: {item}")
+                item_df = pd.DataFrame([item])
+                self.df = pd.concat([self.df, item_df], ignore_index=True)
+                time.sleep(3)
+                # vacancy_count += 1
+            except AttributeError as e:
+                print(f"Error processing link {link}: {e}")
+            # else:
+            #     break
         self.df = self.df.drop_duplicates()
-        self.log.info("Total number of found vacancies after removing duplicates: " + str(len(self.df)) + "\n")
+        self.log.info("Общее количество найденных вакансий после удаления дубликатов: " + str(len(self.df)) + "\n")
