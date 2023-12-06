@@ -165,13 +165,13 @@ class GetMatchJobParser(BaseJobParser):
                             "сurr_salary_to": сurr_salary_to,
                             "currency_id": currency_id
                         }
-                        print(f"Adding item: {item}")
+                        print(f"{page}: Adding item: {item}")
                         item_df = pd.DataFrame([item])
                         self.df = pd.concat([self.df, item_df], ignore_index=True)
                         time.sleep(3)
                 else:
                     print(f"Failed to fetch data for {url}. Status code: {r.status_code}")
-                    continue  # Прерываем цикл при ошибке запроса
+                    break  # Прерываем цикл при ошибке запроса
                 page += 1
             self.log.info("В список добавлены данные")
 
