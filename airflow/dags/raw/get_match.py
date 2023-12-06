@@ -34,6 +34,20 @@ default_args = {
 
 
 class GetMatchJobParser(BaseJobParser):
+    def find_max_page(self, html_content):
+        """
+        Метод для извлечения максимального числа страниц из HTML-контента.
+        """
+        # Используем регулярное выражение для поиска числа внутри тега div с классом b-pagination-page и b-pagination-page__sep
+        match = re.search(r'class="b-pagination-page.*?"> (\d+) </div><!---->', html_content)
+
+        if match:
+            # Если найдено, возвращаем найденное значение
+            return int(match.group(1))
+        else:
+            # Если не найдено, возвращаем значение по умолчанию (например, 1)
+            return 1
+
     def find_vacancies(self):
         """
         This method parses job vacancies from the GetMatch website.
@@ -51,31 +65,16 @@ class GetMatchJobParser(BaseJobParser):
         self.log.info(f'Парсим данные')
 
         try:
-            # Send a request to the first page to extract the maximum page value
-            first_page_url = BASE_URL.format(i=1)
-            r = requests.get(first_page_url, headers=HEADERS)
-            if r.status_code == 200:
-                soup = BeautifulSoup(r.content, 'html.parser')
-                max_page_element = soup.find('div',
-                                             {'class': 'b-pagination-page b-pagination-page__sep ng-star-inserted'})
-                max_page = int(max_page_element.text.strip()) if max_page_element else 100
-                self.log.info(f'MAX PAGE = {max_page}')
-            else:
-                # Handle the case when the request to the first page fails
-                self.log.error('Failed to retrieve the first page')
-                return
+            # Получаем HTML-контент для определения максимальной страницы
+            html_response = requests.get(BASE_URL.format(i=1)).content
+            max_page = self.find_max_page(html_response.decode('utf-8'))
 
-            has_data = True
-            for page in range(1, max_page + 1):
-                url = BASE_URL.format(i=page)  # Обновляем URL на каждой итерации
+            for i in range(1, max_page + 1):
+                url = BASE_URL.format(i=i)  # Обновляем URL на каждой итерации
                 r = requests.get(url)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
                     data = r.json()
-                    # Если нет данных или не существует ключа 'offers', выходим из цикла
-                    if not data.get('offers'):
-                        has_data = False
-                        break
                     # Извлекаем ссылки из JSON
                     for job in data['offers']:
                         # Получаем дату размещения из JSON
@@ -182,7 +181,7 @@ class GetMatchJobParser(BaseJobParser):
                             "сurr_salary_to": сurr_salary_to,
                             "currency_id": currency_id
                         }
-                        print(f"Page {page}/{max_page}: Adding item: {item}")
+                        print(f"Page {i}/{max_page}: Adding item: {item}")
                         item_df = pd.DataFrame([item])
                         self.df = pd.concat([self.df, item_df], ignore_index=True)
                         time.sleep(3)
