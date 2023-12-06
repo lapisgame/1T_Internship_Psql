@@ -68,7 +68,7 @@ class GetMatchJobParser(BaseJobParser):
                 return
 
             for i in range(1, max_page + 1):
-                url = BASE_URL.format(i=page)
+                url = BASE_URL.format(i=i)
                 r = requests.get(url, headers=HEADERS)
                 if r.status_code == 200:
                     # Парсим JSON-ответ
