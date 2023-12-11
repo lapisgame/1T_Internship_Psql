@@ -131,7 +131,9 @@ class DataPreprocessing:
         # dict_dict['companies_dict'] - dictionary from DB
 
         companies_df = dict_dict.get('companies_dict')
-        new_companies = set(self.dataframe['company'])
+        frame = pd.DataFrame({'company': self.dataframe['company']})
+        new_companies = frame[~frame['company'].isin(companies_df['title'])].copy()
+        new_companies = set(new_companies['company'])
         if not dict_dict.get('companies_dict')['id'].empty:
             max_company_id = max(dict_dict.get('companies_dict')['id'])
         else:
