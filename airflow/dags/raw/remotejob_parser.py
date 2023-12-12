@@ -1,4 +1,4 @@
-from airflow.utils.task_group import TaskGroup
+from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -91,13 +91,21 @@ class RemoteJobParser(BaseJobParserSelenium):
         # initializing the main data dictionary
         for vacancy in self.url_l:
             # self.log.info(f'URL {vacancy["vacancy_link"]}')
-            self.browser.get(vacancy["vacancy_link"])
             try:
+                self.browser.get(vacancy["vacancy_link"])
                 date_created = dateparser.parse(
                     self.wait.until(EC.presence_of_element_located((By.XPATH, "//*[@class='text-left']"))).text.strip(),
                     languages=['ru']).date()
-            except:
-                date_created = datetime.now().date()
+
+            except (WebDriverException, TimeoutException) as e:
+                # Логируем ошибку
+                self.log.error(f'Failed to load page {vacancy["vacancy_link"]}: {e}')
+                # Пробуем перезапустить браузер
+                self.restart_browser()
+                # Пропускаем текущую вакансию
+                continue
+            # except:
+            #     date_created = datetime.now().date()
 
             try:
                 text_tag = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="row p-y-3"]')))

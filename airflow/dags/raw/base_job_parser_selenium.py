@@ -3,6 +3,7 @@ import pandas as pd
 from decimal import Decimal
 import psycopg2
 from psycopg2.extensions import register_adapter, AsIs
+from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException
 import numpy as np
 from datetime import datetime
 from psycopg2.extras import execute_values
@@ -36,10 +37,14 @@ class BaseJobParserSelenium:
         self.raw_tables = raw_tables
         self.conn = conn
         self.cur = conn.cursor()
-        self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
-        self.browser.get(self.url)
-        self.browser.maximize_window()
-        self.browser.delete_all_cookies()
+        try:
+            self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
+            self.browser.get(self.url)
+            self.browser.maximize_window()
+            self.browser.delete_all_cookies()
+        except WebDriverException as e:
+            self.log.error(f'Failed to start browser session: {e}')
+            self.restart_browser()
 
         columns = [
             'vacancy_url', 'vacancy_name', 'towns', 'level', 'company', 'salary_from', 'salary_to', 'currency_id',
@@ -51,6 +56,24 @@ class BaseJobParserSelenium:
         self.dataframe_to_closed = pd.DataFrame(columns=columns)
         self.dataframe_to_update = pd.DataFrame(columns=columns)
         self.log.info("DataFrames for storing vacancies are created")
+
+    def restart_browser(self):
+        """
+        Attempt to restart the browser in case of a crash.
+        This method tries to quit the current browser instance gracefully if it is running,
+        and then starts a new instance of the browser to continue operations.
+        """
+        try:
+            # Close the existing browser instance if it exists
+            self.browser.quit()
+        except Exception:
+            # If unsuccessful, silently ignore any exceptions and proceed
+            pass
+        finally:
+            # Launch a new browser instance
+            self.browser = webdriver.Remote(command_executor='http://selenium-router:4444/wd/hub', options=options)
+            self.browser.get(self.url)
+            # Opening the initial URL after restarting browser
 
     def scroll_down_page(self, page_height=0):
         """
