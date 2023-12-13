@@ -12,6 +12,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+
 class DatabaseManager:
     def __init__(self, conn):
         self.conn = conn
