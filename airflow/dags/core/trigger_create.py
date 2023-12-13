@@ -21,15 +21,14 @@ class TriggerCreator:
 
     def create_meta_update_trigger(self):
         try:
+            create_extension = """CREATE EXTENSION plpythonu"""
+            self.cur.execute(create_extension)
             func_create = f"""
             CREATE OR REPLACE FUNCTION core_schema_trigger()
             RETURNS event_trigger AS $$
-            DECLARE
-                cmd text;
             BEGIN
                 IF (TG_TABLE_SCHEMA = '{self.front_schema}') THEN
-                        cmd := 'python {self.path}';
-                        EXECUTE cmd;
+                        EXECUTE 'python {self.path}';
                 END IF;
             END;
             $$ LANGUAGE plpgsql;
