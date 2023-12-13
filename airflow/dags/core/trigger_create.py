@@ -27,7 +27,7 @@ class TriggerCreator:
             DECLARE
                 cmd text;
             BEGIN
-                cmd := 'python {self.path}
+                cmd := 'python {self.path}'
                 IF TG_TABLE_SCHEMA = 'core_schema' THEN
                         EXECUTE cmd;
                 END IF;
