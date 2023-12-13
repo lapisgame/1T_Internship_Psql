@@ -26,7 +26,6 @@ class TriggerCreator:
             RETURNS event_trigger AS $$
             BEGIN
                 EXECUTE 'python {self.path}';
-                RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
             """
