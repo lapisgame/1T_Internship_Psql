@@ -28,7 +28,7 @@ class TriggerCreator:
                 cmd text;
             BEGIN
                 cmd := 'python {self.path}'
-                IF TG_TABLE_SCHEMA = 'core_schema' THEN
+                IF TG_TABLE_ARGV[0] = 'core_schema' THEN
                         EXECUTE cmd;
                 END IF;
             END;
