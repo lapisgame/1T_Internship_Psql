@@ -26,8 +26,10 @@ class TriggerCreator:
             RETURNS event_trigger AS $$
             DECLARE
                 cmd text;
+                TG_ARGV text[];
             BEGIN
                 cmd := 'python {self.path}'
+                TG_ARGV := tg_argv()
                 IF TG_ARGV[0] = 'core_schema' THEN
                         EXECUTE cmd;
                 END IF;
