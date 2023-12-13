@@ -22,20 +22,19 @@ class TriggerCreator:
     def create_meta_update_trigger(self):
         try:
             func_create = f"""
-            CREATE OR REPLACE FUNCTION core_schema_trigger()
+            CREATE OR REPLACE FUNCTION {self.front_schema}.core_schema_trigger()
             RETURNS event_trigger AS $$
             BEGIN
-                IF (TG_TABLE_SCHEMA = '{self.front_schema}') THEN
-                        EXECUTE 'python {self.path}';
-                END IF;
+                EXECUTE 'python {self.path}';
+                RETURN NEW;
             END;
             $$ LANGUAGE plpgsql;
             """
             self.cur.execute(func_create)
-            trigger_create = """
+            trigger_create = f"""
             CREATE EVENT TRIGGER core_schema_event_trigger
             ON ddl_command_end
-            EXECUTE FUNCTION core_schema_trigger();
+            EXECUTE FUNCTION {self.front_schema}.core_schema_trigger();
             """
             self.cur.execute(trigger_create)
             logging.info("function and trigger created successfully")
