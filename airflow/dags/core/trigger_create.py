@@ -39,7 +39,9 @@ class TriggerCreator:
             """
             self.cur.execute(trigger_create)
             logging.info("function and trigger created successfully")
+            self.conn.commit()
             self.conn.close()
         except Exception as e:
             logging.error(f"Error while creating function or trigger to update meta: {e}")
+            self.conn.rollback()
             self.conn.close()
