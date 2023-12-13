@@ -21,8 +21,6 @@ class TriggerCreator:
 
     def create_meta_update_trigger(self):
         try:
-            create_extension = """CREATE EXTENSION plpythonu"""
-            self.cur.execute(create_extension)
             func_create = f"""
             CREATE OR REPLACE FUNCTION core_schema_trigger()
             RETURNS event_trigger AS $$
